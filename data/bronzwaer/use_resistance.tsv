@@ -1,0 +1,12 @@
+country	n_isolates	n_nonsusceptible	did_betalactam	did_macrolide
+Belgium	940	131	14	4.1
+Finland	211	8	8	1.9
+Germany	222	4	5	2.5
+Ireland	157	30	11	2.5
+Italty	194	26	15	5.1
+Luxembourg	11	2	14	4.7
+Netherlands	760	8	4	1.2
+Portugal	134	25	16	3.7
+Spain	1240	418	21	5.9
+Sweden	706	21	8	1.0
+UK	243	21	9	3.2
