@@ -1,121 +1,15 @@
 ---
 title: "Empirical use-resistance relationships over geographic scales"
 author: "Scott Olesen"
-output:
-  pdf_document: default
-header-includes:
-    - \usepackage{bm}
-    - \usepackage{mathrsfs}
 ---
 
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(
   fig.width=7, fig.height=4, fig.path='fig/',
-  dev=c('pdf'),
+  dev=c('png', 'pdf'),
   echo=FALSE, warning=FALSE, message=FALSE,
   cache=TRUE, autodep=TRUE)
 pdf.options(useDingbats=FALSE, useKerning=FALSE)
-```
-
-# *S. pneumoniae* and $\beta$-lactams
-
-```{r arason}
-arason_r = read_tsv('../data/arason/resistance.tsv') %>%
-  group_by(area_code) %>%
-  summarize_at(vars(starts_with('n')), sum) %>%
-  mutate(n_isolates = n_resistant + n_sensitive,
-         pct_res = 100 * n_resistant / n_isolates)
-
-arason_u = read_tsv('../data/arason/use.tsv') %>%
-  mutate(did = did_penV + did_amoxclav) %>%
-  select(area_code, did)
-
-arason = inner_join(arason_r, arason_u, by='area_code') %>%
-  mutate(dataset='Arason', bug='S. pneumoniae', drug='beta_lactam') %>%
-  select(dataset, bug, drug, geo_unit=area_code, did, pct_res, n_isolates)
-```
-
-```{r bronzwaer}
-bronzwaer = read_tsv('../data/bronzwaer/use_resistance.tsv') %>%
-  mutate(pct_res = 100 * n_nonsusceptible / n_isolates) %>%
-  mutate(dataset='Bronzwaer', bug='S. pneumoniae', drug='beta_lactam') %>%
-  select(dataset, bug, drug, geo_unit=country, did=did_betalactam, did=did_betalactam, pct_res, n_isolates)
-```
-
-```{r ecdc}
-rename_bug = function(x) {
-  sapply(x, function(y) {
-    switch(y, 'Escherichia coli'='E. coli', 'Streptococcus pneumoniae'='S. pneumoniae', y)
-  })
-}
-
-ecdc = read_tsv('../data/ecdc/data.tsv') %>%
-  mutate(bug = rename_bug(bug),
-         pct_res = 100 * f_ns,
-         dataset='ECDC') %>%
-  select(dataset, bug, drug, geo_unit=country, did, pct_res)
-```
-
-```{r philjamaki}
-pihljamaki_pen = read_tsv('../data/pihljamaki/penicillins.tsv') %>%
-  mutate(dataset='Pihljamaki', bug='S. pneumoniae', drug='beta_lactam', geo_unit=as.character(1:n())) %>%
-  select(dataset, bug, drug, geo_unit, did=did_pen, pct_res=pct_res_pen)
-
-pihljamaki_macro = read_tsv('../data/pihljamaki/macrolides.tsv') %>%
-  mutate(dataset='Pihljamaki', bug='S. pneumoniae', drug='macrolide', geo_unit=as.character(1:n())) %>%
-  select(dataset, bug, drug, geo_unit, did=did_macrolide, pct_res=pct_res_erythro)
-
-pihljamaki = bind_rows(pihljamaki_pen, pihljamaki_macro)
-```
-
-```{r goossens}
-goossens = read_tsv('../data/goossens/data.tsv') %>%
-  mutate(dataset='Goossens', bug='S. pneumoniae', drug='beta_lactam') %>%
-  select(dataset, bug, drug, geo_unit=country, did, pct_res=pct_nonsusceptible)
-```
-
-```{r kalhmeter}
-kahlmeter = inner_join(
-  read_tsv('../data/kahlmeter/resistance.tsv') %>% filter(drug=='CIP'),
-  read_tsv('../data/kahlmeter/use.tsv') %>% group_by(country) %>% summarize(did=mean(did)),
-  by='country'
-) %>%
-  mutate(dataset='Kahlmeter', bug='E. coli', drug='quinolone') %>%
-  select(dataset, bug, drug, geo_unit=country, did, pct_res, n_isolates=n)
-```
-
-## NHSN/IMS
-
-Requires assuming a 10x conversion factor
-
-```{r nhsn_ims}
-nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
-  mutate(dataset='NHSN/IMS', bug='E. coli', drug='quinolone',
-         pct_res = 100 * n_resistant / n_isolates,
-         did = 10 / 365 * rx_1k_year) %>%
-  select(dataset, bug, drug, geo_unit=state, did, pct_res, n_isolates)
-```
-
-```{r cddep}
-cddep = read_tsv('../data/cddep/use_res.tsv') %>%
-  mutate(dataset='CDDEP',
-         bug = rename_bug(bug),
-         drug_group = if_else(drug_group == 'penicillin', 'beta_lactam', drug_group),
-         multiplier = case_when(
-           .$drug_group == 'quinolone' ~ 10 / 365,
-           .$drug_group == 'beta_lactam' ~ 19 / 365,
-           .$drug_group == 'macrolide' ~ 7 / 365
-         ),
-         did = rx_1k_year * multiplier) %>%
-  select(dataset, bug, drug=drug_group, geo_unit=division, did, pct_res=pct_resistant)
-```
-
-```{r}
-bind_rows(arason, bronzwaer, ecdc, pihljamaki, goossens, kahlmeter, nhsn, cddep, medicare_state) %>%
-  ggplot(aes(did, pct_res, color=dataset)) +
-  facet_wrap(~ bug + drug, scales='free_x') +
-  geom_point(shape=1) +
-  stat_smooth(method='lm')
 ```
 
 # Medicare & ResistanceOpen
@@ -211,4 +105,121 @@ bind_rows(
   do(tidy(lm(did ~ pct_res * at_hrr, data=.), conf.int=TRUE)) %>%
   select(-std.error, -statistic) %>%
   filter(term == 'pct_res:at_hrr')
+```
+
+# Data sets
+
+## Arason
+
+```{r arason}
+arason_r = read_tsv('../data/arason/resistance.tsv') %>%
+  group_by(area_code) %>%
+  summarize_at(vars(starts_with('n')), sum) %>%
+  mutate(n_isolates = n_resistant + n_sensitive,
+         pct_res = 100 * n_resistant / n_isolates)
+
+arason_u = read_tsv('../data/arason/use.tsv') %>%
+  mutate(did = did_penV + did_amoxclav) %>%
+  select(area_code, did)
+
+arason = inner_join(arason_r, arason_u, by='area_code') %>%
+  mutate(dataset='Arason', bug='S. pneumoniae', drug='beta_lactam') %>%
+  select(dataset, bug, drug, geo_unit=area_code, did, pct_res, n_isolates)
+```
+
+## Bronzwaer
+
+```{r bronzwaer}
+bronzwaer = read_tsv('../data/bronzwaer/use_resistance.tsv') %>%
+  mutate(pct_res = 100 * n_nonsusceptible / n_isolates) %>%
+  mutate(dataset='Bronzwaer', bug='S. pneumoniae', drug='beta_lactam') %>%
+  select(dataset, bug, drug, geo_unit=country, did=did_betalactam, did=did_betalactam, pct_res, n_isolates)
+```
+
+## ECDC
+
+```{r ecdc}
+rename_bug = function(x) {
+  sapply(x, function(y) {
+    switch(y, 'Escherichia coli'='E. coli', 'Streptococcus pneumoniae'='S. pneumoniae', y)
+  })
+}
+
+ecdc = read_tsv('../data/ecdc/data.tsv') %>%
+  mutate(bug = rename_bug(bug),
+         pct_res = 100 * f_ns,
+         dataset='ECDC') %>%
+  select(dataset, bug, drug, geo_unit=country, did, pct_res)
+```
+
+## Pihljamaki
+
+```{r pihljamaki}
+pihljamaki_pen = read_tsv('../data/pihljamaki/penicillins.tsv') %>%
+  mutate(dataset='Pihljamaki', bug='S. pneumoniae', drug='beta_lactam', geo_unit=as.character(1:n())) %>%
+  select(dataset, bug, drug, geo_unit, did=did_pen, pct_res=pct_res_pen)
+
+pihljamaki_macro = read_tsv('../data/pihljamaki/macrolides.tsv') %>%
+  mutate(dataset='Pihljamaki', bug='S. pneumoniae', drug='macrolide', geo_unit=as.character(1:n())) %>%
+  select(dataset, bug, drug, geo_unit, did=did_macrolide, pct_res=pct_res_erythro)
+
+pihljamaki = bind_rows(pihljamaki_pen, pihljamaki_macro)
+```
+
+## Goossens
+
+```{r goossens}
+goossens = read_tsv('../data/goossens/data.tsv') %>%
+  mutate(dataset='Goossens', bug='S. pneumoniae', drug='beta_lactam') %>%
+  select(dataset, bug, drug, geo_unit=country, did, pct_res=pct_nonsusceptible)
+```
+
+## Kahlmeter
+
+```{r kalhmeter}
+kahlmeter = inner_join(
+  read_tsv('../data/kahlmeter/resistance.tsv') %>% filter(drug=='CIP'),
+  read_tsv('../data/kahlmeter/use.tsv') %>% group_by(country) %>% summarize(did=mean(did)),
+  by='country'
+) %>%
+  mutate(dataset='Kahlmeter', bug='E. coli', drug='quinolone') %>%
+  select(dataset, bug, drug, geo_unit=country, did, pct_res, n_isolates=n)
+```
+
+## NHSN/IMS
+
+Requires assuming a 10x conversion factor
+
+```{r nhsn_ims}
+nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
+  mutate(dataset='NHSN/IMS', bug='E. coli', drug='quinolone',
+         pct_res = 100 * n_resistant / n_isolates,
+         did = 10 / 365 * rx_1k_year) %>%
+  select(dataset, bug, drug, geo_unit=state, did, pct_res, n_isolates)
+```
+
+## CDDEP
+
+```{r cddep}
+cddep = read_tsv('../data/cddep/use_res.tsv') %>%
+  mutate(dataset='CDDEP',
+         bug = rename_bug(bug),
+         drug_group = if_else(drug_group == 'penicillin', 'beta_lactam', drug_group),
+         multiplier = case_when(
+           .$drug_group == 'quinolone' ~ 10 / 365,
+           .$drug_group == 'beta_lactam' ~ 19 / 365,
+           .$drug_group == 'macrolide' ~ 7 / 365
+         ),
+         did = rx_1k_year * multiplier) %>%
+  select(dataset, bug, drug=drug_group, geo_unit=division, did, pct_res=pct_resistant)
+```
+
+## Combined figure
+
+```{r}
+bind_rows(arason, bronzwaer, ecdc, pihljamaki, goossens, kahlmeter, nhsn, cddep, medicare_state) %>%
+  ggplot(aes(did, pct_res, color=dataset)) +
+  facet_wrap(~ bug + drug, scales='free_x') +
+  geom_point(shape=1) +
+  stat_smooth(method='lm')
 ```
