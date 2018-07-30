@@ -4,6 +4,9 @@
 - S. pneumoniae and macrolides
 - E. coli and quinolones
 
+Maaaaaybe E. coli and trimethoprim
+
+When I have access to the raw data (either just reported in a table in the paper or extracted from the figures):
 
 Data source         Setting                               Time      Bugs & drugs
 -----------         -------                               ----      ------------
@@ -14,6 +17,18 @@ Garcia-Rey JCM 2002 13 Spanish provinces                  1998-1999 *S. pneumoni
 Garcia-Rey JAC 2004 14 Spanish provinces                  2001-2002 *S. pneumoniae* and beta-lactams, macrolides
 Pihljamaki CID 2001 10 Finnish central hospital districts 1995-1997 *S. pneumoniae* and macrolides
                     18 Finnish central hospital districts           *S. pneumoniae* and beta-lactams
+
+When I don't have the raw data and have to rely on their regressions:
+
+Data source         Setting                                           Time      Bugs & drugs
+-----------         -------                                           ----      ------------
+Priest BMJ 2001     262 practices grouped into 20 primary care groups 1996-1998 Urinary coliforms and beta-lactams
+                    371 practices grouped into 32 primary care groups           Urinary coliforms and trimethoprim
+
+Priest *et al*. has some data about pneumococcus, but they do a trichotomous
+grouping and $\chi$-square test. Could do some crazy bootstrapping to get
+those. Definitely worth discussing their findings, since they get similar
+results at the two scales!
 
 ## Cross-country
 
@@ -31,13 +46,6 @@ Pihljamaki CID 2001 10 Finnish central hospital districts 1995-1997 *S. pneumoni
 
 ## Within European countries
 
-### Extract from figures
-
-- Pihlajamaki (22 sites in Finland)
-    - S. pneumoniae and beta-lactams
-    - S. pneumoniae and macrolides
-- Priest; McGee; Ironmonger; Pouwels?: UTIs, so mostly E. coli
-
 ### Unclear
 
 - Bergman AAC 2006 has S. pneumoniae and macrolides, ~ and beta-lactams. Linear models are reported, but with that year term. No raw data.
@@ -48,10 +56,6 @@ Pihljamaki CID 2001 10 Finnish central hospital districts 1995-1997 *S. pneumoni
     - E. coli and beta-lactams
     - E. coli and quinolones
     - E. coli and nitrofurantoin
-- Priest BMJ 2001 has linear models but no raw data. But does show that regressions at different scales give similar results!
-    - S. pneumoniae and beta-lactams
-    - S. pneumoniae and macrolides
-    - Also E. coli and TMP/SMX?
 
 ## Across US regions
 
