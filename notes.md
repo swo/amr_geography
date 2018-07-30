@@ -19,8 +19,14 @@ Goossens Lancet 2005 19 European countries                 2000-2001 *S. pneumon
 Pihljamaki CID 2001  10 Finnish central hospital districts 1995-1997 *S. pneumoniae* and macrolides
 ""                   18 Finnish central hospital districts ""        *S. pneumoniae* and beta-lactams
 NHSN & IMS           50 US states and DC                   2011-2014 *E. coli* and quinolones
+CDDEP                50 US states and DC                   1999-2012 *S. pneumoniae* and macrolides, beta-lactams; *E. coli* and quinolones
 
-NHSN/IMS includes DC. IMS data includes 2015, but NHSN doesn't, so I didn't use that year.
+NHSN/IMS includes DC. IMS data includes 2015, but NHSN doesn't, so I didn't use
+that year.
+
+CDDEP has a lot of years. Maybe break those down a little in an intelligent
+way, to make it comparable to other data sets? Need to get Census values for
+each state so that I can average the use across states...
 
 When I don't have the raw data and have to rely on their regressions:
 
@@ -46,6 +52,9 @@ results at the two scales!
 ## Across US regions
 
 - CDDEP data. Would require aggregating the states' use into the lower Census regions
+    - E. coli & FQs
+    - pneumo & BLs
+    - pneumo & macro
 
 ## Across US states
 
@@ -60,6 +69,11 @@ Redo the Medicare thing, but rather than doing correlations, do slopes!
 
 - MDPH and CHIA
     - E. coli
+
+# Methods
+
+- Say something about the data sources and years for each data source
+- In a sensitivity analysis, where possible, compare the weight and unweighted regressions. I expect they give similar results.
 
 # Discussion
 
