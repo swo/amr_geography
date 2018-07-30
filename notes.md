@@ -17,7 +17,10 @@ Garcia-Rey JCM 2002  13 Spanish provinces                  1998-1999 *S. pneumon
 Garcia-Rey JAC 2004  14 Spanish provinces                  2001-2002 *S. pneumoniae* and beta-lactams, macrolides
 Goossens Lancet 2005 19 European countries                 2000-2001 *S. pneumoniae* and beta-lactams
 Pihljamaki CID 2001  10 Finnish central hospital districts 1995-1997 *S. pneumoniae* and macrolides
-                     18 Finnish central hospital districts           *S. pneumoniae* and beta-lactams
+""                   18 Finnish central hospital districts ""        *S. pneumoniae* and beta-lactams
+NHSN & IMS           50 US states and DC                   2011-2014 *E. coli* and quinolones
+
+NHSN/IMS includes DC. IMS data includes 2015, but NHSN doesn't, so I didn't use that year.
 
 When I don't have the raw data and have to rely on their regressions:
 
@@ -46,8 +49,6 @@ results at the two scales!
 
 ## Across US states
 
-- NHSN and IMS (or CDDEP)
-    - E. coli CAUTI and quinolones
 - MarketScan and ResistanceOpen
     - S. pneumoniae and beta-lactams
     - S. pneumoniae and macrolides
