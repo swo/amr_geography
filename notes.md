@@ -40,19 +40,6 @@ results at the two scales!
     - S. pneumoniae and macrolides
     - E. coli and quinolones
 
-## Within European countries
-
-### Unclear
-
-- Bergman AAC 2006 has S. pneumoniae and macrolides, ~ and beta-lactams. Linear models are reported, but with that year term. No raw data.
-- Bergman AAC 2009 (Finland). Linear models, but with year term. No raw data.
-    - E. coli and TMP/SMX
-    - E. coli and nitrofurantoin
-    - E. coli and quinolones
-    - E. coli and beta-lactams
-    - E. coli and quinolones
-    - E. coli and nitrofurantoin
-
 ## Across US regions
 
 - CDDEP data. Would require aggregating the states' use into the lower Census regions
@@ -83,3 +70,22 @@ Redo the Medicare thing, but rather than doing correlations, do slopes!
 - Bergman CID 2004 (Finland) has raw data, but only S. pyogenes and macrolides
 - van de Sande-Bruinsma, because they only do correlation coefficients
 - Ironmonger does E. coli (not quinolones) and has a funny seasonal thing
+
+## Unclear
+
+The two Bergman papers have regression $\rho ~ \tau + t$. I'm thinking to only
+put in studies that have univariate regressions $\rho ~ \tau$. I'm not sure
+what adding $t$ would do. In practice, it shouldn't do anything to the
+cross-sectional relationship, since we could pick a year and then we'd get back
+to $\rho ~ \tau$, but I'm nervous about any model mis-specification. (And I
+don't want to look to see if it supports my conclusions before deciding whether
+to include it!)
+
+- Bergman AAC 2006 has S. pneumoniae and macrolides, ~ and beta-lactams. Linear models are reported, but with that year term. No raw data.
+- Bergman AAC 2009 (Finland). Linear models, but with year term. No raw data.
+    - E. coli and TMP/SMX
+    - E. coli and nitrofurantoin
+    - E. coli and quinolones
+    - E. coli and beta-lactams
+    - E. coli and quinolones
+    - E. coli and nitrofurantoin
