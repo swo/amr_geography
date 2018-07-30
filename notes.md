@@ -1,10 +1,16 @@
 # Data sources
 
-Things to do:
-
 - S. pneumoniae and beta-lactams
 - S. pneumoniae and macrolides
 - E. coli and quinolones
+
+
+Data source         Setting                  Time      Bugs & drugs
+-----------         -------                  ----      ------------
+Arason BMJ 1996     5 Icelandic communities  1992-1993 *S. pneumoniae* and beta-lactams
+Kalhmeter JAC 2003  14 European countries    1997-2000 *E. coli* and quinolones
+Bronzwaer EID 2002  11 European countries    1997-1999 *S. pneumoniae* and beta-lactams
+Garcia-Rey JCM 2002 13 Spanish provinces     1998-1999 *S. pneumoniae* and beta-lactams, macrolides
 
 ## Cross-country
 
@@ -14,25 +20,16 @@ Things to do:
     - S. pneumoniae and beta-lactams
     - S. pneumoniae and macrolides
     - E. coli and quinolones
+
 ### Extract
 
 - Goossens 2005
     - S. pneumoniae and beta-lactams
-- Kalhmeter JAC 2003 (bar chart)
-    - E. coli and quinolones (and others)
-
-### Not using
-
-- van de Sande-Bruinsma, because they only do correlation coefficients
 
 ## Within European countries
 
 ### Raw data
 
-- Arason (1992-3 use and resistance; 4 sites in Iceland)
-    - S. pneumoniae and beta-lactams
-- Bronzwaer (1997 use; 1998-9 resistance; 11 countries) is pretty bad
-    - S. pneumoniae and beta-lactams (and macrolides)
 - Garcia-Rey JCM 2002 (1998-9 use and resistance; 13 sites in Spain)
     - S. pneumoniae and beta-lactams
     - S. pneumoniae and macrolides
@@ -62,11 +59,6 @@ Things to do:
     - S. pneumoniae and macrolides
     - Also E. coli and TMP/SMX?
 
-### Not using
-
-- Kalhmeter, Menday, Cars (1997 use) only reports correlation coefficients
-- Bergman CID 2004 (Finland) has raw data, but only S. pyogenes and macrolides
-
 ## Across US regions
 
 - CDDEP data. Would require aggregating the states' use into the lower Census regions
@@ -90,3 +82,10 @@ Redo the Medicare thing, but rather than doing correlations, do slopes!
 # Discussion
 
 - Size of x-axis (wider ranges with same slope give smaller p-values)
+
+# Not using
+
+- Kalhmeter, Menday, Cars (1997 use) only reports correlation coefficients
+- Bergman CID 2004 (Finland) has raw data, but only S. pyogenes and macrolides
+- van de Sande-Bruinsma, because they only do correlation coefficients
+- Ironmonger does E. coli (not quinolones) and has a funny seasonal thing
