@@ -6,7 +6,7 @@ ims = read_csv('Data_OAU.csv') %>%
   filter(Antibiotic_Class == 'Fluoroquinolones', Location != 'National', between(Year, 2011, 2014)) %>%
   # average use over years
   group_by(Location) %>%
-  summarize(Rate = mean(Rate)) %>%
+  summarize(Rate = mean(as.numeric(Rate))) %>%
   select(state=Location, rx_1k_year=Rate)
 
 # NHSN
