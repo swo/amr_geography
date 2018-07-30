@@ -11,6 +11,7 @@ Arason BMJ 1996     5 Icelandic communities  1992-1993 *S. pneumoniae* and beta-
 Kalhmeter JAC 2003  14 European countries    1997-2000 *E. coli* and quinolones
 Bronzwaer EID 2002  11 European countries    1997-1999 *S. pneumoniae* and beta-lactams
 Garcia-Rey JCM 2002 13 Spanish provinces     1998-1999 *S. pneumoniae* and beta-lactams, macrolides
+Garcia-Rey JAC 2004 14 Spanish provinces     2001-2002 *S. pneumoniae* and beta-lactams, macrolides
 
 ## Cross-country
 
@@ -27,15 +28,6 @@ Garcia-Rey JCM 2002 13 Spanish provinces     1998-1999 *S. pneumoniae* and beta-
     - S. pneumoniae and beta-lactams
 
 ## Within European countries
-
-### Raw data
-
-- Garcia-Rey JCM 2002 (1998-9 use and resistance; 13 sites in Spain)
-    - S. pneumoniae and beta-lactams
-    - S. pneumoniae and macrolides
-- Garcia-Rey JAC 2004 (2002 data)
-    - S. pneumoniae and beta-lactams
-    - S. pneumoniae and macrolides
 
 ### Extract from figures
 
