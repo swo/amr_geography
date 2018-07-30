@@ -8,15 +8,16 @@ Maaaaaybe E. coli and trimethoprim
 
 When I have access to the raw data (either just reported in a table in the paper or extracted from the figures):
 
-Data source         Setting                               Time      Bugs & drugs
------------         -------                               ----      ------------
-Arason BMJ 1996     5 Icelandic communities               1992-1993 *S. pneumoniae* and beta-lactams
-Kalhmeter JAC 2003  14 European countries                 1997-2000 *E. coli* and quinolones
-Bronzwaer EID 2002  11 European countries                 1997-1999 *S. pneumoniae* and beta-lactams
-Garcia-Rey JCM 2002 13 Spanish provinces                  1998-1999 *S. pneumoniae* and beta-lactams, macrolides
-Garcia-Rey JAC 2004 14 Spanish provinces                  2001-2002 *S. pneumoniae* and beta-lactams, macrolides
-Pihljamaki CID 2001 10 Finnish central hospital districts 1995-1997 *S. pneumoniae* and macrolides
-                    18 Finnish central hospital districts           *S. pneumoniae* and beta-lactams
+Data source          Setting                               Time      Bugs & drugs
+-----------          -------                               ----      ------------
+Arason BMJ 1996      5 Icelandic communities               1992-1993 *S. pneumoniae* and beta-lactams
+Kalhmeter JAC 2003   14 European countries                 1997-2000 *E. coli* and quinolones
+Bronzwaer EID 2002   11 European countries                 1997-1999 *S. pneumoniae* and beta-lactams
+Garcia-Rey JCM 2002  13 Spanish provinces                  1998-1999 *S. pneumoniae* and beta-lactams, macrolides
+Garcia-Rey JAC 2004  14 Spanish provinces                  2001-2002 *S. pneumoniae* and beta-lactams, macrolides
+Goossens Lancet 2005 19 European countries                 2000-2001 *S. pneumoniae* and beta-lactams
+Pihljamaki CID 2001  10 Finnish central hospital districts 1995-1997 *S. pneumoniae* and macrolides
+                     18 Finnish central hospital districts           *S. pneumoniae* and beta-lactams
 
 When I don't have the raw data and have to rely on their regressions:
 
@@ -38,11 +39,6 @@ results at the two scales!
     - S. pneumoniae and beta-lactams
     - S. pneumoniae and macrolides
     - E. coli and quinolones
-
-### Extract
-
-- Goossens 2005
-    - S. pneumoniae and beta-lactams
 
 ## Within European countries
 
