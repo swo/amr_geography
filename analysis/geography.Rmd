@@ -1,5 +1,5 @@
 ---
-title: "Use-resistance relationships over geographic scales"
+title: "Theory of use-resistance relationships over geographic scales"
 author: "Scott Olesen"
 output:
   pdf_document: default

@@ -1,0 +1,214 @@
+---
+title: "Empirical use-resistance relationships over geographic scales"
+author: "Scott Olesen"
+output:
+  pdf_document: default
+header-includes:
+    - \usepackage{bm}
+    - \usepackage{mathrsfs}
+---
+
+```{r global_options, include=FALSE}
+knitr::opts_chunk$set(
+  fig.width=7, fig.height=4, fig.path='fig/',
+  dev=c('pdf'),
+  echo=FALSE, warning=FALSE, message=FALSE,
+  cache=TRUE, autodep=TRUE)
+pdf.options(useDingbats=FALSE, useKerning=FALSE)
+```
+
+# *S. pneumoniae* and $\beta$-lactams
+
+```{r arason}
+arason_r = read_tsv('../data/arason/resistance.tsv') %>%
+  group_by(area_code) %>%
+  summarize_at(vars(starts_with('n')), sum) %>%
+  mutate(n_isolates = n_resistant + n_sensitive,
+         pct_res = 100 * n_resistant / n_isolates)
+
+arason_u = read_tsv('../data/arason/use.tsv') %>%
+  mutate(did = did_penV + did_amoxclav) %>%
+  select(area_code, did)
+
+arason = inner_join(arason_r, arason_u, by='area_code') %>%
+  mutate(dataset='Arason', bug='S. pneumoniae', drug='beta_lactam') %>%
+  select(dataset, bug, drug, geo_unit=area_code, did, pct_res, n_isolates)
+```
+
+```{r bronzwaer}
+bronzwaer = read_tsv('../data/bronzwaer/use_resistance.tsv') %>%
+  mutate(pct_res = 100 * n_nonsusceptible / n_isolates) %>%
+  mutate(dataset='Bronzwaer', bug='S. pneumoniae', drug='beta_lactam') %>%
+  select(dataset, bug, drug, geo_unit=country, did=did_betalactam, did=did_betalactam, pct_res, n_isolates)
+```
+
+```{r ecdc}
+rename_bug = function(x) {
+  sapply(x, function(y) {
+    switch(y, 'Escherichia coli'='E. coli', 'Streptococcus pneumoniae'='S. pneumoniae', y)
+  })
+}
+
+ecdc = read_tsv('../data/ecdc/data.tsv') %>%
+  mutate(bug = rename_bug(bug),
+         pct_res = 100 * f_ns,
+         dataset='ECDC') %>%
+  select(dataset, bug, drug, geo_unit=country, did, pct_res)
+```
+
+```{r philjamaki}
+pihljamaki_pen = read_tsv('../data/pihljamaki/penicillins.tsv') %>%
+  mutate(dataset='Pihljamaki', bug='S. pneumoniae', drug='beta_lactam', geo_unit=as.character(1:n())) %>%
+  select(dataset, bug, drug, geo_unit, did=did_pen, pct_res=pct_res_pen)
+
+pihljamaki_macro = read_tsv('../data/pihljamaki/macrolides.tsv') %>%
+  mutate(dataset='Pihljamaki', bug='S. pneumoniae', drug='macrolide', geo_unit=as.character(1:n())) %>%
+  select(dataset, bug, drug, geo_unit, did=did_macrolide, pct_res=pct_res_erythro)
+
+pihljamaki = bind_rows(pihljamaki_pen, pihljamaki_macro)
+```
+
+```{r goossens}
+goossens = read_tsv('../data/goossens/data.tsv') %>%
+  mutate(dataset='Goossens', bug='S. pneumoniae', drug='beta_lactam') %>%
+  select(dataset, bug, drug, geo_unit=country, did, pct_res=pct_nonsusceptible)
+```
+
+```{r kalhmeter}
+kahlmeter = inner_join(
+  read_tsv('../data/kahlmeter/resistance.tsv') %>% filter(drug=='CIP'),
+  read_tsv('../data/kahlmeter/use.tsv') %>% group_by(country) %>% summarize(did=mean(did)),
+  by='country'
+) %>%
+  mutate(dataset='Kahlmeter', bug='E. coli', drug='quinolone') %>%
+  select(dataset, bug, drug, geo_unit=country, did, pct_res, n_isolates=n)
+```
+
+## NHSN/IMS
+
+Requires assuming a 10x conversion factor
+
+```{r nhsn_ims}
+nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
+  mutate(dataset='NHSN/IMS', bug='E. coli', drug='quinolone',
+         pct_res = 100 * n_resistant / n_isolates,
+         did = 10 / 365 * rx_1k_year) %>%
+  select(dataset, bug, drug, geo_unit=state, did, pct_res, n_isolates)
+```
+
+```{r cddep}
+cddep = read_tsv('../data/cddep/use_res.tsv') %>%
+  mutate(dataset='CDDEP',
+         bug = rename_bug(bug),
+         drug_group = if_else(drug_group == 'penicillin', 'beta_lactam', drug_group),
+         multiplier = case_when(
+           .$drug_group == 'quinolone' ~ 10 / 365,
+           .$drug_group == 'beta_lactam' ~ 19 / 365,
+           .$drug_group == 'macrolide' ~ 7 / 365
+         ),
+         did = rx_1k_year * multiplier) %>%
+  select(dataset, bug, drug=drug_group, geo_unit=division, did, pct_res=pct_resistant)
+```
+
+```{r}
+bind_rows(arason, bronzwaer, ecdc, pihljamaki, goossens, kahlmeter, nhsn, cddep, medicare_state) %>%
+  ggplot(aes(did, pct_res, color=dataset)) +
+  facet_wrap(~ bug + drug, scales='free_x') +
+  geom_point(shape=1) +
+  stat_smooth(method='lm')
+```
+
+# Medicare & ResistanceOpen
+
+This is a nice chance to ask if going to a smaller scale gives you different regression coefficients. I do this by modeling
+
+```{r}
+ro_bugdrugs = data_frame(
+  bug = c('S. pneumoniae', 'S. pneumoniae', 'E. coli'),
+  drug_group = c('beta_lactam', 'macrolide', 'quinolone')
+)
+
+ro_state = read_tsv('../data/ms-medicare-ro/abg_state.tsv')
+ro_hrr = read_tsv('../data/ms-medicare-ro/abg_hrr.tsv')
+
+medicare_state_use = read_tsv('../data/ms-medicare-ro/ineq_medicare_state.tsv')
+medicare_hrr_use = read_tsv('../data/ms-medicare-ro/ineq_medicare_hrr.tsv')
+
+medicare_state = inner_join(medicare_state_use, ro_state, by=c('drug_group', 'state')) %>%
+  inner_join(ro_bugdrugs) %>%
+  mutate(dataset='Medicare (state)',
+         pct_res=100*f_ns,
+         multiplier = case_when(
+           .$drug_group == 'quinolone' ~ 10 / 365 * 1000,
+           .$drug_group == 'beta_lactam' ~ 19 / 365 * 1000,
+           .$drug_group == 'macrolide' ~ 7 / 365 * 1000
+         ),
+         did = multiplier * total_use
+         ) %>%
+  select(dataset, bug, drug=drug_group, geo_unit=state, did, pct_res)
+
+medicare_hrr = inner_join(medicare_hrr_use, ro_hrr, by=c('drug_group', 'hrr')) %>%
+  inner_join(ro_bugdrugs) %>%
+  mutate(dataset='Medicare (HRR)',
+         pct_res=100*f_ns,
+         multiplier = case_when(
+           .$drug_group == 'quinolone' ~ 10 / 365 * 1000,
+           .$drug_group == 'beta_lactam' ~ 19 / 365 * 1000,
+           .$drug_group == 'macrolide' ~ 7 / 365 * 1000
+         ),
+         did = multiplier * total_use,
+         geo_unit = as.character(hrr)
+         ) %>%
+  select(dataset, bug, drug=drug_group, geo_unit, did, pct_res)
+
+medicare_state_models = medicare_state %>%
+  group_by(bug, drug) %>%
+  do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
+  ungroup()
+
+medicare_hrr_models = medicare_hrr %>%
+  group_by(bug, drug) %>%
+  do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
+  ungroup()
+```
+
+To the eye, it looks like the state and HRR points lie on similar lines:
+
+```{r}
+bind_rows(
+  medicare_state %>% mutate(level='state'),
+  medicare_hrr %>% mutate(level='hrr')
+) %>%
+  ggplot(aes(did, pct_res, color=level)) +
+  facet_wrap(~ bug + drug, scales='free_x') +
+  geom_point() +
+  geom_smooth(method='lm')
+```
+
+Looking at just the regression results emphasizes that:
+
+```{r}
+bind_rows(
+  medicare_state_models %>% mutate(level='state'),
+  medicare_hrr_models %>% mutate(level='hrr')
+) %>%
+  filter(term == 'did') %>%
+  ggplot(aes(level, estimate, ymin=conf.low, ymax=conf.high)) +
+  facet_wrap(~ bug + drug) +
+  geom_point() +
+  geom_errorbar()
+```
+
+And I could do something more sophisticated, by running a model $\rho ~ \tau$ and another one $\rho ~ \tau + \tau \times L$, where $L$ is a dummy variable encoding whether the level of the analysis is state or HRR. All those interaction terms are not statistically significant.
+
+```{r}
+bind_rows(
+  medicare_state %>% mutate(level='state'),
+  medicare_hrr %>% mutate(level='hrr')
+) %>%
+  mutate(at_hrr = as.integer(level == 'hrr')) %>%
+  group_by(bug, drug) %>%
+  do(tidy(lm(did ~ pct_res * at_hrr, data=.), conf.int=TRUE)) %>%
+  select(-std.error, -statistic) %>%
+  filter(term == 'pct_res:at_hrr')
+```

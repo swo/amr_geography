@@ -1,3 +1,8 @@
+# To do
+
+- What's up with ECDC vs. Kahlmeter?
+- Check on the non-finite values in the combined plot
+
 # Data sources
 
 - S. pneumoniae and beta-lactams
@@ -29,6 +34,8 @@ that year.
 
 CDDEP has a lot of years. Maybe break those down a little in an intelligent
 way, to make it comparable to other data sets? Lots of methodological points there.
+
+To convert US to European values, CDDEP is a Rosetta stone? Then do a sensitivity analysis to show that it's fine.
 
 When I don't have the raw data and have to rely on their regressions:
 
@@ -63,6 +70,15 @@ Redo the Medicare thing, but rather than doing correlations, do slopes!
 - Say something about the data sources and years for each data source
 - In a sensitivity analysis, where possible, compare the weight and unweighted regressions. I expect they give similar results.
 - Show that it makes sense to average over multiple years. Like, do some funny GEE thing showing that that's OK for the CDDEP and ECDC stuff
+
+Drug                        PKY:DID
+--------------------------- -------
+Broad-spectrum penicillins  19
+Narrow-spectrum penicillins 8
+Quinolones                  10
+Macrolides                  7
+
+Table: Ratio of prescriptions per 1,000 people per year to DDD per 1,000 people per day. I got this from the CDDEP Rosetta Stone, averaging over 2000 and 2012. Should probably do something a little more principled.
 
 # Discussion
 
