@@ -19,7 +19,10 @@ Goossens Lancet 2005 19 European countries                 2000-2001 *S. pneumon
 Pihljamaki CID 2001  10 Finnish central hospital districts 1995-1997 *S. pneumoniae* and macrolides
 ""                   18 Finnish central hospital districts ""        *S. pneumoniae* and beta-lactams
 NHSN & IMS           50 US states and DC                   2011-2014 *E. coli* and quinolones
-CDDEP                50 US states and DC                   1999-2012 *S. pneumoniae* and macrolides, beta-lactams; *E. coli* and quinolones
+CDDEP                9 US Census divisions                 1999-2012 *S. pneumoniae* and macrolides, beta-lactams; *E. coli* and quinolones
+European CDC         13-25 European countries              2001-2015 *E. coli* and quinolones
+""                   15-24 European countries              2005-2015 *S. pneumoniae* and beta-lactams
+""                   16-24 European countries              2005-2015 *S. pneumoniae* and macrolides
 
 NHSN/IMS includes DC. IMS data includes 2015, but NHSN doesn't, so I didn't use
 that year.
@@ -41,13 +44,6 @@ results at the two scales!
 
 ## Cross-country
 
-### Raw data
-
-- ECDC
-    - S. pneumoniae and beta-lactams
-    - S. pneumoniae and macrolides
-    - E. coli and quinolones
-
 ## Across US states
 
 - MarketScan and ResistanceOpen
@@ -66,6 +62,7 @@ Redo the Medicare thing, but rather than doing correlations, do slopes!
 
 - Say something about the data sources and years for each data source
 - In a sensitivity analysis, where possible, compare the weight and unweighted regressions. I expect they give similar results.
+- Show that it makes sense to average over multiple years. Like, do some funny GEE thing showing that that's OK for the CDDEP and ECDC stuff
 
 # Discussion
 
