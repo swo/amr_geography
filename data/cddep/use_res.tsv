@@ -1,0 +1,28 @@
+bug	division	pct_resistant	drug_group	rx_1k_year
+Escherichia coli	East North Central	18.77309236947791	quinolone	104.41056405085098
+Escherichia coli	East South Central	16.426935886761033	quinolone	151.30399811005296
+Escherichia coli	Mid Atlantic	21.181202059472522	quinolone	124.79996567249776
+Escherichia coli	Mountain	11.577537212449256	quinolone	81.32563984130678
+Escherichia coli	New England	17.734488050866037	quinolone	96.52086614931459
+Escherichia coli	Pacific	18.293842058562557	quinolone	73.61133676562501
+Escherichia coli	South Atlantic	20.312883435582823	quinolone	123.15643761754103
+Escherichia coli	West North Central	15.101505781123958	quinolone	101.53261999861212
+Escherichia coli	West South Central	20.31180578649817	quinolone	115.88329153684352
+Streptococcus pneumoniae	East North Central	22.971715328467152	macrolide	218.30568637129747
+Streptococcus pneumoniae	East South Central	30.371375116931713	macrolide	282.2444500335615
+Streptococcus pneumoniae	Mid Atlantic	22.442349528643945	macrolide	229.57396980086247
+Streptococcus pneumoniae	Mountain	18.374629080118694	macrolide	168.85566258645187
+Streptococcus pneumoniae	New England	24.441326530612244	macrolide	205.11695484704506
+Streptococcus pneumoniae	Pacific	17.569671161580317	macrolide	143.26402976713712
+Streptococcus pneumoniae	South Atlantic	32.57645651802495	macrolide	211.99200922023954
+Streptococcus pneumoniae	West North Central	28.128227960819235	macrolide	212.0670383638013
+Streptococcus pneumoniae	West South Central	28.867248290497525	macrolide	227.37933986288172
+Streptococcus pneumoniae	East North Central	23.068223563369195	penicillin	282.9063011399905
+Streptococcus pneumoniae	East South Central	40.52641392169049	penicillin	329.64341111347994
+Streptococcus pneumoniae	Mid Atlantic	24.821520951888257	penicillin	296.677572994737
+Streptococcus pneumoniae	Mountain	30.670842824601365	penicillin	235.02808104465993
+Streptococcus pneumoniae	New England	21.971541501976283	penicillin	294.0248633484693
+Streptococcus pneumoniae	Pacific	18.47388888888889	penicillin	189.2424412245513
+Streptococcus pneumoniae	South Atlantic	32.000674384624034	penicillin	277.56553123104294
+Streptococcus pneumoniae	West North Central	22.90258806613947	penicillin	270.57294821492326
+Streptococcus pneumoniae	West South Central	29.428435296359826	penicillin	277.97634806051565

@@ -25,8 +25,7 @@ NHSN/IMS includes DC. IMS data includes 2015, but NHSN doesn't, so I didn't use
 that year.
 
 CDDEP has a lot of years. Maybe break those down a little in an intelligent
-way, to make it comparable to other data sets? Need to get Census values for
-each state so that I can average the use across states...
+way, to make it comparable to other data sets? Lots of methodological points there.
 
 When I don't have the raw data and have to rely on their regressions:
 
@@ -48,13 +47,6 @@ results at the two scales!
     - S. pneumoniae and beta-lactams
     - S. pneumoniae and macrolides
     - E. coli and quinolones
-
-## Across US regions
-
-- CDDEP data. Would require aggregating the states' use into the lower Census regions
-    - E. coli & FQs
-    - pneumo & BLs
-    - pneumo & macro
 
 ## Across US states
 
