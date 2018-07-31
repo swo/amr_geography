@@ -2,14 +2,25 @@
 
 - What's up with ECDC vs. Kahlmeter?
 - Check on the non-finite values in the combined plot
+- Garcia-Rey 2004 gives *percent* resistant
 
-# Data sources
+# Introduction
 
-- S. pneumoniae and beta-lactams
-- S. pneumoniae and macrolides
-- E. coli and quinolones
+Say we want to do an outpatient antibiotic use intervention. At what length scale do we need to do the intervention to see an effect? How long does the intervention (or the wait until the effect) need to be?
 
-Maaaaaybe E. coli and trimethoprim
+# Methods
+
+## Data sources
+
+Limited ourselves to three bug/drug combos because there's a lot of literature about them, and they include some of the most-cited literature:
+
+- *S. pneumoniae* and beta-lactams
+- *S. pneumoniae* and macrolides
+- *E. coli* and quinolones
+
+(Maaaaaybe E. coli and trimethoprim)
+
+Also limited to studies that have directly accessible data (raw in tables or extractable from plots) or that reported the results of single-variable regressions (resistance against use).
 
 When I have access to the raw data (either just reported in a table in the paper or extracted from the figures):
 
@@ -83,6 +94,15 @@ Table: Ratio of prescriptions per 1,000 people per year to DDD per 1,000 people 
 # Discussion
 
 - Size of x-axis (wider ranges with same slope give smaller p-values)
+    - E.g., look at van de Sande-Bruinsma: penicillin use varies 28-fold, cephalosporins 100-fold!
+    - Different from Priest's point about the S-curve, so that we might expect the slopes away from the midpoint to be less steep
+- What does "strength" mean, as in Bell? Could mean that there is more confidence of a relationship (i.e., p-value for correlation different or slope from zero) or it could mean the slope itself. Here we focused on slope because we expect it could be similar across dynamic ranges, etc.
+    - Can we say that Ec/FQ is stronger than the Sp/bL relationship?
+    - What does it mean that relationships are "stronger" in Southern Europe? If it's just about p-value, then that has to do with the range of the x-axis
+    - Strength could have to do with who takes that drug. Say only children take a drug or have a resistance. Then a large increase in children's use looks like a small increase in overall use but a large change in resistance, giving a big slope.
+    - Conversely, if you measure use among high users (e.g., older adults) and resistance among everyone, you'll get the same amount of resistance for higher use, i.e., a weaker slope.
+    - Regression dilution: if there are errors on the x-axis, then slope is biased toward smaller values
+- Analogy with temporal. It's hard to know if cross-sectional relationships should also be causal, and if so, on what scales. How widely does the change have to be implemented? Analogously, how long do you have to wait to see a change?
 
 # Not using
 
@@ -90,6 +110,7 @@ Table: Ratio of prescriptions per 1,000 people per year to DDD per 1,000 people 
 - Bergman CID 2004 (Finland) has raw data, but only S. pyogenes and macrolides
 - van de Sande-Bruinsma, because they only do correlation coefficients
 - Ironmonger does E. coli (not quinolones) and has a funny seasonal thing
+- UK UTI nexus: Magee, Priest, Ironmonger, Pouwels
 
 ## Unclear
 

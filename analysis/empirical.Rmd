@@ -16,7 +16,7 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 
 This is a nice chance to ask if going to a smaller scale gives you different regression coefficients. I do this by modeling
 
-```{r}
+```{r medicare_ro}
 ro_bugdrugs = data_frame(
   bug = c('S. pneumoniae', 'S. pneumoniae', 'E. coli'),
   drug_group = c('beta_lactam', 'macrolide', 'quinolone')
@@ -64,6 +64,21 @@ medicare_hrr_models = medicare_hrr %>%
   group_by(bug, drug) %>%
   do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
   ungroup()
+```
+
+```{r ms}
+marketscan = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
+  inner_join(ro_state, by=c('drug_group', 'state')) %>%
+  inner_join(ro_bugdrugs) %>%
+  mutate(multiplier = case_when(
+           .$drug_group == 'quinolone' ~ 10 / 365 * 1000,
+           .$drug_group == 'beta_lactam' ~ 19 / 365 * 1000,
+           .$drug_group == 'macrolide' ~ 7 / 365 * 1000
+         ),
+         did = multiplier * total_use
+  ) %>%
+  mutate(dataset='MarketScan', pct_res=100 * f_ns) %>%
+  select(dataset, bug, drug=drug_group, geo_unit=state, did, pct_res)
 ```
 
 To the eye, it looks like the state and HRR points lie on similar lines:
@@ -204,8 +219,8 @@ nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
 cddep = read_tsv('../data/cddep/use_res.tsv') %>%
   mutate(dataset='CDDEP',
          bug = rename_bug(bug),
-         drug_group = if_else(drug_group == 'penicillin', 'beta_lactam', drug_group),
-         multiplier = case_when(
+         drug_group = if_else(drug_group == 'penicillin', 'beta_lactam', drug_group)) %>%
+  mutate(multiplier = case_when(
            .$drug_group == 'quinolone' ~ 10 / 365,
            .$drug_group == 'beta_lactam' ~ 19 / 365,
            .$drug_group == 'macrolide' ~ 7 / 365
@@ -214,12 +229,126 @@ cddep = read_tsv('../data/cddep/use_res.tsv') %>%
   select(dataset, bug, drug=drug_group, geo_unit=division, did, pct_res=pct_resistant)
 ```
 
+## Garcia-Rey 2002
+
+```{r garcia_rey2002}
+gr2_raw = read_tsv('../data/garcia-rey2002/data.tsv') %>%
+  select(province, n_isolates,
+         did_bl_total, pct_res_pen,
+         did_macrolide_total, pct_res_erythro) %>%
+  gather('key', 'value', -province)
+
+# use and resistance data
+gr2_ur = gr2_raw %>%
+  filter(key != 'n_isolates') %>%
+  mutate(
+    drug = case_when(
+      str_detect(.$key, '(bl|pen)') ~ 'beta_lactam',
+      str_detect(.$key, '(macrolide|erythro)') ~ 'macrolide',
+      TRUE ~ NA_character_),
+    metric = case_when(
+      str_detect(.$key, 'did') ~ 'did',
+      str_detect(.$key, 'pct_res') ~ 'pct_res',
+      .$key == 'n_isolates' ~ 'n_isolates'
+    )
+  ) %>%
+  select(-key) %>%
+  spread(metric, value)
+
+# number of isolates
+gr2_ni = gr2_raw %>%
+  filter(key == 'n_isolates') %>%
+  select(province, n_isolates=value)
+
+garciarey2002 = inner_join(gr2_ur, gr2_ni, by='province') %>%
+  mutate(dataset='Garcia-Rey 2002', bug='S. pneumoniae') %>%
+  select(dataset, bug, drug, geo_unit=province, did, pct_res, n_isolates)
+```
+
+## Garcia-Rey 2004
+
+Units in the paper are "units per 1,000 inhabitants per year". So clearly need to divide by 365, but I also don't know how to convert "units" to DDD. So I think I should dropp this study, which isn't bad, since I have the 2002 version from the same data stream.
+
+```{r}
+gr4_raw = read_tsv('../data/garcia-rey2004/data.tsv')
+
+gr4_ni = gr4_raw %>%
+  select(province, n_isolates)
+
+gr4_bl = gr4_raw %>%
+  mutate(drug = 'beta_lactam',
+         pct_res = n_res_pen,
+         did = did_beta_lactams / 365) %>%
+  select(province, drug, pct_res, did)
+
+gr4_macro = gr4_raw %>%
+  mutate(drug = 'macrolide',
+         pct_res = n_res_erythro,
+         did = did_macrolides / 365) %>%
+  select(province, drug, pct_res, did)
+
+garciarey2004 = bind_rows(gr4_bl, gr4_macro) %>%
+  left_join(gr4_ni, by='province') %>%
+  mutate(did = case_when(
+    .$drug == 'beta_lactam' ~ 19 * .$did,
+    .$drug == 'macrolide' ~ 7 * .$did
+  )) %>%
+  mutate(dataset='Garcia-Rey 2004', bug='S. pneumoniae') %>%
+  select(dataset, bug, drug, geo_unit=province, did, pct_res, n_isolates)
+```
+
 ## Combined figure
 
 ```{r}
-bind_rows(arason, bronzwaer, ecdc, pihljamaki, goossens, kahlmeter, nhsn, cddep, medicare_state) %>%
-  ggplot(aes(did, pct_res, color=dataset)) +
-  facet_wrap(~ bug + drug, scales='free_x') +
-  geom_point(shape=1) +
-  stat_smooth(method='lm')
+comb = bind_rows(arason, bronzwaer, ecdc, pihljamaki, goossens, kahlmeter, nhsn, cddep, medicare_state, garciarey2002, medicare_hrr, marketscan) %>%
+  mutate(bugdrug = case_when(
+    .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
+    .$bug == 'S. pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
+    .$bug == 'S. pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
+  ))
+
+data_plot_f = function(bugdrug_) {
+  comb %>%
+    filter(dataset != 'Medicare (HRR)', bugdrug == bugdrug_) %>%
+    ggplot(aes(did, pct_res, color=dataset)) +
+    stat_smooth(method='lm', se=FALSE, fullrange=TRUE,
+                size=0.5, linetype=1) +
+    geom_point(shape=1) +
+    ggtitle(bugdrug_)
+}
+
+data_plot_f('Ec/q')
+data_plot_f('Sp/bl')
+data_plot_f('Sp/m')
+```
+
+```{r}
+models = comb %>%
+  group_by(dataset, bugdrug) %>%
+  do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
+  ungroup()
+
+plot_f_f = function(term_, xlab_) {
+  function(bugdrug_) {
+    models %>%
+      filter(term==term_, bugdrug==bugdrug_) %>%
+      mutate(dataset = fct_reorder(factor(dataset), estimate)) %>%
+      ggplot(aes(y=dataset, x=estimate, xmin=conf.low, xmax=conf.high)) +
+      geom_point() + geom_errorbarh() +
+      xlab(xlab_) +
+      ylab('') +
+      ggtitle(bugdrug_)
+  }
+}
+
+did_plot_f = plot_f_f('did', 'regression coefficient (p.p. resistance / DID)')
+intercept_plot_f = plot_f_f('(Intercept)', 'regression intercept (% resistant)')
+
+did_plot_f('Ec/q')
+did_plot_f('Sp/bl')
+did_plot_f('Sp/m')
+
+intercept_plot_f('Ec/q')
+intercept_plot_f('Sp/bl')
+intercept_plot_f('Sp/m')
 ```
