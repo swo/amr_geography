@@ -8,6 +8,9 @@
 
 Say we want to do an outpatient antibiotic use intervention. At what length scale do we need to do the intervention to see an effect? How long does the intervention (or the wait until the effect) need to be?
 
+- Vellinga *JAC* 2010 speculates that smaller geographic scales produce more positive slopes
+- Donnan *BMJ* 2004 has some good discussion about why ecological studies have problems, since there's variation in use among the people making up the population. Some careful thought about practice vs. individual-level results.
+
 # Methods
 
 ## Data sources
@@ -30,7 +33,6 @@ Arason BMJ 1996      5 Icelandic communities               1992-1993 *S. pneumon
 Kalhmeter JAC 2003   14 European countries                 1997-2000 *E. coli* and quinolones
 Bronzwaer EID 2002   11 European countries                 1997-1999 *S. pneumoniae* and beta-lactams
 Garcia-Rey JCM 2002  13 Spanish provinces                  1998-1999 *S. pneumoniae* and beta-lactams, macrolides
-Garcia-Rey JAC 2004  14 Spanish provinces                  2001-2002 *S. pneumoniae* and beta-lactams, macrolides
 Goossens Lancet 2005 19 European countries                 2000-2001 *S. pneumoniae* and beta-lactams
 Pihljamaki CID 2001  10 Finnish central hospital districts 1995-1997 *S. pneumoniae* and macrolides
 ""                   18 Finnish central hospital districts ""        *S. pneumoniae* and beta-lactams
@@ -111,6 +113,7 @@ Table: Ratio of prescriptions per 1,000 people per year to DDD per 1,000 people 
 - van de Sande-Bruinsma, because they only do correlation coefficients
 - Ironmonger does E. coli (not quinolones) and has a funny seasonal thing
 - UK UTI nexus: Magee, Priest, Ironmonger, Pouwels
+- Garcia-Rey 2004, because they report use in "units". I can't use the same conversions as for the US and get reasonable results, so I'd have to use G-R 2002 as the Rosetta Stone, which means I'm basically using two periods of data from the same stream.
 
 ## Unclear
 
