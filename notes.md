@@ -2,7 +2,6 @@
 
 - What's up with ECDC vs. Kahlmeter?
 - Check on the non-finite values in the combined plot
-- Consider random aggregations of HRRs, comparing what happens with the slopes? MAUP is tough
 
 # Introduction
 
@@ -12,6 +11,7 @@ Say we want to do an outpatient antibiotic use intervention. At what length scal
 - Donnan *BMJ* 2004 has some good discussion about why ecological studies have problems, since there's variation in use among the people making up the population. Some careful thought about practice vs. individual-level results.
 - Openshaw "MAUP": correlation coefficients differ with the areal unit (tending to increase with larger units) and are relative only to the unit used. They don't signal anything fundamental about the process. So for p-values it's a trade: larger $\rho$ with smaller $n$. "[B]ecause the correlations are modifiable they may not provide any useful guide to individual or more spatially disaggregated levels of correlations." E.g., Robinson's nativity and illiteracy; although AMR is different because of transmission.
     - Robinson's negro & illiteracy is the same as our race & AMR: more blacks, who use less abx, in the South, where there is more AMR
+    - Openshaw's Iowa experiment suggests that larger aggregation units yield systematically stronger slopes
 
 # Methods
 
