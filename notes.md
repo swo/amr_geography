@@ -12,6 +12,9 @@ Say we want to do an outpatient antibiotic use intervention. At what length scal
 - Openshaw "MAUP": correlation coefficients differ with the areal unit (tending to increase with larger units) and are relative only to the unit used. They don't signal anything fundamental about the process. So for p-values it's a trade: larger $\rho$ with smaller $n$. "[B]ecause the correlations are modifiable they may not provide any useful guide to individual or more spatially disaggregated levels of correlations." E.g., Robinson's nativity and illiteracy; although AMR is different because of transmission.
     - Robinson's negro & illiteracy is the same as our race & AMR: more blacks, who use less abx, in the South, where there is more AMR
     - Openshaw's Iowa experiment suggests that larger aggregation units yield systematically stronger slopes
+- It may certainly be that the associations we see are not causual, but we investigate them because think they may be causal. We certainly wouldn't be studying them if we didn't think they would help us figure out what to do about AMR. Specifically, at what scale do you want to do an intervention?
+    - Gerrymandering is a great example by which you can see that real and statistically significant results can be gotten by choosing your areal units carefully.
+    - Gerrymandering also raises the question: in what way can it be true to say that a state is more Democrat or Republican, if you are using areal units?
 
 # Methods
 

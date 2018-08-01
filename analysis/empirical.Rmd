@@ -12,6 +12,23 @@ knitr::opts_chunk$set(
 pdf.options(useDingbats=FALSE, useKerning=FALSE)
 ```
 
+# US/Europe conversions
+
+```{r piy_did}
+us_europe_crosswalk = data_frame(
+  drug = c('beta_lactam', 'quinolone', 'macrolide'),
+  ddd_per_rx = c(10, 10, 7)
+)
+
+kable(us_europe_crosswalk)
+
+# PIY = Prescriptions per 1,000 Inhabitants per Year
+us_europe_convert = function(drug_, piy) {
+  us_europe_crosswalk %$%
+    { piy / 365 * ddd_per_rx[match(drug_, drug)] }
+}
+```
+
 # Medicare & ResistanceOpen
 
 This is a nice chance to ask if going to a smaller scale gives you different regression coefficients. I do this by modeling
@@ -32,12 +49,13 @@ medicare_state = inner_join(medicare_state_use, ro_state, by=c('drug_group', 'st
   inner_join(ro_bugdrugs) %>%
   mutate(dataset='Medicare (state)',
          pct_res=100*f_ns,
-         multiplier = case_when(
-           .$drug_group == 'quinolone' ~ 10 / 365 * 1000,
-           .$drug_group == 'beta_lactam' ~ 19 / 365 * 1000,
-           .$drug_group == 'macrolide' ~ 7 / 365 * 1000
-         ),
-         did = multiplier * total_use
+         did = us_europe_convert(drug_group, total_use * 1000)
+         #multiplier = case_when(
+        #   .$drug_group == 'quinolone' ~ 10 / 365 * 1000,
+        #   .$drug_group == 'beta_lactam' ~ 19 / 365 * 1000,
+        #   .$drug_group == 'macrolide' ~ 7 / 365 * 1000
+        # ),
+        # did = multiplier * total_use
          ) %>%
   select(dataset, bug, drug=drug_group, geo_unit=state, did, pct_res)
 
@@ -45,12 +63,13 @@ medicare_hrr = inner_join(medicare_hrr_use, ro_hrr, by=c('drug_group', 'hrr')) %
   inner_join(ro_bugdrugs) %>%
   mutate(dataset='Medicare (HRR)',
          pct_res=100*f_ns,
-         multiplier = case_when(
-           .$drug_group == 'quinolone' ~ 10 / 365 * 1000,
-           .$drug_group == 'beta_lactam' ~ 19 / 365 * 1000,
-           .$drug_group == 'macrolide' ~ 7 / 365 * 1000
-         ),
-         did = multiplier * total_use,
+         did = us_europe_convert(drug_group, total_use * 1000),
+         # multiplier = case_when(
+         #   .$drug_group == 'quinolone' ~ 10 / 365 * 1000,
+         #   .$drug_group == 'beta_lactam' ~ 19 / 365 * 1000,
+         #   .$drug_group == 'macrolide' ~ 7 / 365 * 1000
+         # ),
+         # did = multiplier * total_use,
          geo_unit = as.character(hrr)
          ) %>%
   select(dataset, bug, drug=drug_group, geo_unit, did, pct_res)
@@ -70,13 +89,7 @@ medicare_hrr_models = medicare_hrr %>%
 marketscan = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
   inner_join(ro_state, by=c('drug_group', 'state')) %>%
   inner_join(ro_bugdrugs) %>%
-  mutate(multiplier = case_when(
-           .$drug_group == 'quinolone' ~ 10 / 365 * 1000,
-           .$drug_group == 'beta_lactam' ~ 19 / 365 * 1000,
-           .$drug_group == 'macrolide' ~ 7 / 365 * 1000
-         ),
-         did = multiplier * total_use
-  ) %>%
+  mutate(did = us_europe_convert(drug_group, total_use * 1000)) %>%
   mutate(dataset='MarketScan', pct_res=100 * f_ns) %>%
   select(dataset, bug, drug=drug_group, geo_unit=state, did, pct_res)
 ```
@@ -209,7 +222,8 @@ Requires assuming a 10x conversion factor
 nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
   mutate(dataset='NHSN/IMS', bug='E. coli', drug='quinolone',
          pct_res = 100 * n_resistant / n_isolates,
-         did = 10 / 365 * rx_1k_year) %>%
+         did = us_europe_convert(drug, rx_1k_year)) %>%
+         # did = 10 / 365 * rx_1k_year) %>%
   select(dataset, bug, drug, geo_unit=state, did, pct_res, n_isolates)
 ```
 
@@ -219,13 +233,14 @@ nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
 cddep = read_tsv('../data/cddep/use_res.tsv') %>%
   mutate(dataset='CDDEP',
          bug = rename_bug(bug),
-         drug_group = if_else(drug_group == 'penicillin', 'beta_lactam', drug_group)) %>%
-  mutate(multiplier = case_when(
-           .$drug_group == 'quinolone' ~ 10 / 365,
-           .$drug_group == 'beta_lactam' ~ 19 / 365,
-           .$drug_group == 'macrolide' ~ 7 / 365
-         ),
-         did = rx_1k_year * multiplier) %>%
+         drug_group = if_else(drug_group == 'penicillin', 'beta_lactam', drug_group),
+         did = us_europe_convert(drug_group, rx_1k_year)) %>%
+  # mutate(multiplier = case_when(
+  #          .$drug_group == 'quinolone' ~ 10 / 365,
+  #          .$drug_group == 'beta_lactam' ~ 19 / 365,
+  #          .$drug_group == 'macrolide' ~ 7 / 365
+  #        ),
+  #        did = rx_1k_year * multiplier) %>%
   select(dataset, bug, drug=drug_group, geo_unit=division, did, pct_res=pct_resistant)
 ```
 
@@ -269,7 +284,7 @@ garciarey2002 = inner_join(gr2_ur, gr2_ni, by='province') %>%
 
 Units in the paper are "units per 1,000 inhabitants per year". So clearly need to divide by 365, but I also don't know how to convert "units" to DDD. So I think I should dropp this study, which isn't bad, since I have the 2002 version from the same data stream.
 
-```{r}
+```{r, eval=FALSE}
 gr4_raw = read_tsv('../data/garcia-rey2004/data.tsv')
 
 gr4_ni = gr4_raw %>%
@@ -300,7 +315,9 @@ garciarey2004 = bind_rows(gr4_bl, gr4_macro) %>%
 ## Combined figure
 
 ```{r}
-comb = bind_rows(arason, bronzwaer, ecdc, pihljamaki, goossens, kahlmeter, nhsn, cddep, medicare_state, garciarey2002, medicare_hrr, marketscan) %>%
+comb = bind_rows(arason, bronzwaer, ecdc, pihljamaki, goossens, kahlmeter, nhsn, cddep, garciarey2002,
+                 #medicare_state, medicare_hrr,
+                 marketscan) %>%
   mutate(bugdrug = case_when(
     .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
     .$bug == 'S. pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
@@ -311,8 +328,8 @@ data_plot_f = function(bugdrug_) {
   comb %>%
     filter(dataset != 'Medicare (HRR)', bugdrug == bugdrug_) %>%
     ggplot(aes(did, pct_res, color=dataset)) +
-    stat_smooth(method='lm', se=FALSE, fullrange=TRUE,
-                size=0.5, linetype=1) +
+    stat_smooth(method='lm', fullrange=TRUE, se=FALSE, size=1) +
+    stat_smooth(method='lm', fullrange=TRUE, geom='ribbon', linetype=2, fill=NA) +
     geom_point(shape=1) +
     ggtitle(bugdrug_)
 }
@@ -334,6 +351,7 @@ plot_f_f = function(term_, xlab_) {
       filter(term==term_, bugdrug==bugdrug_) %>%
       mutate(dataset = fct_reorder(factor(dataset), estimate)) %>%
       ggplot(aes(y=dataset, x=estimate, xmin=conf.low, xmax=conf.high)) +
+      geom_vline(xintercept=0, color='black', linetype=2) +
       geom_point() + geom_errorbarh() +
       xlab(xlab_) +
       ylab('') +
