@@ -1,4 +1,4 @@
-province	n_isolates	n_res_erythro	n_res_pen	did_total	did_beta_lactams	did_macrolides
+province	n_isolates	pct_res_erythro	pct_res_pen	did_total	did_beta_lactams	did_macrolides
 Vizcaya	149	29.5	28.9	1056.18	596.85	219.6
 Navarra	225	39.1	36.4	1208.34	678.25	269
 Madrid	677	38.1	45.9	1241.01	677.69	268.23
