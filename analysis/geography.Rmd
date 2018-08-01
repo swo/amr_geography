@@ -17,6 +17,11 @@ knitr::opts_chunk$set(
 pdf.options(useDingbats=FALSE, useKerning=FALSE)
 ```
 
+# To add
+
+- Here I talk about changing the geographical scale of analysis; I think it might be more common to think about the geographical scale of transmission. If the scale of transmission is longer than the scale of the geographical analysis, then you're doing the same thing I talk about here, subdividing an island. (Conversely, if transmission scales are shorter than geographical scales, you might see a relationship.)
+- I show that slopes within each island are more shallow than the cross-island relationship. It's also true that if you take a sample of within-island values from different islands, you'll also get a more shallow slope, just maybe not quite as shallow. I put that as a gray line.
+
 # Introduction
 
 We expect that changing antibiotic use may have an effect on resistance. One complicating factor in this potential relationship is geographic scale. At what scale ---individual, community, state, country--- must an intervention take place?
@@ -367,6 +372,7 @@ ggplot(data=NULL, aes(tau, rho)) +
   geom_line(data=davies_cross) +
   geom_point(aes(color=factor(island_tau)), data=davies_within, shape=1) +
   geom_line(aes(color=factor(island_tau)), data=davies_time_comp) +
+  geom_smooth(data=davies_within, color='gray', method='lm', se=FALSE) +
   xlab('antibiotic use (tau)') +
   ylab('resistance (rho = R/S+R+D)')
 ```
