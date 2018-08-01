@@ -1,7 +1,8 @@
 # To do
 
 - What's up with ECDC vs. Kahlmeter?
-- Check on the non-finite values in the combined plot
+- Get more careful with the x-axis: how are DDDs defined for each study? among whom?
+- Get more careful with the y-axis: how is resistance defined? among whom?
 
 # Introduction
 
@@ -15,6 +16,8 @@ Say we want to do an outpatient antibiotic use intervention. At what length scal
 - It may certainly be that the associations we see are not causual, but we investigate them because think they may be causal. We certainly wouldn't be studying them if we didn't think they would help us figure out what to do about AMR. Specifically, at what scale do you want to do an intervention?
     - Gerrymandering is a great example by which you can see that real and statistically significant results can be gotten by choosing your areal units carefully.
     - Gerrymandering also raises the question: in what way can it be true to say that a state is more Democrat or Republican, if you are using areal units?
+    - There are "good" and "bad" ways to do aggregation. If there is a use/resistance relationship, and you aggregate natural units with different uses, then you'll end up flattening out the relationship. (But there is lots of variation, even within US states!)
+- Garcia-Rey *CMI* 2006 says it is "quite naive to calculate a 'mean' prevalence of resistance for a given country" because there are "large differences in resistance [...] within the same country".
 
 # Methods
 
