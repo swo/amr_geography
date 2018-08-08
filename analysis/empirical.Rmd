@@ -355,6 +355,30 @@ intercept_plot_f('Sp/bl')
 intercept_plot_f('Sp/m')
 ```
 
+## Mixed models
+
+I use mixed models as a way to summarize these data. Each study has an intercept and slope that are drawn from some true populations that we try to estimate.
+
+```{r}
+mixed_models = comb %>%
+  group_by(bugdrug) %>%
+  do(tidy(lme4::lmer(pct_res ~ did + (did | dataset), data=.), conf.int=TRUE)) %>%
+  ungroup()
+
+bind_rows(
+  models %>% mutate(type = 'study'),
+  mixed_models %>% mutate(type = 'summary', dataset='Mixed model')
+) %>%
+  filter(bugdrug=='Sp/m', term == 'did') %>%
+  ggplot(aes(y=dataset, x=estimate)) +
+  geom_vline(xintercept = 0, color='gray', linetype=2) +
+  geom_point(aes(shape=type, size=type)) +
+  scale_shape_manual(values=c(16, 18)) +
+  scale_size_manual(values=c(2, 6)) +
+  geom_errorbarh(aes(xmin=conf.low, xmax=conf.high)) +
+  facet_grid(type ~ ., scales='free', space='free')
+```
+
 # MAUP
 
 ```{r}
