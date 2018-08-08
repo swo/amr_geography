@@ -3,6 +3,8 @@
 - What's up with ECDC vs. Kahlmeter?
 - Get more careful with the x-axis: how are DDDs defined for each study? among whom?
 - Get more careful with the y-axis: how is resistance defined? among whom?
+- Epidemiologic phase: we're looking in a case where the resistant strains have spread and are mostly in some kind of equilibrium. This is implicit in our calculations where we look at the equilibrium values. Could be that resistance is *not* in equilibrium, of course.
+- Use `metafor` or something like it to ask whether there is heterogeneity in the slopes ($Q$ test, Higgins's $I^2$).
 
 # Introduction
 
@@ -122,6 +124,7 @@ Table: Ratio of prescriptions per 1,000 people per year to DDD per 1,000 people 
 - Ironmonger does E. coli (not quinolones) and has a funny seasonal thing
 - UK UTI nexus: Magee, Priest, Ironmonger, Pouwels
 - Garcia-Rey 2004, because they report use in "units". I can't use the same conversions as for the US and get reasonable results, so I'd have to use G-R 2002 as the Rosetta Stone, which means I'm basically using two periods of data from the same stream.
+- Bacquero (1999) Figure 3 because I can't figure out what's actually shown, and I think the same countries appear multiple times
 
 ## Unclear
 
