@@ -21,6 +21,7 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 
 - Here I talk about changing the geographical scale of analysis; I think it might be more common to think about the geographical scale of transmission. If the scale of transmission is longer than the scale of the geographical analysis, then you're doing the same thing I talk about here, subdividing an island. (Conversely, if transmission scales are shorter than geographical scales, you might see a relationship.)
 - I show that slopes within each island are more shallow than the cross-island relationship. It's also true that if you take a sample of within-island values from different islands, you'll also get a more shallow slope, just maybe not quite as shallow. I put that as a gray line.
+- I do the derivation of the subpopulation equations by assuming that the target group is small so that the island-wide $(S, R, D, X)$ is fixed. In fact, you can say that the target group, which is a fraction $f$ of the whole island, has use $\tau_1$ such that the remaining $1-f$ has use $\tau_0$ where $f \tau_1 + (1-f) \tau_0 = \tau$. In this case, you get the same equations as below. In other words, so long as the subpopulations have use such that the island-wide average use is $\tau$, then the cross-island relationship holds regardless of the size of the subgroups.
 
 # Introduction
 
@@ -64,7 +65,7 @@ where $X$ is uncolonized, $u$ is the natural recovery rate, $\tau$ is the antibi
 The parameter values are drawn from the manuscript: $u = 1 \text{ month}^{-1}$, $\beta = 4$ (I presume the units are also month$^{-1}$, $\tau \in [0, 4]$ courses per person per year (i.e., up to $1/3 \text{ month}^{-1}$, and $k \in \{0, 1/4, 1/2, 1\}$. In the manuscript, the cost $c$ was chosen such that $\rho = 1/2$ when $\tau = 1.5$ courses per person per year. To find these values, I used a symbolic computation program (SageMath) to directly solve the differential equations at equilibrium.
 
 ```{r}
-davies_base_parms = c(
+davies_base_parms = list(
   beta = 4.0,
   u = 1.0
 )
@@ -192,7 +193,7 @@ I reproduce Figure 2e from Davies *et al*., showing that resistance prevalence i
 ```{r davies_cross_sim}
 # within-host (Davies) cross-island simulation
 davies_cross_sim = function(tau, k, tau50=1.5/12) {
-  parms = with(as.list(davies_base_parms),
+  parms = with(davies_base_parms,
                c(davies_base_parms, tau=tau, k=k,
                  cost=cost_function(beta, u, k, tau50)))
   
@@ -201,7 +202,7 @@ davies_cross_sim = function(tau, k, tau50=1.5/12) {
   stopifnot(sum(state) == 1.0)
   
   ode_func = function(t, state, parms) {
-    with(as.list(c(state, parms)), {
+    with(c(state, parms), {
       # NB: The (1-c) term in the last term of dS/dt
       dS = beta * (S + D) * X - (u + tau) * S - k * (1 - cost) * beta * R * S
       dR = beta * (1 - cost) * R * X - u * R + tau * D
@@ -243,7 +244,7 @@ davies_within_sim = function(island_tau, tau, k, tau50=1.5/12) {
   # get the island-level results
   island = davies_cross_sim(island_tau, k)
   
-  parms = with(as.list(davies_base_parms),
+  parms = with(davies_base_parms,
                c(davies_base_parms, tau=tau,
                  k=k, cost=cost_function(beta, u, k, tau50)))
 
@@ -252,7 +253,7 @@ davies_within_sim = function(island_tau, tau, k, tau50=1.5/12) {
   stopifnot(abs(sum(state) - 1) < 1e-6)
     
   ode_func = function(t, state, parms) {
-    with(as.list(c(state, parms)), {
+    with(c(state, parms), {
       dS = beta * (island$S + island$D) * X - (u + tau) * S - k * beta * (1 - cost) * island$R * S
       dR = beta * (1 - cost) * island$R * X - u * R + tau * D
       dD = k * beta * (1 - cost) * island$R * S - (u + tau) * D
@@ -282,7 +283,7 @@ drop_last = function(x) x[-length(x)]
 
 davies_time_sim = function(tau, k, tau50=1.5/12, alpha=1.0, nT=72) {
   # nT = number of time intervals
-  parms = with(as.list(davies_base_parms),
+  parms = with(davies_base_parms,
              c(davies_base_parms, tau=tau,
                alpha=alpha, nT=nT,
                k=k, cost=cost_function(beta, u, k, tau50)))
@@ -290,13 +291,13 @@ davies_time_sim = function(tau, k, tau50=1.5/12, alpha=1.0, nT=72) {
   # state is a matrix:
   # rows are X, S, R, D (=S_R); columns are time brackets
   # set all compartments to 0 except for the "just-treated" bracket
-  state = matrix(0, nrow=4, ncol=parms['nT'])
+  state = matrix(0, nrow=4, ncol=parms$nT)
   state[,1] = c(0.998, 0.001, 0.001, 0.0)
   state_c = as.vector(state)
   stopifnot(sum(state_c) == 1.0)
   
 ode_func = function(t, state_c, parms) {
-    with(as.list(parms), {
+    with(parms, {
       # unpack the state
       state = matrix(state_c, nrow=4)
       stopifnot(ncol(state) == nT)
@@ -325,7 +326,7 @@ ode_func = function(t, state_c, parms) {
   result = rootSolve::runsteady(state_c, func=ode_func, parms=parms)
   end_state = result$y %>% matrix(nrow=4)
   
-  time = time=1:parms['nT']
+  time = time=1:parms$nT
   bind_rows(
     data_frame(compartment='X', time, y=end_state[1,]),
     data_frame(compartment='S', time, y=end_state[2,]),
@@ -498,3 +499,116 @@ These results suggest that the best way to change your risk of antibiotic resist
 The fact that the within-island slopes are really shallow implies that, if an analysis did go below the relevant length scale, you'd expect a quick drop-off in the slopes.
 
 This toy moel is limited because there's only one length scale. In reality there aren't completely-separated, well-mixed islands; instead there's a network of length scales. I expect that having multiple length scales would soften this weaking of slopes with shorter length scales so that you don't see a sudden cliff.
+
+# Addenda
+
+## Two length scales
+
+Divide an island into islets. Each of the $N$ islets $i$ has use $\tau_i$ such that $\tau = (1/N)\sum_i \tau_i$ and size $\phi_i$ such that $\sum_i \phi_i = 1$. Introduce some parameter $\alpha \in [0, 1]$ that encodes the amount of mixing between the islets. For $\alpha = 0$, the islets are completely separate; for $\alpha = 1$, they are all completely mixed. Setting $\alpha = 1$ reproduces the cross-island results, while setting $\alpha = 0$ creates new cross-island-type results, only with the islet values $\tau_i$ rather than the island-wide values $\tau$.
+
+$$
+\begin{aligned}
+\dot{S}_i &= \beta (S_i' + D_i') X_i - (u + \tau_i) S_i - k \beta (1-c) R_i' S_i \\
+\dot{R}_i &= \beta R_i' X_i - u R_i + \tau_i D_i \\
+\dot{D}_i &= k \beta (1-c) R_i' S_i - (u + \tau_i) D_i \\
+\phi_i &= X_i + S_i + R_i + D_i \\
+1 &= \sum_i \phi_i \\
+\tau &= (1/N) \sum_i \tau_i
+\end{aligned}
+$$
+where the primes indicate the scaled, cross-islet forces of infection:
+$$
+S_i' \equiv (1-\alpha) \frac{S_i}{\phi_i} + \alpha \sum_j S_j
+$$
+and similarly for $R_i'$ and $D_i'$.
+
+```{r}
+islet_v2l = function(x) {
+  x %>%
+    matrix(ncol=4, dimnames=list(NULL, c('X', 'S', 'R', 'D'))) %>%
+    as_tibble() %>%
+    as.list()
+}
+
+islet_ode_func = function(t, state_vector, parms) {
+  state = islet_v2l(state_vector)
+  
+  with(c(state, parms), {
+    prime_f = function(x) (1 - alpha) * x / phii + alpha * sum(x)
+    
+    Sprime = prime_f(S)
+    Rprime = prime_f(R)
+    Dprime = prime_f(D)
+    
+    dS = beta * (Sprime + Dprime) * X - (u + taui) * S - k * beta * (1 - cost) * Rprime * S
+    dR = beta * (1 - cost) * Rprime * X - u * R + taui * D
+    dD = k * beta * (1 - cost) * Rprime * S - (u + taui) * D
+    dX = -(dS + dR + dD)
+    
+    change_vector = c(dX, dS, dR, dD)
+    
+    stopifnot(abs(sum(change_vector)) < 1e-12)
+
+    list(c(dX, dS, dR, dD))
+  })
+}
+
+islet_sim = function(taui, k, alpha, tau50=1.5/12) {
+  n_islets = length(taui)
+  phii = rep(1 / n_islets, n_islets)
+  
+  stopifnot(length(phii) == length(taui))
+  stopifnot(sum(phii) == 1.0)
+  
+  parms = with(davies_base_parms,
+               c(davies_base_parms, taui=list(taui), phii=list(phii), alpha=alpha,
+                 k=k, cost=cost_function(beta, u, k, tau50)))
+  
+  state = data_frame(
+    X = phii * 0.990,
+    S = phii * 0.005,
+    R = phii * 0.005,
+    D = phii * 0
+  )
+  
+  state_vector = unlist(state)
+  
+  result = rootSolve::runsteady(state_vector, func=islet_ode_func, parms=parms)
+  
+  result$y %>%
+    islet_v2l() %>%
+    as_tibble() %>%
+    mutate(tau = taui, islet = seq_along(phii))
+
+}
+
+islets = crossing(island_tau = round(c(1.25, 1.50, 1.75) / 12, 3),
+                  delta_tau = seq(-0.1, 0.1, length.out = 11),
+                  k = c(1.0),
+                  alpha = c(0.0, 0.1, 0.5, 1.0)) %>%
+  mutate(tau = island_tau + delta_tau) %>%
+  group_by(island_tau, alpha, k) %>%
+  do(islet_sim(taui=.$tau, k=unique(.$k), alpha=unique(.$alpha))) %>%
+  ungroup() %>%
+  mutate(rho = R/(S + R + D))
+
+# compare with within-host neutral cross-island model
+# black lines
+comp1 = davies_cross %>%
+  filter(k == 1) %>%
+  crossing(island_tau = unique(islets$island_tau))
+
+# compare with within-host neutral model, within-island (subpop) model
+# dotted lines
+comp2 = davies_within %>%
+  filter(k == 1)
+
+islets %>%
+  ggplot(aes(tau, rho, color=factor(island_tau))) +
+  geom_point() + geom_line() +
+  geom_line(data=comp1, color='black') +
+  geom_line(data=comp2, linetype=2) +
+  facet_wrap(~ alpha)
+```
+
+Colored points and lines show the results from this simulation. Grey boxes show values of the mixing parameter $\alpha$. Black lines show the cross-island simulations. Dotted lines show the subpopulation simulations. I expect that the cross-island and cross-islet simulations coincide for $\alpha = 0$ and that the cross-islet and subpopulation models will be similar when $\alpha = 1$.
