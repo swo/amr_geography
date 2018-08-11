@@ -369,15 +369,17 @@ bind_rows(
   models %>% mutate(type = 'study'),
   mixed_models %>% mutate(type = 'summary', dataset='Mixed model')
 ) %>%
-  filter(bugdrug=='Sp/m', term == 'did') %>%
+  filter(term == 'did') %>%
   ggplot(aes(y=dataset, x=estimate)) +
   geom_vline(xintercept = 0, color='gray', linetype=2) +
   geom_point(aes(shape=type, size=type)) +
   scale_shape_manual(values=c(16, 18)) +
   scale_size_manual(values=c(2, 6)) +
-  geom_errorbarh(aes(xmin=conf.low, xmax=conf.high)) +
-  facet_grid(type ~ ., scales='free', space='free')
+  geom_errorbarh(aes(xmin=conf.low, xmax=conf.high), height=0.5) +
+  facet_grid(type ~ bugdrug, scales='free', space='free_y')
 ```
+
+There's not enough studies to properly ask whether geographical scale has an effect on the model performance. I think it's better to just do something qualitative, to say that we don't see an obvious signal in these larger studies, but we see, in our stuff, that grouping states into 9-state groups is fine.
 
 # MAUP
 
@@ -434,7 +436,7 @@ maup_region = maup_ur %>%
   maup_lm()
 
 maup_division = maup_ur %>%
-  group_by(region) %>%
+  group_by(division) %>%
   maup_lm()
 
 group_sample_idx = function(n_units, n_groups) {
@@ -461,13 +463,10 @@ group_lm_simulation = function(ur, n_groups, n_iterations) {
   lapply(1:n_iterations, function(i) group_lm(ur, n_groups)) %>%
     bind_rows() %>%
     filter(term == 'piy') %>%
-    summarize(n_groups = n_groups,
-              mean_slope = mean(estimate),
-              std_slope = sd(estimate))
+    mutate(n_groups = n_groups)
 }
 
-list_n_groups = c(4, 9, 15, 20, 25, 30, 35, 40, 44)
-#list_n_groups = c(4, 9, 44) 
+list_n_groups = c(4, 9, 15, 20, 25, 30, 35, 40)
 n_iterations = 100
 
 maup_group = lapply(list_n_groups, function(n) group_lm_simulation(maup_ur, n, n_iterations)) %>%
@@ -476,21 +475,16 @@ maup_group = lapply(list_n_groups, function(n) group_lm_simulation(maup_ur, n, n
 
 ```{r}
 # random zones
-usa = map_data('state') %>%
-  as_tibble() %>%
-  select(state=region, long, lat) %>%
-  mutate(state = tools::toTitleCase(state)) %>%
-  group_by(state) %>%
-  summarize_at(vars(long, lat), mean)
+state_centers = read_tsv('../db/state_centers.tsv') %>%
+  filter(state %in% maup_ur$state)
 
 zone_lm = function(ur, k) {
   # select k states to be the centers of the zones
-  centers = sample_n(usa, k) %>%
-    mutate(zone = LETTERS[1:k]) %>%
-    select(zone, long, lat)
+  centers = sample_n(state_centers, k) %>%
+    select(zone=state, long, lat)
 
   # then cluster the states into those zones
-  zones = crossing(usa, centers) %>%
+  zones = crossing(state_centers, centers) %>%
     mutate(dist = sqrt((long - long1) ** 2 + (lat - lat1) ** 2)) %>%
     group_by(state) %>%
     filter(dist == min(dist)) %>%
@@ -507,10 +501,7 @@ zone_lm = function(ur, k) {
 zone_simulation = function(ur, n_groups, n_iterations) {
   lapply(1:n_iterations, function(i) zone_lm(ur, n_groups)) %>%
     bind_rows() %>%
-    filter(term == 'piy') %>%
-    summarize(n_groups = n_groups,
-              mean_slope = mean(estimate),
-              std_slope = sd(estimate))
+    mutate(n_groups = n_groups)
 }
 
 maup_zone = lapply(list_n_groups, function(x) zone_simulation(maup_ur, x, n_iterations)) %>%
@@ -524,20 +515,21 @@ maup_combined = bind_rows(
 )
 
 maup_combined %>%
-  mutate(hci = std_slope / 2,
-         ymin = mean_slope - hci,
-         ymax = mean_slope + hci) %>%
+  filter(term == 'piy', n_groups < 44) %>%
+  group_by(type, n_groups) %>%
+  summarize(mean_slope = mean(estimate),
+            sd_slope = sd(estimate)) %>%
+  ungroup() %>%
   ggplot(aes(n_groups, mean_slope, color=type)) +
   geom_point() +
   geom_line() +
-  geom_errorbar(aes(ymin=ymin, ymax=ymax)) +
-  geom_point(inherit.aes=FALSE, data=filter(maup_state, term=='piy'), aes(x=44, estimate)) +
+  geom_errorbar(aes(ymin=mean_slope-sd_slope, ymax=mean_slope+sd_slope)) +
   #geom_errorbar(inherit.aes=FALSE, data=filter(maup_state, term=='piy'), aes(x=44, ymin=conf.low, ymax=conf.high)) +
+  geom_point(inherit.aes=FALSE, data=filter(maup_state, term=='piy'), aes(x=44, y=estimate)) +
   geom_point(inherit.aes=FALSE, data=filter(maup_division, term=='piy'), aes(x=9, estimate)) +
-  #geom_errorbar(inherit.aes=FALSE, data=filter(maup_division, term=='piy'), aes(x=9, ymin=conf.low, ymax=conf.high)) +
   geom_point(inherit.aes=FALSE, data=filter(maup_region, term=='piy'), aes(x=4, estimate)) +
-  #geom_errorbar(inherit.aes=FALSE, data=filter(maup_region, term=='piy'), aes(x=4, ymin=conf.low, ymax=conf.high))
   xlab('number of aggregations') +
-  ylab('mean regression slope (SD)')
+  ylab('mean regression slope (SD)') +
+  coord_cartesian(ylim=c(-0.15, 0.45))
 ```
 
