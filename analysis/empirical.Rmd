@@ -634,3 +634,33 @@ bind_rows(
   #geom_point(data=maup_region2 %>% filter(term=='did') %>% mutate(n_groups=4)) +
   #geom_point(data=maup_region2 %>% filter(term=='did') %>% mutate(n_groups=9))
 ```
+
+## Simulations
+
+Here I imagine I have $N = 50$ states with uses uniformly distributed between 0 and $u_\mathrm{max} = 1$. Some slope $m \in [0, 0.1, 1, 10]$ connects use with resistance, which is subject to variance $\sigma = 1$. If I randomly aggregate or zone states, averaging use and resistance in each aggregate or zone, how do the measured use-resistance slopes $\hat{m}$ compare to the actual $m$?
+
+```{r maup_abstract}
+sim_group = crossing(k = c(5, 10, 20, 30, 40, 50),
+         slope = c(0, 0.1, 1, 10),
+         iteration = 1:100) %>%
+  group_by_all() %>%
+  do(sim_group_lm(.$slope, .$k)) %>%
+  ungroup()
+
+zone_group = crossing(k = c(5, 10, 20, 30, 40, 50),
+                      slope = c(0, 0.1, 1, 10),
+                      iteration = 1:100) %>%
+  group_by_all() %>%
+  do(zone_group_lm(.$slope, .$k)) %>%
+  ungroup()
+
+bind_rows(
+  sim_group %>% mutate(type = 'random'),
+  zone_group %>% mutate(type = 'zone')
+) %>%
+  filter(term == 'use') %>%
+  ggplot(aes(factor(k), estimate)) +
+  geom_hline(aes(yintercept = slope), color='gray') +
+  geom_boxplot(aes(color=type)) +
+  facet_wrap(~ slope, scales='free_y')
+```
