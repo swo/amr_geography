@@ -569,7 +569,9 @@ nhsn_maup_zone = crossing(k=c(ks, 45), iteration=1:n_iterations) %>%
   group_by(k, iteration) %>%
   do(zone_lm(nhsn_maup_ur, .$k)) %>%
   ungroup()
+```
 
+```{r}
 nhsn_maup_combined = bind_rows(
   nhsn_maup_group %>% mutate(type='group'),
   nhsn_maup_zone %>% mutate(type='zone')
@@ -590,56 +592,13 @@ nhsn_maup_combined %>%
   geom_point(data = nhsn_maup_division %>% filter(term == 'did') %>% rename(mean_slope = estimate))
 ```
 
-```{r}
-zone_lm2 = function(ur, k) {
-  # select k states to be the centers of the zones
-  centers = sample_n(state_centers, k) %>%
-    select(zone=state, long, lat)
-
-  # then cluster the states into those zones
-  zones = crossing(state_centers, centers) %>%
-    mutate(dist = sqrt((long - long1) ** 2 + (lat - lat1) ** 2)) %>%
-    group_by(state) %>%
-    filter(dist == min(dist)) %>%
-    ungroup() %>%
-    select(zone, state)
-
-  # group the states and do the analysis
-  ur %>%
-    left_join(zones, by='state') %>%
-    group_by(zone) %>%
-    maup_lm2()
-}
-
-zone_simulation2 = function(ur, n_groups, n_iterations) {
-  lapply(1:n_iterations, function(i) zone_lm2(ur, n_groups)) %>%
-    bind_rows() %>%
-    mutate(n_groups = n_groups)
-}
-
-maup_zone2 = lapply(list_n_groups, function(x) zone_simulation2(maup_ur2, x, n_iterations)) %>%
-  bind_rows()
-```
-
-```{r}
-bind_rows(
-  maup_group2 %>% mutate(type='random'),
-  maup_zone2 %>% mutate(type='zone')
-) %>%
-  #filter(!(type == 'zone' & n_groups == 44)) %>%
-  ggplot(aes(factor(n_groups), estimate)) +
-  #geom_violin(aes(color=type), position=position_dodge(width=0.5)) #+
-  geom_boxplot(aes(color=type), position=position_dodge(width=0.8))
-  #geom_point(data=maup_state2 %>% filter(term=='did') %>% mutate(n_groups=50)) +
-  #geom_point(data=maup_region2 %>% filter(term=='did') %>% mutate(n_groups=4)) +
-  #geom_point(data=maup_region2 %>% filter(term=='did') %>% mutate(n_groups=9))
-```
-
 ## Simulations
 
-Here I imagine I have $N = 50$ states with uses uniformly distributed between 0 and $u_\mathrm{max} = 1$. Some slope $m \in [0, 0.1, 1, 10]$ connects use with resistance, which is subject to variance $\sigma = 1$. If I randomly aggregate or zone states, averaging use and resistance in each aggregate or zone, how do the measured use-resistance slopes $\hat{m}$ compare to the actual $m$?
+Here I imagine I have $N = 50$ states with uses uniformly distributed between 0 and $u_\mathrm{max} = 1$. Some slope $m \in [0, 0.1, 1, 10]$ connects use with resistance, which is subject to variance $\sigma = 1$. If I randomly aggregate or zone states into $k$ groups, averaging use and resistance in each group, how do the measured use-resistance slopes $\hat{m}$ compare to the actual $m$?
 
-```{r maup_abstract}
+Both types of aggregation appear to give unbiased estimates for $m$. The variance of the random aggregates increases with the size of the aggregates, but only substantially so for small $k$. The standard errors in the measured slopes increases for both zones and random samples, but the effect is especially acute for the random samples. This makes it look like going to larger aggregates is a pretty bad way to find a use-resistance relationship!
+
+```{r maup_abstract_sim}
 sim_group = crossing(k = c(5, 10, 20, 30, 40, 50),
          slope = c(0, 0.1, 1, 10),
          iteration = 1:100) %>%
@@ -653,7 +612,9 @@ zone_group = crossing(k = c(5, 10, 20, 30, 40, 50),
   group_by_all() %>%
   do(zone_group_lm(.$slope, .$k)) %>%
   ungroup()
+```
 
+```{r}
 bind_rows(
   sim_group %>% mutate(type = 'random'),
   zone_group %>% mutate(type = 'zone')
@@ -661,6 +622,15 @@ bind_rows(
   filter(term == 'use') %>%
   ggplot(aes(factor(k), estimate)) +
   geom_hline(aes(yintercept = slope), color='gray') +
+  geom_boxplot(aes(color=type)) +
+  facet_wrap(~ slope, scales='free_y')
+
+bind_rows(
+  sim_group %>% mutate(type = 'random'),
+  zone_group %>% mutate(type = 'zone')
+) %>%
+  filter(term == 'use') %>%
+  ggplot(aes(factor(k), std.error)) +
   geom_boxplot(aes(color=type)) +
   facet_wrap(~ slope, scales='free_y')
 ```
