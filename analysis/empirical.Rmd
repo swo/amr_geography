@@ -405,8 +405,10 @@ maup_use = read_tsv('~/grad/proj/medicare/analysis/ms2/data/marketscan_abxdist.t
   ungroup() %>%
   filter(state %in% maup_res$state)
 
+# swo: census regions has a weird thing, where DC has two lines
 census_regions = read_tsv('~/grad/proj/medicare/db/census-regions/census-regions.tsv') %>%
-  select(state, region, division=division_name)
+  rename(division=division_name) %>%
+  filter(state != 'DC')
 
 maup_ur = inner_join(maup_use, maup_res, by=c('drug', 'state')) %>%
   select(-drug) %>%
@@ -533,3 +535,105 @@ maup_combined %>%
   coord_cartesian(ylim=c(-0.15, 0.45))
 ```
 
+## Using IMS/NHSN
+
+```{r}
+state_census = read_tsv('../db/census/state_census.tsv') %>%
+  filter(between(year, 2011, 2014)) %>%
+  group_by(state) %>%
+  summarize(population = mean(population)) %>%
+  left_join(census_regions, by=c('state'='state_abbreviation'))
+
+# swo: what does "ur" stand for? use-resistance?
+maup_ur2 = read_tsv('../data/nhsn-ims/data.tsv') %>%
+  # just exclude DC for now
+  filter(state != 'DC') %>%
+  mutate(did = us_europe_convert('quinolone', rx_1k_year)) %>%
+  left_join(state_census, by='state') %>%
+  rename(state_abbreviation = state, state = state.y)
+
+maup_lm2 = function (df) {
+  df %>%
+    summarize(did = weighted.mean(did, w=population),
+              pct_res = weighted.mean(pct_res, w=n_isolates)) %>%
+    do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
+    ungroup()
+}
+
+maup_region2 = maup_ur2 %>%
+  group_by(region) %>%
+  maup_lm2()
+
+maup_division2 = maup_ur2 %>%
+  group_by(division) %>%
+  maup_lm2()
+
+maup_state2 = maup_ur2 %>%
+  group_by(state) %>%
+  maup_lm2()
+
+group_lm2 = function(ur, n_groups) {
+  n_state = length(unique(ur$state))
+  group = group_sample_idx(n_state, n_groups)
+  
+  ur %>%
+    mutate(group = group) %>%
+    group_by(group) %>%
+    maup_lm2()
+}
+
+group_lm_simulation2 = function(ur, n_groups, n_iterations) {
+  lapply(1:n_iterations, function(i) group_lm2(ur, n_groups)) %>%
+    bind_rows() %>%
+    filter(term == 'did') %>%
+    mutate(n_groups = n_groups)
+}
+
+maup_group2 = lapply(list_n_groups, function(k) group_lm_simulation2(maup_ur2, k, n_iterations)) %>%
+  bind_rows()
+```
+
+```{r}
+zone_lm2 = function(ur, k) {
+  # select k states to be the centers of the zones
+  centers = sample_n(state_centers, k) %>%
+    select(zone=state, long, lat)
+
+  # then cluster the states into those zones
+  zones = crossing(state_centers, centers) %>%
+    mutate(dist = sqrt((long - long1) ** 2 + (lat - lat1) ** 2)) %>%
+    group_by(state) %>%
+    filter(dist == min(dist)) %>%
+    ungroup() %>%
+    select(zone, state)
+
+  # group the states and do the analysis
+  ur %>%
+    left_join(zones, by='state') %>%
+    group_by(zone) %>%
+    maup_lm2()
+}
+
+zone_simulation2 = function(ur, n_groups, n_iterations) {
+  lapply(1:n_iterations, function(i) zone_lm2(ur, n_groups)) %>%
+    bind_rows() %>%
+    mutate(n_groups = n_groups)
+}
+
+maup_zone2 = lapply(list_n_groups, function(x) zone_simulation2(maup_ur2, x, n_iterations)) %>%
+  bind_rows()
+```
+
+```{r}
+bind_rows(
+  maup_group2 %>% mutate(type='random'),
+  maup_zone2 %>% mutate(type='zone')
+) %>%
+  #filter(!(type == 'zone' & n_groups == 44)) %>%
+  ggplot(aes(factor(n_groups), estimate)) +
+  #geom_violin(aes(color=type), position=position_dodge(width=0.5)) #+
+  geom_boxplot(aes(color=type), position=position_dodge(width=0.8))
+  #geom_point(data=maup_state2 %>% filter(term=='did') %>% mutate(n_groups=50)) +
+  #geom_point(data=maup_region2 %>% filter(term=='did') %>% mutate(n_groups=4)) +
+  #geom_point(data=maup_region2 %>% filter(term=='did') %>% mutate(n_groups=9))
+```
