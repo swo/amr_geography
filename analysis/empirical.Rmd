@@ -383,8 +383,24 @@ There's not enough studies to properly ask whether geographical scale has an eff
 
 # MAUP
 
-```{r}
-maup_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv') %>%
+## MarketScan
+
+```{r maup_db}
+# swo: census regions has a weird thing, where DC has two lines
+census_regions = read_tsv('~/grad/proj/medicare/db/census-regions/census-regions.tsv') %>%
+  select(state, state_abbreviation, region, division=division_name) %>%
+  filter(!(state %in% c('DC', 'District of Columbia')))
+
+state_census = read_tsv('../db/census/state_census.tsv') %>%
+  filter(between(year, 2011, 2014)) %>%
+  group_by(state_abbreviation) %>%
+  summarize(population = mean(population))
+
+census = inner_join(census_regions, state_census, by='state_abbreviation')
+```
+
+```{r marketscan_maup_data}
+ms_maup_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv') %>%
   rename(drug=drug_group) %>%
   mutate(bugdrug = case_when(
     .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
@@ -392,97 +408,90 @@ maup_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv') %>%
     .$bug == 'S. pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
   )) %>%
   filter(!is.na(bugdrug)) %>%
-  mutate(n_res = as.integer(round(f_ns * n_isolates))) %>%
-  select(bugdrug, drug, state, n_res, n_isolates)
+  mutate(n_resistant = as.integer(round(f_ns * n_isolates))) %>%
+  select(bugdrug, drug, state, n_resistant, n_isolates)
 
-maup_use = read_tsv('~/grad/proj/medicare/analysis/ms2/data/marketscan_abxdist.tsv') %>%
-  rename(drug=drug_group) %>%
+ms_maup_use = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
+  rename(drug = drug_group) %>%
   filter(drug %in% c('quinolone', 'beta_lactam', 'macrolide')) %>%
-  group_by(drug, state, year) %>%
-  summarize(n_rx = sum(n_rx * n_member),
-            n_member = sum(n_member)) %>%
-  summarize_at(vars(n_rx, n_member), function(x) as.integer(round(mean(x)))) %>%
-  ungroup() %>%
-  filter(state %in% maup_res$state)
+  mutate(did = us_europe_convert(drug, total_use * 1000))
 
-# swo: census regions has a weird thing, where DC has two lines
-census_regions = read_tsv('~/grad/proj/medicare/db/census-regions/census-regions.tsv') %>%
-  rename(division=division_name) %>%
-  filter(state != 'DC')
-
-maup_ur = inner_join(maup_use, maup_res, by=c('drug', 'state')) %>%
-  select(-drug) %>%
-  left_join(census_regions, by='state') %>%
-  filter(bugdrug == 'Ec/q')
+ms_maup_ur = ms_maup_use %>%
+  inner_join(ms_maup_res, by=c('drug', 'state')) %>%
+  left_join(census, by='state')
 ```
 
-```{r}
-maup_state = maup_ur %>%
-  mutate(piy = n_rx / n_member * 1000, pct_res = 100 * n_res / n_isolates) %>%
-  group_by(bugdrug) %>%
-  do(tidy(lm(pct_res ~ piy, data=.), conf.int=TRUE)) %>%
-  ungroup()
-
-maup_lm = function (df) {
+```{r marketscan_maup_random}
+maup_lm = function(df, summary_vars=NULL, lm_group_vars=NULL) {
+  group_f_factory = function(xs) {
+    if (is.null(xs)) {
+      identity
+    } else {
+      function(df) group_by(df, !!!lapply(xs, as.symbol))
+    }
+  }
+  
+  summary_group_f = group_f_factory(summary_vars)
+  lm_group_f = group_f_factory(lm_group_vars)
+  
   df %>%
-    group_by(bugdrug, add=TRUE) %>%
-    summarize_at(vars(n_rx, n_member, n_res, n_isolates), sum) %>%
-    mutate(piy = n_rx / n_member * 1000, pct_res = 100 * n_res / n_isolates) %>%
-    group_by(bugdrug) %>%
-    do(tidy(lm(pct_res ~ piy, data=.), conf.int=TRUE)) %>%
+    summary_group_f() %>%
+    summarize(pct_res = sum(n_resistant) / sum(n_isolates) * 100,
+              did = weighted.mean(did, w = population)) %>%
+    lm_group_f() %>%
+    do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
     ungroup()
 }
 
-maup_region = maup_ur %>%
-  group_by(region) %>%
-  maup_lm()
+ms_maup_state = ms_maup_ur %>%
+  maup_lm(c('bugdrug', 'state'), 'bugdrug')
 
-maup_division = maup_ur %>%
-  group_by(division) %>%
-  maup_lm()
+ms_maup_region = ms_maup_ur %>%
+  maup_lm(c('bugdrug', 'region'), 'bugdrug')
 
-group_sample_idx = function(n_units, n_groups) {
-  stopifnot(n_units >= n_groups)
+ms_maup_division = ms_maup_ur %>%
+  maup_lm(c('bugdrug', 'division'), 'bugdrug')
+
+group_sample_idx = function(n_units, k) {
+  stopifnot(n_units >= k)
   # each group must appear at least once
-  fixed_idx = 1:n_groups
+  fixed_idx = 1:k
   # remaining units assigned to groups at random
-  random_idx = sample(n_groups, n_units - n_groups, replace=TRUE)
+  random_idx = sample(k, n_units - k, replace=TRUE)
   # mix up the fixed and random indices
   sample(c(fixed_idx, random_idx))
 }
 
-group_lm = function(ur, n_groups) {
-  n_state = length(unique(ur$state))
-  group = group_sample_idx(n_state, n_groups)
+group_lm = function(ur, k) {
+  states = unique(ur$state)
+  state_group = data_frame(
+    state = states,
+    group = group_sample_idx(length(states), k)
+  )
   
   ur %>%
-    mutate(group = group) %>%
+    left_join(state_group, by='state') %>%
     group_by(group) %>%
-    maup_lm()
+    maup_lm(c('group', 'bugdrug'), 'bugdrug')
 }
 
-group_lm_simulation = function(ur, n_groups, n_iterations) {
-  lapply(1:n_iterations, function(i) group_lm(ur, n_groups)) %>%
-    bind_rows() %>%
-    filter(term == 'piy') %>%
-    mutate(n_groups = n_groups)
-}
-
-list_n_groups = c(4, 9, 15, 20, 25, 30, 35, 40)
+ks = c(4, 9, 15, 20, 25, 30, 35, 40)
 n_iterations = 100
 
-maup_group = lapply(list_n_groups, function(n) group_lm_simulation(maup_ur, n, n_iterations)) %>%
-  bind_rows()
+ms_maup_group = crossing(k=ks, iteration=1:n_iterations) %>%
+  group_by(k, iteration) %>%
+  do(group_lm(ms_maup_ur, .$k)) %>%
+  ungroup()
 ```
 
-```{r}
-# random zones
-state_centers = read_tsv('../db/state_centers.tsv') %>%
-  filter(state %in% maup_ur$state)
+```{r marketscan_maup_zone}
+state_centers = read_tsv('../db/state_centers.tsv')
 
 zone_lm = function(ur, k) {
   # select k states to be the centers of the zones
-  centers = sample_n(state_centers, k) %>%
+  centers = state_centers %>%
+    filter(state %in% ur$state) %>%
+    sample_n(k) %>%
     select(zone=state, long, lat)
 
   # then cluster the states into those zones
@@ -496,101 +505,89 @@ zone_lm = function(ur, k) {
   # group the states and do the analysis
   ur %>%
     left_join(zones, by='state') %>%
-    group_by(zone) %>%
-    maup_lm()
+    maup_lm(c('bugdrug', 'zone'), 'bugdrug')
 }
 
-zone_simulation = function(ur, n_groups, n_iterations) {
-  lapply(1:n_iterations, function(i) zone_lm(ur, n_groups)) %>%
-    bind_rows() %>%
-    mutate(n_groups = n_groups)
-}
-
-maup_zone = lapply(list_n_groups, function(x) zone_simulation(maup_ur, x, n_iterations)) %>%
-  bind_rows()
+ms_maup_zone = crossing(k=ks, iteration=1:n_iterations) %>%
+  group_by(k, iteration) %>%
+  do(zone_lm(ms_maup_ur, .$k)) %>%
+  ungroup()
 ```
 
 ```{r}
-maup_combined = bind_rows(
-  maup_group %>% mutate(type='group'),
-  maup_zone %>% mutate(type='zone')
+ms_maup_combined = bind_rows(
+  ms_maup_group %>% mutate(type='group'),
+  ms_maup_zone %>% mutate(type='zone')
 )
 
-maup_combined %>%
-  filter(term == 'piy', n_groups < 44) %>%
-  group_by(type, n_groups) %>%
+ms_maup_combined %>%
+  filter(term == 'did') %>%
+  group_by(bugdrug, type, k) %>%
   summarize(mean_slope = mean(estimate),
-            sd_slope = sd(estimate)) %>%
-  ungroup() %>%
-  ggplot(aes(n_groups, mean_slope, color=type)) +
-  geom_point() +
-  geom_line() +
-  geom_errorbar(aes(ymin=mean_slope-sd_slope, ymax=mean_slope+sd_slope)) +
-  #geom_errorbar(inherit.aes=FALSE, data=filter(maup_state, term=='piy'), aes(x=44, ymin=conf.low, ymax=conf.high)) +
-  geom_point(inherit.aes=FALSE, data=filter(maup_state, term=='piy'), aes(x=44, y=estimate)) +
-  geom_point(inherit.aes=FALSE, data=filter(maup_division, term=='piy'), aes(x=9, estimate)) +
-  geom_point(inherit.aes=FALSE, data=filter(maup_region, term=='piy'), aes(x=4, estimate)) +
-  xlab('number of aggregations') +
-  ylab('mean regression slope (SD)') +
-  coord_cartesian(ylim=c(-0.15, 0.45))
+            p25 = quantile(estimate, 0.25),
+            p75 = quantile(estimate, 0.75)) %>%
+  ggplot(aes(k, mean_slope)) +
+  geom_point(aes(color=type)) +
+  geom_line(aes(color=type)) +
+  geom_errorbar(aes(ymin=p25, ymax=p75, color=type)) +
+  geom_point(data = ms_maup_state %>% filter(term == 'did') %>% mutate(k = 44, mean_slope = estimate)) +
+  geom_point(data = ms_maup_region %>% filter(term == 'did') %>% mutate(k = 4, mean_slope = estimate)) +
+  geom_point(data = ms_maup_division %>% filter(term == 'did') %>% mutate(k = 9, mean_slope = estimate)) +
+  facet_wrap(~ bugdrug, scales='free_y')
 ```
 
 ## Using IMS/NHSN
 
 ```{r}
-state_census = read_tsv('../db/census/state_census.tsv') %>%
-  filter(between(year, 2011, 2014)) %>%
-  group_by(state) %>%
-  summarize(population = mean(population)) %>%
-  left_join(census_regions, by=c('state'='state_abbreviation'))
-
 # swo: what does "ur" stand for? use-resistance?
-maup_ur2 = read_tsv('../data/nhsn-ims/data.tsv') %>%
+nhsn_maup_ur = read_tsv('../data/nhsn-ims/data.tsv') %>%
   # just exclude DC for now
   filter(state != 'DC') %>%
-  mutate(did = us_europe_convert('quinolone', rx_1k_year)) %>%
-  left_join(state_census, by='state') %>%
-  rename(state_abbreviation = state, state = state.y)
+  mutate(drug = 'quinolone', bugdrug = 'Ec/q') %>%
+  mutate(did = us_europe_convert(drug, rx_1k_year)) %>%
+  rename(state_abbreviation = state) %>%
+  left_join(census, by='state_abbreviation')
 
-maup_lm2 = function (df) {
-  df %>%
-    summarize(did = weighted.mean(did, w=population),
-              pct_res = weighted.mean(pct_res, w=n_isolates)) %>%
-    do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
-    ungroup()
-}
+nhsn_maup_state = nhsn_maup_ur %>%
+  maup_lm(c('bugdrug', 'state'), 'bugdrug') %>%
+  mutate(k = 50)
 
-maup_region2 = maup_ur2 %>%
-  group_by(region) %>%
-  maup_lm2()
+nhsn_maup_region = nhsn_maup_ur %>%
+  maup_lm(c('bugdrug', 'region'), 'bugdrug') %>%
+  mutate(k = 4)
 
-maup_division2 = maup_ur2 %>%
-  group_by(division) %>%
-  maup_lm2()
+nhsn_maup_division = nhsn_maup_ur %>%
+  maup_lm(c('bugdrug', 'division'), 'bugdrug') %>%
+  mutate(k = 9)
 
-maup_state2 = maup_ur2 %>%
-  group_by(state) %>%
-  maup_lm2()
+nhsn_maup_group = crossing(k=c(ks, 45), iteration=1:n_iterations) %>%
+  group_by(k, iteration) %>%
+  do(group_lm(nhsn_maup_ur, .$k)) %>%
+  ungroup()
 
-group_lm2 = function(ur, n_groups) {
-  n_state = length(unique(ur$state))
-  group = group_sample_idx(n_state, n_groups)
-  
-  ur %>%
-    mutate(group = group) %>%
-    group_by(group) %>%
-    maup_lm2()
-}
+nhsn_maup_zone = crossing(k=c(ks, 45), iteration=1:n_iterations) %>%
+  group_by(k, iteration) %>%
+  do(zone_lm(nhsn_maup_ur, .$k)) %>%
+  ungroup()
 
-group_lm_simulation2 = function(ur, n_groups, n_iterations) {
-  lapply(1:n_iterations, function(i) group_lm2(ur, n_groups)) %>%
-    bind_rows() %>%
-    filter(term == 'did') %>%
-    mutate(n_groups = n_groups)
-}
+nhsn_maup_combined = bind_rows(
+  nhsn_maup_group %>% mutate(type='group'),
+  nhsn_maup_zone %>% mutate(type='zone')
+)
 
-maup_group2 = lapply(list_n_groups, function(k) group_lm_simulation2(maup_ur2, k, n_iterations)) %>%
-  bind_rows()
+nhsn_maup_combined %>%
+  filter(term == 'did') %>%
+  group_by(type, k) %>%
+  summarize(mean_slope = mean(estimate),
+            p25 = quantile(estimate, 0.25),
+            p75 = quantile(estimate, 0.75)) %>%
+  ggplot(aes(k, mean_slope)) +
+  geom_point(aes(color=type)) +
+  geom_line(aes(color=type)) +
+  geom_errorbar(aes(ymin=p25, ymax=p75, color=type)) +
+  geom_point(data = nhsn_maup_state %>% filter(term == 'did') %>% rename(mean_slope = estimate)) +
+  geom_point(data = nhsn_maup_region %>% filter(term == 'did') %>% rename(mean_slope = estimate)) +
+  geom_point(data = nhsn_maup_division %>% filter(term == 'did') %>% rename(mean_slope = estimate))
 ```
 
 ```{r}
