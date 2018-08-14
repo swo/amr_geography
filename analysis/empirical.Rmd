@@ -452,75 +452,63 @@ ms_maup_region = ms_maup_ur %>%
 ms_maup_division = ms_maup_ur %>%
   maup_lm(c('bugdrug', 'division'), 'bugdrug')
 
-group_sample_idx = function(n_units, k) {
-  stopifnot(n_units >= k)
-  # each group must appear at least once
-  fixed_idx = 1:k
-  # remaining units assigned to groups at random
-  random_idx = sample(k, n_units - k, replace=TRUE)
-  # mix up the fixed and random indices
-  sample(c(fixed_idx, random_idx))
+# group n items into k groups, with at least 1 item in each group
+sample1 = function(n, k) {
+  stopifnot(n >= k)
+  sample(c(1:k, sample(k, n - k, replace=TRUE)))
+}
+
+state_centers = read_tsv('../db/state_centers.tsv')
+
+random_groups = function(states, k) {
+  stopifnot(length(states) >= k)
+  
+  zone_centers = state_centers %>%
+    filter(state %in% states) %>%
+    sample_n(k) %>%
+    select(zone = state, center_long = long, center_lat = lat)
+    
+  zones = crossing(state_centers, zone_centers) %>%
+    mutate(dist = sqrt((long - center_long) ** 2 + (lat - center_lat) ** 2)) %>%
+    group_by(state) %>%
+    filter(dist == min(dist)) %>%
+    ungroup() %>%
+    select(state, zone)
+  
+  data_frame(state = states,
+             sample = as.character(sample1(length(states), k))) %>%
+    left_join(zones, by = 'state')
 }
 
 group_lm = function(ur, k) {
-  states = unique(ur$state)
-  state_group = data_frame(
-    state = states,
-    group = group_sample_idx(length(states), k)
-  )
+  groups = random_groups(unique(ur$state), k)
   
-  ur %>%
-    left_join(state_group, by='state') %>%
-    group_by(group) %>%
-    maup_lm(c('group', 'bugdrug'), 'bugdrug')
+  sample_lm = ur %>%
+    left_join(groups, by = 'state') %>%
+    group_by(sample) %>%
+    maup_lm(c('bugdrug', 'sample'), 'bugdrug') %>%
+    mutate(type = 'sample')
+
+  zone_lm = ur %>%
+    left_join(groups, by = 'state') %>%
+    group_by(zone) %>%
+    maup_lm(c('bugdrug', 'zone'), 'bugdrug') %>%
+    mutate(type = 'zone')
+  
+  bind_rows(sample_lm, zone_lm)
 }
 
-ks = c(4, 9, 15, 20, 25, 30, 35, 40)
+ks = c(4, 9, 15, 25, 40)
 n_iterations = 100
 
-ms_maup_group = crossing(k=ks, iteration=1:n_iterations) %>%
+ms_maup_results = crossing(k=ks, iteration=1:n_iterations) %>%
   group_by(k, iteration) %>%
   do(group_lm(ms_maup_ur, .$k)) %>%
   ungroup()
 ```
 
-```{r marketscan_maup_zone}
-state_centers = read_tsv('../db/state_centers.tsv')
-
-zone_lm = function(ur, k) {
-  # select k states to be the centers of the zones
-  centers = state_centers %>%
-    filter(state %in% ur$state) %>%
-    sample_n(k) %>%
-    select(zone=state, long, lat)
-
-  # then cluster the states into those zones
-  zones = crossing(state_centers, centers) %>%
-    mutate(dist = sqrt((long - long1) ** 2 + (lat - lat1) ** 2)) %>%
-    group_by(state) %>%
-    filter(dist == min(dist)) %>%
-    ungroup() %>%
-    select(zone, state)
-
-  # group the states and do the analysis
-  ur %>%
-    left_join(zones, by='state') %>%
-    maup_lm(c('bugdrug', 'zone'), 'bugdrug')
-}
-
-ms_maup_zone = crossing(k=ks, iteration=1:n_iterations) %>%
-  group_by(k, iteration) %>%
-  do(zone_lm(ms_maup_ur, .$k)) %>%
-  ungroup()
-```
-
 ```{r}
-ms_maup_combined = bind_rows(
-  ms_maup_group %>% mutate(type='group'),
-  ms_maup_zone %>% mutate(type='zone')
-)
-
-ms_maup_combined %>%
+ms_maup_results %>%
   filter(term == 'did') %>%
   group_by(bugdrug, type, k) %>%
   summarize(mean_slope = mean(estimate),
@@ -630,7 +618,7 @@ sim_lm = function(slope, k, n_units=50, use_max=1, sigma=1) {
   bind_rows(sample_model, zone_model)
 }
 
-sim_group = crossing(k = c(5, 10, 20, 30, 40, 50),
+sim_group = crossing(k = c(5, 10, 25, 50),
          slope = c(0, 0.1, 1, 10),
          iteration = 1:100) %>%
   group_by_all() %>%
