@@ -458,26 +458,28 @@ sample1 = function(n, k) {
   sample(c(1:k, sample(k, n - k, replace=TRUE)))
 }
 
-state_centers = read_tsv('../db/state_centers.tsv')
+state_distances = data_frame(long = state.center$x, lat = state.center$y) %>%
+  dist() %>%
+  as.matrix()
 
 random_groups = function(states, k) {
-  stopifnot(length(states) >= k)
+  if (any(duplicated(states))) stop('unique states required')
   
-  zone_centers = state_centers %>%
-    filter(state %in% states) %>%
-    sample_n(k) %>%
-    select(zone = state, center_long = long, center_lat = lat)
-    
-  zones = crossing(state_centers, zone_centers) %>%
-    mutate(dist = sqrt((long - center_long) ** 2 + (lat - center_lat) ** 2)) %>%
-    group_by(state) %>%
-    filter(dist == min(dist)) %>%
-    ungroup() %>%
-    select(state, zone)
+  stopifnot(length(states) >= k)
+  stopifnot(all(states %in% state.name))
+  
+  state_idx = match(states, state.name)
+  
+  samples = sample1(length(state_idx), k)
+  
+  zone_centers = sample(state_idx, k)
+  zones = state_distances[state_idx, zone_centers] %>%
+    apply(1, which.min) %>%
+    { state.name[zone_centers[.]] }
   
   data_frame(state = states,
-             sample = as.character(sample1(length(states), k))) %>%
-    left_join(zones, by = 'state')
+             sample = samples,
+             zone = zones)
 }
 
 group_lm = function(ur, k) {
@@ -509,19 +511,20 @@ ms_maup_results = crossing(k=ks, iteration=1:n_iterations) %>%
 
 ```{r}
 ms_maup_results %>%
+  bind_rows(
+    ms_maup_state %>% mutate(type = 'actual', k = 44),
+    ms_maup_division %>% mutate(type = 'actual', k = 9),
+    ms_maup_region %>% mutate(type = 'actual', k = 4)
+  ) %>%
   filter(term == 'did') %>%
   group_by(bugdrug, type, k) %>%
   summarize(mean_slope = mean(estimate),
             p25 = quantile(estimate, 0.25),
             p75 = quantile(estimate, 0.75)) %>%
-  ggplot(aes(k, mean_slope)) +
+  ggplot(aes(factor(k), mean_slope)) +
   geom_point(aes(color=type)) +
-  geom_line(aes(color=type)) +
   geom_errorbar(aes(ymin=p25, ymax=p75, color=type)) +
-  geom_point(data = ms_maup_state %>% filter(term == 'did') %>% mutate(k = 44, mean_slope = estimate)) +
-  geom_point(data = ms_maup_region %>% filter(term == 'did') %>% mutate(k = 4, mean_slope = estimate)) +
-  geom_point(data = ms_maup_division %>% filter(term == 'did') %>% mutate(k = 9, mean_slope = estimate)) +
-  facet_wrap(~ bugdrug, scales='free_y')
+  facet_wrap(~ bugdrug, scales = 'free_y')
 ```
 
 ## Using IMS/NHSN
