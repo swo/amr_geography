@@ -599,38 +599,50 @@ Here I imagine I have $N = 50$ states with uses uniformly distributed between 0 
 Both types of aggregation appear to give unbiased estimates for $m$. The variance of the random aggregates increases with the size of the aggregates, but only substantially so for small $k$. The standard errors in the measured slopes increases for both zones and random samples, but the effect is especially acute for the random samples. This makes it look like going to larger aggregates is a pretty bad way to find a use-resistance relationship!
 
 ```{r maup_abstract_sim}
+which_nearest = function(x, vals) {
+  outer(x, vals, FUN=function(x, y) abs(x - y)) %>%
+    apply(1, which.min)
+}
+
+sim_lm = function(slope, k, n_units=50, use_max=1, sigma=1) {
+  use = runif(n_units, 0, use_max)
+  res = use * slope + rnorm(n_units, 0, sigma)
+  
+  # random sample grouping
+  sample_group = group_sample_idx(n_units, k)
+  sample_model = data_frame(use=use, res=res, g=sample_group) %>%
+    group_by(g) %>%
+    summarize_at(vars(use, res), mean) %>%
+    lm(res ~ use, data=.) %>%
+    tidy(conf.int=TRUE) %>%
+    mutate(type = 'sample')
+  
+  # random zone grouping
+  centers = sample(use, size = k, replace = FALSE)
+  zones = which_nearest(use, centers)
+  zone_model = data_frame(use=use, res=res, g=zones) %>%
+    group_by(g) %>%
+    summarize_at(vars(use, res), mean) %>%
+    lm(res ~ use, data=.) %>%
+    tidy(conf.int=TRUE) %>%
+    mutate(type = 'zone')
+  
+  bind_rows(sample_model, zone_model)
+}
+
 sim_group = crossing(k = c(5, 10, 20, 30, 40, 50),
          slope = c(0, 0.1, 1, 10),
          iteration = 1:100) %>%
   group_by_all() %>%
-  do(sim_group_lm(.$slope, .$k)) %>%
-  ungroup()
-
-zone_group = crossing(k = c(5, 10, 20, 30, 40, 50),
-                      slope = c(0, 0.1, 1, 10),
-                      iteration = 1:100) %>%
-  group_by_all() %>%
-  do(zone_group_lm(.$slope, .$k)) %>%
+  do(sim_lm(.$slope, .$k)) %>%
   ungroup()
 ```
 
 ```{r}
-bind_rows(
-  sim_group %>% mutate(type = 'random'),
-  zone_group %>% mutate(type = 'zone')
-) %>%
+sim_group %>%
   filter(term == 'use') %>%
   ggplot(aes(factor(k), estimate)) +
   geom_hline(aes(yintercept = slope), color='gray') +
-  geom_boxplot(aes(color=type)) +
-  facet_wrap(~ slope, scales='free_y')
-
-bind_rows(
-  sim_group %>% mutate(type = 'random'),
-  zone_group %>% mutate(type = 'zone')
-) %>%
-  filter(term == 'use') %>%
-  ggplot(aes(factor(k), std.error)) +
   geom_boxplot(aes(color=type)) +
   facet_wrap(~ slope, scales='free_y')
 ```
