@@ -168,7 +168,7 @@ ecdc = read_tsv('../data/ecdc/data.tsv') %>%
   mutate(bug = rename_bug(bug),
          pct_res = 100 * f_ns,
          dataset='ECDC') %>%
-  select(dataset, bug, drug, geo_unit=country, did, pct_res)
+  select(dataset, bug, drug, geo_unit=country, did, n_resistant=n_ns, n_isolates, pct_res)
 ```
 
 ## Pihljamaki
@@ -418,7 +418,8 @@ ms_maup_use = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') 
 
 ms_maup_ur = ms_maup_use %>%
   inner_join(ms_maup_res, by=c('drug', 'state')) %>%
-  left_join(census, by='state')
+  left_join(census, by='state') %>%
+  rename(geo_unit = state)
 ```
 
 ```{r marketscan_maup_random}
@@ -444,7 +445,7 @@ maup_lm = function(df, summary_vars=NULL, lm_group_vars=NULL) {
 }
 
 ms_maup_state = ms_maup_ur %>%
-  maup_lm(c('bugdrug', 'state'), 'bugdrug')
+  maup_lm(c('bugdrug', 'geo_unit'), 'bugdrug')
 
 ms_maup_region = ms_maup_ur %>%
   maup_lm(c('bugdrug', 'region'), 'bugdrug')
@@ -462,37 +463,37 @@ state_distances = data_frame(long = state.center$x, lat = state.center$y) %>%
   dist() %>%
   as.matrix()
 
-random_groups = function(states, k) {
-  if (any(duplicated(states))) stop('unique states required')
+random_groups = function(geo_units, k, geo_unit_distances, geo_unit_names) {
+  if (any(duplicated(geo_units))) stop('unique geo units required')
   
-  stopifnot(length(states) >= k)
-  stopifnot(all(states %in% state.name))
+  stopifnot(length(geo_units) >= k)
+  stopifnot(all(geo_units %in% geo_unit_names))
   
-  state_idx = match(states, state.name)
+  geo_unit_idx = match(geo_units, geo_unit_names)
   
-  samples = sample1(length(state_idx), k)
+  samples = sample1(length(geo_unit_idx), k)
   
-  zone_centers = sample(state_idx, k)
-  zones = state_distances[state_idx, zone_centers] %>%
+  zone_centers = sample(geo_unit_idx, k)
+  zones = geo_unit_distances[geo_unit_idx, zone_centers] %>%
     apply(1, which.min) %>%
-    { state.name[zone_centers[.]] }
+    { geo_unit_names[zone_centers[.]] }
   
-  data_frame(state = states,
+  data_frame(geo_unit = geo_units,
              sample = samples,
              zone = zones)
 }
 
-group_lm = function(ur, k) {
-  groups = random_groups(unique(ur$state), k)
+group_lm = function(ur, k, geo_unit_distances=state_distances, geo_unit_names=state.name) {
+  groups = random_groups(unique(ur$geo_unit), k, geo_unit_distances, geo_unit_names)
   
   sample_lm = ur %>%
-    left_join(groups, by = 'state') %>%
+    left_join(groups, by = 'geo_unit') %>%
     group_by(sample) %>%
     maup_lm(c('bugdrug', 'sample'), 'bugdrug') %>%
     mutate(type = 'sample')
 
   zone_lm = ur %>%
-    left_join(groups, by = 'state') %>%
+    left_join(groups, by = 'geo_unit') %>%
     group_by(zone) %>%
     maup_lm(c('bugdrug', 'zone'), 'bugdrug') %>%
     mutate(type = 'zone')
@@ -505,7 +506,7 @@ n_iterations = 100
 
 ms_maup_results = crossing(k=ks, iteration=1:n_iterations) %>%
   group_by(k, iteration) %>%
-  do(group_lm(ms_maup_ur, .$k)) %>%
+  do(group_lm(ms_maup_ur, .$k, state_distances, state.name)) %>%
   ungroup()
 ```
 
@@ -537,10 +538,11 @@ nhsn_maup_ur = read_tsv('../data/nhsn-ims/data.tsv') %>%
   mutate(drug = 'quinolone', bugdrug = 'Ec/q') %>%
   mutate(did = us_europe_convert(drug, rx_1k_year)) %>%
   rename(state_abbreviation = state) %>%
-  left_join(census, by='state_abbreviation')
+  left_join(census, by='state_abbreviation') %>%
+  rename(geo_unit = state)
 
 nhsn_maup_state = nhsn_maup_ur %>%
-  maup_lm(c('bugdrug', 'state'), 'bugdrug') %>%
+  maup_lm(c('bugdrug', 'geo_unit'), 'bugdrug') %>%
   mutate(k = 50)
 
 nhsn_maup_region = nhsn_maup_ur %>%
@@ -551,24 +553,19 @@ nhsn_maup_division = nhsn_maup_ur %>%
   maup_lm(c('bugdrug', 'division'), 'bugdrug') %>%
   mutate(k = 9)
 
-nhsn_maup_group = crossing(k=c(ks, 45), iteration=1:n_iterations) %>%
+nhsn_maup_results = crossing(k=c(ks, 45), iteration=1:n_iterations) %>%
   group_by(k, iteration) %>%
   do(group_lm(nhsn_maup_ur, .$k)) %>%
-  ungroup()
-
-nhsn_maup_zone = crossing(k=c(ks, 45), iteration=1:n_iterations) %>%
-  group_by(k, iteration) %>%
-  do(zone_lm(nhsn_maup_ur, .$k)) %>%
   ungroup()
 ```
 
 ```{r}
-nhsn_maup_combined = bind_rows(
-  nhsn_maup_group %>% mutate(type='group'),
-  nhsn_maup_zone %>% mutate(type='zone')
-)
-
-nhsn_maup_combined %>%
+nhsn_maup_results %>%
+  bind_rows(
+    nhsn_maup_state %>% mutate(type = 'actual'),
+    nhsn_maup_division %>% mutate(type = 'actual'),
+    nhsn_maup_region %>% mutate(type = 'actual')
+  ) %>%
   filter(term == 'did') %>%
   group_by(type, k) %>%
   summarize(mean_slope = mean(estimate),
@@ -577,10 +574,51 @@ nhsn_maup_combined %>%
   ggplot(aes(k, mean_slope)) +
   geom_point(aes(color=type)) +
   geom_line(aes(color=type)) +
+  geom_errorbar(aes(ymin=p25, ymax=p75, color=type))
+```
+
+## Europe
+
+```{r}
+europe_centers = read_tsv('../db/europe_centers/europe_centers.tsv')
+
+europe_maup_ur = read_tsv('../data/ecdc/data.tsv') %>%
+  mutate(bugdrug = case_when(
+    .$bug == 'Escherichia coli' & .$drug == 'quinolone' ~ 'Ec/q',
+    .$bug == 'Streptococcus pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
+    .$bug == 'Streptococcus pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
+  )) %>%
+  left_join(select(europe_centers, country, population), by='country') %>%
+  rename(geo_unit = country, n_resistant = n_ns)
+
+europe_distances = europe_centers %>%
+  select(latitude, longitude) %>%
+  dist() %>%
+  as.matrix()
+
+europe_names = europe_centers$country
+
+europe_maup_country = europe_maup_ur %>%
+  maup_lm(c('bugdrug', 'geo_unit'), 'bugdrug')
+
+europe_maup_results = crossing(k=c(5, 10, 15, 20, 25), iteration=1:n_iterations) %>%
+  group_by(k, iteration) %>%
+  do(group_lm(europe_maup_ur, .$k, europe_distances, europe_names)) %>%
+  ungroup()
+```
+
+```{r}
+europe_maup_results %>%
+  bind_rows(europe_maup_country %>% mutate(type = 'actual', k = 26)) %>%
+  filter(term == 'did') %>%
+  group_by(bugdrug, type, k) %>%
+  summarize(mean_slope = mean(estimate),
+            p25 = quantile(estimate, 0.25),
+            p75 = quantile(estimate, 0.75)) %>%
+  ggplot(aes(factor(k), mean_slope)) +
+  geom_point(aes(color=type)) +
   geom_errorbar(aes(ymin=p25, ymax=p75, color=type)) +
-  geom_point(data = nhsn_maup_state %>% filter(term == 'did') %>% rename(mean_slope = estimate)) +
-  geom_point(data = nhsn_maup_region %>% filter(term == 'did') %>% rename(mean_slope = estimate)) +
-  geom_point(data = nhsn_maup_division %>% filter(term == 'did') %>% rename(mean_slope = estimate))
+  facet_wrap(~ bugdrug, scales = 'free_y')
 ```
 
 ## Simulations
@@ -600,7 +638,7 @@ sim_lm = function(slope, k, n_units=50, use_max=1, sigma=1) {
   res = use * slope + rnorm(n_units, 0, sigma)
   
   # random sample grouping
-  sample_group = group_sample_idx(n_units, k)
+  sample_group = sample1(n_units, k)
   sample_model = data_frame(use=use, res=res, g=sample_group) %>%
     group_by(g) %>%
     summarize_at(vars(use, res), mean) %>%
