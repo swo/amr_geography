@@ -425,8 +425,7 @@ marketscan_use = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv
 
 marketscan = marketscan_use %>%
   inner_join(marketscan_res, by=c('drug', 'state')) %>%
-  left_join(census, by='state') %>%
-  rename(unit = state)
+  select(unit = state, bugdrug, did, n_resistant, n_isolates)
 ```
 
 ```{r marketscan_maup_random}
@@ -472,7 +471,7 @@ maup_sim = function(ur, unit_data, ks, n_iterations=10, extra_groups=NULL) {
 
   random_zones = function(k) {
     centers = sample(unit_data$unit, k)
-    zones = state_distances[, centers] %>%
+    zones = unit_distances[, centers] %>%
       apply(1, function(x) centers[which.min(x)])
     
     data_frame(unit = unit_data$unit, group = zones)
@@ -480,6 +479,7 @@ maup_sim = function(ur, unit_data, ks, n_iterations=10, extra_groups=NULL) {
   
   data_f = function(bugdrug_, group_) {
     ur %>%
+      left_join(unit_data, by = 'unit') %>%
       filter(bugdrug == bugdrug_) %>%
       left_join(group_, by = 'unit') %>%
       group_by(group) %>%
@@ -582,94 +582,74 @@ ex4 %>%
 ## Using IMS/NHSN
 
 ```{r}
-# swo: what does "ur" stand for? use-resistance?
-nhsn_maup_ur = read_tsv('../data/nhsn-ims/data.tsv') %>%
-  # just exclude DC for now
-  filter(state != 'DC') %>%
-  mutate(drug = 'quinolone', bugdrug = 'Ec/q') %>%
-  mutate(did = us_europe_convert(drug, rx_1k_year)) %>%
+nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
   rename(state_abbreviation = state) %>%
-  left_join(census, by='state_abbreviation') %>%
-  rename(geo_unit = state)
+  filter(state_abbreviation %in% state.abb) %>%
+  mutate(state_id = match(state_abbreviation, state.abb),
+         state = state.name[state_id],
+         bugdrug = 'Ec/q',
+         did = us_europe_convert('quinolone', rx_1k_year)) %>%
+  select(unit = state, bugdrug, did, n_resistant, n_isolates)
 
-nhsn_maup_state = nhsn_maup_ur %>%
-  maup_lm(c('bugdrug', 'geo_unit'), 'bugdrug') %>%
-  mutate(k = 50)
+nhsn_unit_data = state_data %>%
+  rename(unit = state) %>%
+  filter(unit %in% nhsn$unit)
 
-nhsn_maup_region = nhsn_maup_ur %>%
-  maup_lm(c('bugdrug', 'region'), 'bugdrug') %>%
-  mutate(k = 4)
+nhsn_extra_groups = data_frame(
+  k = 50,
+  type = 'actual',
+  group = map(1, ~ select(nhsn_unit_data, unit, group = unit_id))
+)
 
-nhsn_maup_division = nhsn_maup_ur %>%
-  maup_lm(c('bugdrug', 'division'), 'bugdrug') %>%
-  mutate(k = 9)
-
-nhsn_maup_results = crossing(k=c(ks, 45), iteration=1:n_iterations) %>%
-  group_by(k, iteration) %>%
-  do(group_lm(nhsn_maup_ur, .$k)) %>%
-  ungroup()
+nhsn_maup = maup_sim(nhsn, nhsn_unit_data, c(4, 9, 20, 30, 40),
+                     extra_groups = nhsn_extra_groups)
 ```
 
 ```{r}
-nhsn_maup_results %>%
-  bind_rows(
-    nhsn_maup_state %>% mutate(type = 'actual'),
-    nhsn_maup_division %>% mutate(type = 'actual'),
-    nhsn_maup_region %>% mutate(type = 'actual')
-  ) %>%
-  filter(term == 'did') %>%
-  group_by(type, k) %>%
-  summarize(mean_slope = mean(estimate),
-            p25 = quantile(estimate, 0.25),
-            p75 = quantile(estimate, 0.75)) %>%
-  ggplot(aes(k, mean_slope)) +
-  geom_point(aes(color=type)) +
-  geom_line(aes(color=type)) +
-  geom_errorbar(aes(ymin=p25, ymax=p75, color=type))
+nhsn_maup %>%
+  select(k, iteration, type, bugdrug, slope, cor) %>%
+  gather('metric', 'estimate', slope, cor) %>%
+  ggplot(aes(factor(k), estimate, color=type)) +
+  geom_boxplot() +
+  geom_jitter() +
+  facet_wrap(metric ~ bugdrug, scales='free_y')
 ```
 
 ## Europe
 
 ```{r}
-europe_centers = read_tsv('../db/europe_centers/europe_centers.tsv')
-
-europe_maup_ur = read_tsv('../data/ecdc/data.tsv') %>%
+europe = read_tsv('../data/ecdc/data.tsv') %>%
   mutate(bugdrug = case_when(
     .$bug == 'Escherichia coli' & .$drug == 'quinolone' ~ 'Ec/q',
     .$bug == 'Streptococcus pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
     .$bug == 'Streptococcus pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
   )) %>%
   left_join(select(europe_centers, country, population), by='country') %>%
-  rename(geo_unit = country, n_resistant = n_ns)
+  select(unit = country, bugdrug, did, n_resistant = n_ns, n_isolates)
 
-europe_distances = europe_centers %>%
-  select(latitude, longitude) %>%
-  dist() %>%
-  as.matrix()
+europe_units = read_tsv('../db/europe_centers/europe_centers.tsv') %>%
+  filter(country %in% europe$unit) %>%
+  mutate(unit_id = 1:n()) %>%
+  select(unit = country, long = longitude, lat = latitude, population, unit_id)
 
-europe_names = europe_centers$country
+europe_extra = data_frame(
+  k = nrow(europe_units),
+  type = 'actual',
+  group = map(1, ~ select(europe_units, unit, group = unit_id))
+)
 
-europe_maup_country = europe_maup_ur %>%
-  maup_lm(c('bugdrug', 'geo_unit'), 'bugdrug')
-
-europe_maup_results = crossing(k=c(5, 10, 15, 20, 25), iteration=1:n_iterations) %>%
-  group_by(k, iteration) %>%
-  do(group_lm(europe_maup_ur, .$k, europe_distances, europe_names)) %>%
-  ungroup()
+europe_maup = maup_sim(europe, europe_units, ks = c(5, 10, 15, 20),
+                       extra_groups = europe_extra)
 ```
 
 ```{r}
-europe_maup_results %>%
-  bind_rows(europe_maup_country %>% mutate(type = 'actual', k = 26)) %>%
-  filter(term == 'did') %>%
-  group_by(bugdrug, type, k) %>%
-  summarize(mean_slope = mean(estimate),
-            p25 = quantile(estimate, 0.25),
-            p75 = quantile(estimate, 0.75)) %>%
-  ggplot(aes(factor(k), mean_slope)) +
-  geom_point(aes(color=type)) +
-  geom_errorbar(aes(ymin=p25, ymax=p75, color=type)) +
-  facet_wrap(~ bugdrug, scales = 'free_y')
+europe_maup %>%
+  select(k, iteration, type, bugdrug, slope, cor) %>%
+  gather('metric', 'estimate', slope, cor) %>%
+  ggplot(aes(factor(k), estimate, color=type)) +
+  geom_boxplot() +
+  geom_jitter() +
+  facet_wrap(metric ~ bugdrug, scales='free_y')
 ```
 
 ## Simulations
