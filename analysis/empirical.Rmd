@@ -14,7 +14,9 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 library(purrr)
 ```
 
-# US/Europe conversions
+# Methods
+
+## US/Europe conversions
 
 Most of the US studies and data are measured in prescriptions (or claims) per 1,000 people per year (PIY); the European studies are usually in DID (DDD per 1,000 people per year). Converting between the two requires asserting how many DDD are in one prescription.
 
@@ -35,7 +37,9 @@ us_europe_convert = function(drug_, piy) {
 }
 ```
 
-# Medicare & ResistanceOpen
+## Data
+
+#### Medicare & ResistanceOpen
 
 This is a nice chance to ask if going to a smaller scale gives you different regression coefficients. I compare the slopes of the use/resistance relationship when using HRRs and states.
 
@@ -76,15 +80,6 @@ medicare_hrr_models = medicare_hrr %>%
   group_by(bug, drug) %>%
   do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
   ungroup()
-```
-
-```{r ms}
-marketscan = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
-  inner_join(ro_state, by=c('drug_group', 'state')) %>%
-  inner_join(ro_bugdrugs) %>%
-  mutate(did = us_europe_convert(drug_group, total_use * 1000)) %>%
-  mutate(dataset='MarketScan', pct_res=100 * f_ns) %>%
-  select(dataset, bug, drug=drug_group, geo_unit=state, did, pct_res)
 ```
 
 To the eye, it looks like the state and HRR points lie on similar lines:
@@ -128,36 +123,7 @@ bind_rows(
   filter(term == 'pct_res:at_hrr')
 ```
 
-# Data sets
-
-## Arason
-
-```{r arason}
-arason_r = read_tsv('../data/arason/resistance.tsv') %>%
-  group_by(area_code) %>%
-  summarize_at(vars(starts_with('n')), sum) %>%
-  mutate(n_isolates = n_resistant + n_sensitive,
-         pct_res = 100 * n_resistant / n_isolates)
-
-arason_u = read_tsv('../data/arason/use.tsv') %>%
-  mutate(did = did_penV + did_amoxclav) %>%
-  select(area_code, did)
-
-arason = inner_join(arason_r, arason_u, by='area_code') %>%
-  mutate(dataset='Arason', bug='S. pneumoniae', drug='beta_lactam') %>%
-  select(dataset, bug, drug, geo_unit=area_code, did, pct_res, n_isolates)
-```
-
-## Bronzwaer
-
-```{r bronzwaer}
-bronzwaer = read_tsv('../data/bronzwaer/use_resistance.tsv') %>%
-  mutate(pct_res = 100 * n_nonsusceptible / n_isolates) %>%
-  mutate(dataset='Bronzwaer', bug='S. pneumoniae', drug='beta_lactam') %>%
-  select(dataset, bug, drug, geo_unit=country, did=did_betalactam, did=did_betalactam, pct_res, n_isolates)
-```
-
-## ECDC
+### ECDC
 
 ```{r ecdc}
 rename_bug = function(x) {
@@ -173,43 +139,7 @@ ecdc = read_tsv('../data/ecdc/data.tsv') %>%
   select(dataset, bug, drug, geo_unit=country, did, n_resistant=n_ns, n_isolates, pct_res)
 ```
 
-## Pihljamaki
-
-```{r pihljamaki}
-pihljamaki_pen = read_tsv('../data/pihljamaki/penicillins.tsv') %>%
-  mutate(dataset='Pihljamaki', bug='S. pneumoniae', drug='beta_lactam', geo_unit=as.character(1:n())) %>%
-  select(dataset, bug, drug, geo_unit, did=did_pen, pct_res=pct_res_pen)
-
-pihljamaki_macro = read_tsv('../data/pihljamaki/macrolides.tsv') %>%
-  mutate(dataset='Pihljamaki', bug='S. pneumoniae', drug='macrolide', geo_unit=as.character(1:n())) %>%
-  select(dataset, bug, drug, geo_unit, did=did_macrolide, pct_res=pct_res_erythro)
-
-pihljamaki = bind_rows(pihljamaki_pen, pihljamaki_macro)
-```
-
-## Goossens
-
-```{r goossens}
-goossens = read_tsv('../data/goossens/data.tsv') %>%
-  mutate(dataset='Goossens', bug='S. pneumoniae', drug='beta_lactam') %>%
-  select(dataset, bug, drug, geo_unit=country, did, pct_res=pct_nonsusceptible)
-```
-
-## Kahlmeter
-
-```{r kalhmeter}
-kahlmeter = inner_join(
-  read_tsv('../data/kahlmeter/resistance.tsv') %>% filter(drug=='CIP'),
-  read_tsv('../data/kahlmeter/use.tsv') %>% group_by(country) %>% summarize(did=mean(did)),
-  by='country'
-) %>%
-  mutate(dataset='Kahlmeter', bug='E. coli', drug='quinolone') %>%
-  select(dataset, bug, drug, geo_unit=country, did, pct_res, n_isolates=n)
-```
-
-## NHSN/IMS
-
-Requires assuming a 10x conversion factor
+### NHSN/IMS
 
 ```{r nhsn_ims}
 nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
@@ -219,173 +149,11 @@ nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
   select(dataset, bug, drug, geo_unit=state, did, pct_res, n_isolates)
 ```
 
-## CDDEP
+# Results
 
-```{r cddep}
-cddep = read_tsv('../data/cddep/use_res.tsv') %>%
-  mutate(dataset='CDDEP',
-         bug = rename_bug(bug),
-         drug_group = if_else(drug_group == 'penicillin', 'beta_lactam', drug_group),
-         did = us_europe_convert(drug_group, rx_1k_year)) %>%
-  select(dataset, bug, drug=drug_group, geo_unit=division, did, pct_res=pct_resistant)
-```
+## MAUP
 
-## Garcia-Rey 2002
-
-```{r garcia_rey2002}
-gr2_raw = read_tsv('../data/garcia-rey2002/data.tsv') %>%
-  select(province, n_isolates,
-         did_bl_total, pct_res_pen,
-         did_macrolide_total, pct_res_erythro) %>%
-  gather('key', 'value', -province)
-
-# use and resistance data
-gr2_ur = gr2_raw %>%
-  filter(key != 'n_isolates') %>%
-  mutate(
-    drug = case_when(
-      str_detect(.$key, '(bl|pen)') ~ 'beta_lactam',
-      str_detect(.$key, '(macrolide|erythro)') ~ 'macrolide',
-      TRUE ~ NA_character_),
-    metric = case_when(
-      str_detect(.$key, 'did') ~ 'did',
-      str_detect(.$key, 'pct_res') ~ 'pct_res',
-      .$key == 'n_isolates' ~ 'n_isolates'
-    )
-  ) %>%
-  select(-key) %>%
-  spread(metric, value)
-
-# number of isolates
-gr2_ni = gr2_raw %>%
-  filter(key == 'n_isolates') %>%
-  select(province, n_isolates=value)
-
-garciarey2002 = inner_join(gr2_ur, gr2_ni, by='province') %>%
-  mutate(dataset='Garcia-Rey 2002', bug='S. pneumoniae') %>%
-  select(dataset, bug, drug, geo_unit=province, did, pct_res, n_isolates)
-```
-
-## Garcia-Rey 2004
-
-Units in the paper are "units per 1,000 inhabitants per year". So clearly need to divide by 365, but I also don't know how to convert "units" to DDD. So I think I should dropp this study, which isn't bad, since I have the 2002 version from the same data stream.
-
-```{r, eval=FALSE}
-gr4_raw = read_tsv('../data/garcia-rey2004/data.tsv')
-
-gr4_ni = gr4_raw %>%
-  select(province, n_isolates)
-
-gr4_bl = gr4_raw %>%
-  mutate(drug = 'beta_lactam',
-         pct_res = n_res_pen,
-         did = did_beta_lactams / 365) %>%
-  select(province, drug, pct_res, did)
-
-gr4_macro = gr4_raw %>%
-  mutate(drug = 'macrolide',
-         pct_res = n_res_erythro,
-         did = did_macrolides / 365) %>%
-  select(province, drug, pct_res, did)
-
-garciarey2004 = bind_rows(gr4_bl, gr4_macro) %>%
-  left_join(gr4_ni, by='province') %>%
-  mutate(did = case_when(
-    .$drug == 'beta_lactam' ~ 19 * .$did,
-    .$drug == 'macrolide' ~ 7 * .$did
-  )) %>%
-  mutate(dataset='Garcia-Rey 2004', bug='S. pneumoniae') %>%
-  select(dataset, bug, drug, geo_unit=province, did, pct_res, n_isolates)
-```
-
-## Combined figure
-
-```{r}
-comb = bind_rows(arason, bronzwaer, ecdc, pihljamaki, goossens, kahlmeter, nhsn, cddep, garciarey2002,
-                 #medicare_state, medicare_hrr,
-                 marketscan) %>%
-  mutate(bugdrug = case_when(
-    .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
-    .$bug == 'S. pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
-    .$bug == 'S. pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
-  ))
-
-data_plot_f = function(bugdrug_) {
-  comb %>%
-    filter(dataset != 'Medicare (HRR)', bugdrug == bugdrug_) %>%
-    ggplot(aes(did, pct_res, color=dataset)) +
-    stat_smooth(method='lm', fullrange=TRUE, se=FALSE, size=1) +
-    stat_smooth(method='lm', fullrange=TRUE, geom='ribbon', linetype=2, fill=NA) +
-    geom_point(shape=1) +
-    ggtitle(bugdrug_)
-}
-
-data_plot_f('Ec/q')
-data_plot_f('Sp/bl')
-data_plot_f('Sp/m')
-```
-
-```{r}
-models = comb %>%
-  group_by(dataset, bugdrug) %>%
-  do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
-  ungroup()
-
-plot_f_f = function(term_, xlab_) {
-  function(bugdrug_) {
-    models %>%
-      filter(term==term_, bugdrug==bugdrug_) %>%
-      mutate(dataset = fct_reorder(factor(dataset), estimate)) %>%
-      ggplot(aes(y=dataset, x=estimate, xmin=conf.low, xmax=conf.high)) +
-      geom_vline(xintercept=0, color='black', linetype=2) +
-      geom_point() + geom_errorbarh() +
-      xlab(xlab_) +
-      ylab('') +
-      ggtitle(bugdrug_)
-  }
-}
-
-did_plot_f = plot_f_f('did', 'regression coefficient (p.p. resistance / DID)')
-intercept_plot_f = plot_f_f('(Intercept)', 'regression intercept (% resistant)')
-
-did_plot_f('Ec/q')
-did_plot_f('Sp/bl')
-did_plot_f('Sp/m')
-
-intercept_plot_f('Ec/q')
-intercept_plot_f('Sp/bl')
-intercept_plot_f('Sp/m')
-```
-
-## Mixed models
-
-I use mixed models as a way to summarize these data. Each study has an intercept and slope that are drawn from some true populations that we try to estimate.
-
-```{r}
-mixed_models = comb %>%
-  group_by(bugdrug) %>%
-  do(tidy(lme4::lmer(pct_res ~ did + (did | dataset), data=.), conf.int=TRUE)) %>%
-  ungroup()
-
-bind_rows(
-  models %>% mutate(type = 'study'),
-  mixed_models %>% mutate(type = 'summary', dataset='Mixed model')
-) %>%
-  filter(term == 'did') %>%
-  ggplot(aes(y=dataset, x=estimate)) +
-  geom_vline(xintercept = 0, color='gray', linetype=2) +
-  geom_point(aes(shape=type, size=type)) +
-  scale_shape_manual(values=c(16, 18)) +
-  scale_size_manual(values=c(2, 6)) +
-  geom_errorbarh(aes(xmin=conf.low, xmax=conf.high), height=0.5) +
-  facet_grid(type ~ bugdrug, scales='free', space='free_y')
-```
-
-There's not enough studies to properly ask whether geographical scale has an effect on the model performance. I think it's better to just do something qualitative, to say that we don't see an obvious signal in these larger studies, but we see, in our stuff, that grouping states into 9-state groups is fine.
-
-# MAUP
-
-## MarketScan
+### MarketScan
 
 ```{r maup_db}
 state_census = read_tsv('../db/census/state_census.tsv') %>%
@@ -579,7 +347,7 @@ ex4 %>%
   { ggpubr::ggarrange(plotlist = .) }
 ```
 
-## Using IMS/NHSN
+### Using IMS/NHSN
 
 ```{r}
 nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
@@ -615,7 +383,7 @@ nhsn_maup %>%
   facet_wrap(metric ~ bugdrug, scales='free_y')
 ```
 
-## Europe
+### Europe
 
 ```{r}
 europe = read_tsv('../data/ecdc/data.tsv') %>%
@@ -652,7 +420,7 @@ europe_maup %>%
   facet_wrap(metric ~ bugdrug, scales='free_y')
 ```
 
-## Simulations
+### Simulations
 
 Here I imagine I have $N = 50$ states with uses uniformly distributed between 0 and $u_\mathrm{max} = 1$. Some slope $m \in [0, 0.1, 1, 10]$ connects use with resistance, which is subject to variance $\sigma = 1$. If I randomly aggregate or zone states into $k$ groups, averaging use and resistance in each group, how do the measured use-resistance slopes $\hat{m}$ compare to the actual $m$?
 
