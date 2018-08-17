@@ -430,98 +430,108 @@ marketscan = marketscan_use %>%
 ```
 
 ```{r marketscan_maup_random}
-unit_data = state_data %>%
-  rename(unit = state) %>%
-  filter(unit %in% marketscan$unit)
-
-n_units = nrow(unit_data)
-
 # group n items into k groups, with at least 1 item in each group
 sample1 = function(n, k) {
   stopifnot(n >= k)
   sample(c(1:k, sample(k, n - k, replace = TRUE)))
 }
 
-random_samples = function(k) {
-  stopifnot(n_units >= k)
-  data_frame(unit = unit_data$unit,
-             group = as.character(sample1(n_units, k)))
-}
+range1 = function(x) max(x) - min(x)
 
-unit_distances = unit_data %>%
-  select(long, lat) %>%
-  dist() %>%
-  as.matrix() %>%
-  set_colnames(unit_data$unit) %>%
-  set_rownames(unit_data$unit)
-
-random_zones = function(k) {
-  stopifnot(n_units >= k)
-  
-  centers = sample(unit_data$unit, k)
-  zones = state_distances[, centers] %>%
-    apply(1, function(x) centers[which.min(x)])
-  
-  data_frame(unit = unit_data$unit, group = zones)
-}
-
-group_f = function(type, k) {
-  if (type == 'sample') {
-    random_samples(k)
-  } else if (type == 'zone') {
-    random_zones(k)
+maup_sim = function(ur, unit_data, ks, n_iterations=10, extra_groups=NULL) {
+  if (!all(c('unit', 'long', 'lat', 'population') %in% names(unit_data))) {
+    stop('missing columns in unit_data')
   }
+  if (any(duplicated(unit_data$unit))) stop('duplicated units')
+  if (!all(c('unit', 'bugdrug', 'did', 'n_resistant', 'n_isolates') %in% names(ur))) {
+    stop('missing columns in use-resistance (ur)')
+  }
+  
+  n_units = nrow(unit_data)
+  if (max(ks) > n_units) stop('at least one k is greater than no. units')
+  
+  if (!is.null(extra_groups)) {
+    if (!all(c('k', 'type', 'group') %in% names(extra_groups))) {
+      stop('missing columns in extra_groups')
+    }
+  }
+  
+  bugdrugs = unique(ur$bugdrug)
+
+  random_samples = function(k) {
+    samples = as.character(sample1(n_units, k))
+    data_frame(unit = unit_data$unit, group = samples)
+  }
+
+  unit_distances = unit_data %>%
+    select(long, lat) %>%
+    dist() %>%
+    as.matrix() %>%
+    set_colnames(unit_data$unit) %>%
+    set_rownames(unit_data$unit)
+
+  random_zones = function(k) {
+    centers = sample(unit_data$unit, k)
+    zones = state_distances[, centers] %>%
+      apply(1, function(x) centers[which.min(x)])
+    
+    data_frame(unit = unit_data$unit, group = zones)
+  }
+  
+  data_f = function(bugdrug_, group_) {
+    ur %>%
+      filter(bugdrug == bugdrug_) %>%
+      left_join(group_, by = 'unit') %>%
+      group_by(group) %>%
+      summarize(pct_res = sum(n_resistant) / sum(n_isolates) * 100,
+                did = weighted.mean(did, w = population))
+  }
+  
+  # iterations for each k
+  k_it = crossing(k = ks, iteration = 1:n_iterations)
+  
+  # add in the sample and zone
+  bind_rows(
+    k_it %>% mutate(type = 'sample', group = map(k, random_samples)),
+    k_it %>% mutate(type = 'zone', group = map(k, random_zones))
+  ) %>%
+    bind_rows(extra_groups) %>%
+    crossing(bugdrug = bugdrugs) %>%
+    mutate(data = map2(bugdrug, group, data_f),
+           model = map(data, ~ lm(pct_res ~ did, data = .)),
+           slope = map_dbl(model, ~ coef(.)[2]),
+           cor = map_dbl(data, ~ cor(.$did, .$pct_res)),
+           did_range = map_dbl(data, ~ range1(.$did)),
+           res_range = map_dbl(data, ~ range1(.$pct_res)))
 }
+```
+
+```{r}
+marketscan_unit_data = state_data %>%
+  rename(unit = state) %>%
+  filter(unit %in% marketscan$unit)
 
 state_grouping = data_frame(
   k = n_units,
-  type = 'actual',
   group = map(1, ~ select(unit_data, unit, group = unit_id))
 )
 
 division_grouping = data_frame(
   k = length(unique(unit_data$division)),
-  type = 'actual',
   group = map(1, ~ select(unit_data, unit, group = division))
 )
 
 region_grouping = data_frame(
   k = length(unique(unit_data$region)),
-  type = 'actual',
   group = map(1, ~ select(unit_data, unit, group = region))
 )
-```
 
-```{r}
-data_f = function(bugdrug_, group_) {
-  #browser()
-  marketscan %>%
-    filter(bugdrug == bugdrug_) %>%
-    left_join(group_, by = 'unit') %>%
-    group_by(group) %>%
-    summarize(pct_res = sum(n_resistant) / sum(n_isolates) * 100,
-              did = weighted.mean(did, w = population))
-}
+census_groups = bind_rows(state_grouping, division_grouping, region_grouping) %>%
+  mutate(type = 'actual')
 
-range1 = function(x) max(x) - min(x)
-
-ks = c(4, 9, 20, 30, 40)
-n_iterations = 100
-
-marketscan_maup = crossing(
-  k = ks,
-  iteration = 1:n_iterations,
-  type = c('sample', 'zone')
-) %>%
-  mutate(group = map2(type, k, group_f)) %>%
-  bind_rows(state_grouping, division_grouping, region_grouping) %>%
-  crossing(bugdrug = c('Ec/q', 'Sp/bl', 'Sp/m')) %>%
-  mutate(data = map2(bugdrug, group, data_f),
-         model = map(data, ~ lm(pct_res ~ did, data = .)),
-         slope = map_dbl(model, ~ coef(.)[2]),
-         cor = map_dbl(data, ~ cor(.$did, .$pct_res)),
-         did_range = map_dbl(data, ~ range1(.$did)),
-         res_range = map_dbl(data, ~ range1(.$pct_res)))
+marketscan_ks = c(4, 9, 20, 30, 40)
+marketscan_maup = maup_sim(marketscan, marketscan_unit_data, marketscan_ks,
+                           extra_groups = census_groups)
 ```
 
 ```{r}
