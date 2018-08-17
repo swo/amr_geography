@@ -13,6 +13,7 @@
 - Refactor everything using purrr, so that it's easier to extract data from the models, or whatever.
 - Refactor using correlations, since that's a more common way of measuring these relationships.
 - Discussion point: non equilibirum (eg colistin) is going to be a very different picture. Use this logic to justify why we picked these organisms, which we expect to be "at equilib" in some way.
+- Limitation is A-types: we think there could of course be confounding factors, although it's not clear why those things would fix the MAUP
 
 # Introduction
 

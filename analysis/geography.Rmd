@@ -615,48 +615,40 @@ Colored points and lines show the results from this simulation. Grey boxes show 
 
 ## Tunable geographical influence
 
-As a variation on the previous, imagine that the islands can interact with one another in a tunable way. First, arrange the $N$ islands in a ring. The interaction between two islands $i$ and $j$ will be a function of the distance between them $d(i, j) = \min( |i-j|, N - |i-j| )$ as well as a separation parameter $\alpha$. For $\alpha \to \infty$, the islands are completely separate; for $\alpha = 0$, the islands interact fully. Terms like $\beta S X$ in the original model become like:
+As a variation on the previous, imagine that the islands can interact with one another in a tunable way. First, arrange the $N$ islands in a ring. The interaction between two islands $i$ and $j$ will be a function of the distance between them $d(i, j) = \min( |i-j|, N - |i-j| )$ as well as a separation parameter $\alpha$. For $\alpha \to \infty$, the islands are completely separate; for $\alpha = 0$, the islands interact fully. Terms like $\beta X S$ in the original model become like:
 $$
-\beta \left( \sum_{j=1}^N W_{ij} S_j \right) X_i,
+\beta S_i \sum_j f_{ij} \frac{I_j}{\phi_j},
 $$
-where $\sum_j W_{ij} = 1$. For exponential decay in interaction, this is:
+where the $f_{ij}$ is the proportion of encounters made by people on island $i$ with people on island $j$. For exponential decay in interaction, this is:
 $$
-W_{ij} = \frac{ \exp\{ -\alpha \, d(i,j) \} }{\sum_{j=1}^N \exp \{ -\alpha \, d(i,j) \} }.
-$$
-Alternatively, we can parameterize this using the distance $d$:
-$$
-W(d) = \frac{e^{-\alpha d}}{\sum_{d'=0}^{\lfloor n/2 \rfloor} e^{-\alpha d'} }
+f_{ij} = \frac{ \exp\{ -\alpha \, d(i,j) \} }{\sum_{j=1}^N \exp \{ -\alpha \, d(i,j) \} }.
 $$
 
-For $\alpha = 0$, $W_{ij} = 1/N$ for all $i$ and $j$. For $\alpha \to \infty$, $W_{ij} = \mathbf{1}_{i=j}$. So, all told, we write:
-$$
-S_i' = \frac{ \sum_j W_{ij} S_j }{ \phi_i }
-$$
-and similarly for $R_i'$ and $D_i'$.
+For $\alpha = 0$, $f_{ij} = 1/N$ for all $i$ and $j$. For $\alpha \to \infty$, $W_{ij} = \mathbf{1}_{i=j}$.
 
-Use can be distributed randomly across the ring, or there can be some autocorrelation, say via a sinusoid.
+It's easier to think about using a different tuning parameters, which is the fraction of contacts that are made on the island, which is $1 / \sum_j e^{-\alpha d}$, which uniquely determines $\alpha$.
+
+Here I use 50 islands, with $\tau$ going linearly from 0 at point in the ring to 3 courses per month at the other end. Then I tune $\alpha$ to see how mixing dilutes the use-resistance relationship.
 
 ```{r}
-ring_v2l = function(x) {
-  x %>%
-    matrix(ncol=4, dimnames=list(NULL, c('X', 'S', 'R', 'D'))) %>%
-    as_tibble() %>%
-    as.list()
+ring_dist = function(i, j, n) pmin(abs(i - j), n - abs(i - j))
+
+f_ij_f = function(n, alpha) {
+  f_ij_denom = sum(exp(-alpha * ring_dist(1, 1:n, n)))
+  outer(1:n, 1:n, function(i, j) {
+    exp(-alpha * ring_dist(i, j, n))
+  }) %>%
+    divide_by(f_ij_denom)
 }
 
-ring_dist = function(i, j, n) min(abs(i - j), n - abs(i - j))
-
 ring_ode_func = function(t, state_vector, parms) {
-  state = ring_v2l(state_vector)
+  state = islet_v2l(state_vector)
   
   with(c(state, parms), {
     n = length(phii)
-    raw_weights = sapply(1:
-    weight = function(i, j) exp(-alpha * ring_dist(i, j, n)) / sum(exp(-alpha * 
-    raw_weights = outer(1:n, 1:n, FUN=function(i, j) exp(
     
-    
-    prime_f = function(x) (1 - alpha) * x / phii + alpha * sum(x)
+    f_ij = f_ij_f(n, alpha)
+    prime_f = function(x) f_ij %*% (x / phii)
     
     Sprime = prime_f(S)
     Rprime = prime_f(R)
@@ -675,7 +667,7 @@ ring_ode_func = function(t, state_vector, parms) {
   })
 }
 
-islet_sim = function(taui, k, alpha, tau50=1.5/12) {
+ring_sim = function(taui, k, alpha, tau50=1.5/12) {
   n_islets = length(taui)
   phii = rep(1 / n_islets, n_islets)
   
@@ -695,40 +687,54 @@ islet_sim = function(taui, k, alpha, tau50=1.5/12) {
   
   state_vector = unlist(state)
   
-  result = rootSolve::runsteady(state_vector, func=islet_ode_func, parms=parms)
+  result = rootSolve::runsteady(state_vector, func=ring_ode_func, parms=parms)
   
   result$y %>%
     islet_v2l() %>%
     as_tibble() %>%
     mutate(tau = taui, islet = seq_along(phii))
-
 }
 
-islets = crossing(island_tau = round(c(1.25, 1.50, 1.75) / 12, 3),
-                  delta_tau = seq(-0.1, 0.1, length.out = 11),
-                  k = c(1.0),
-                  alpha = c(0.0, 0.1, 0.5, 1.0)) %>%
-  mutate(tau = island_tau + delta_tau) %>%
-  group_by(island_tau, alpha, k) %>%
-  do(islet_sim(taui=.$tau, k=unique(.$k), alpha=unique(.$alpha))) %>%
+# what fraction of contacts are on-island (vs. off?)
+on_island_f = Vectorize(function(n, a) {
+  d = floor(n / 2) - 1
+  (exp(a) - 1) * exp(a * d) / (exp(a * d) + exp(a * (d + 1)) - 2)
+})
+
+# find the alpha matching some on-island fraction
+f_to_alpha = Vectorize(function(oif, n) {
+  uniroot(function(a) on_island_f(n, a) - oif, c(1e-12, 10))$root
+})
+
+n_ring = 50
+ring_tau = (3.0 / 12) / floor(n_ring / 2) * ring_dist(1, 1:n_ring, n_ring)
+
+rings = data_frame(on_island_f = c(0.99, 0.50, 0.25, 0.10, 0.05)) %>%
+  mutate(alpha = f_to_alpha(on_island_f, n_ring)) %>%
+  group_by(on_island_f, alpha) %>%
+  do(ring_sim(taui = ring_tau, k = 1.0, alpha = .$alpha)) %>%
   ungroup() %>%
   mutate(rho = R/(S + R + D))
+```
 
+```{r}
 # compare with within-host neutral cross-island model
 # black lines
-comp1 = davies_cross %>%
-  filter(k == 1) %>%
-  crossing(island_tau = unique(islets$island_tau))
+ring_comp1 = davies_cross %>%
+  filter(k == 1, tau <= 3 / 12) %>%
+  mutate(on_island_f = 1)
 
-# compare with within-host neutral model, within-island (subpop) model
-# dotted lines
-comp2 = davies_within %>%
-  filter(k == 1)
+# time model
+ring_comp2 = davies_time_comp %>%
+  filter(k == 1, island_tau == 1.5 / 12) %>%
+  mutate(on_island_f = NA)
 
-islets %>%
-  ggplot(aes(tau, rho, color=factor(island_tau))) +
-  geom_point() + geom_line() +
-  geom_line(data=comp1, color='black') +
-  geom_line(data=comp2, linetype=2) +
-  facet_wrap(~ alpha)
+rings %>%
+  ggplot(aes(tau, rho, color = factor(on_island_f))) +
+  geom_point() +
+  geom_line() +
+  geom_line(data = ring_comp1) +
+  geom_line(data = ring_comp2)
 ```
+
+The original within-island simulation arises from this as the number of (equally-populated) islands goes to infinity, all other islands have a fixed use, and islands are well-mixed.
