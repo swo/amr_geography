@@ -17,8 +17,7 @@ res = read_tsv('ears/ears.tsv') %>%
   mutate(n_ns=if_else(is.na(n_ns), n_res, n_ns)) %>%
   # keep only records that have some data
   filter(n_ns > 0) %>%
-  mutate(f_ns=n_ns/n_isolates) %>%
-  select(-n_res, -n_ns)
+  mutate(f_ns = n_ns / n_isolates)
 
 use = read_tsv('esac/esac.tsv') %>%
   filter(!(country=='Romania' & year==2009)) %>%
@@ -42,8 +41,10 @@ mod = comb %>%
 
 ares = res %>%
   group_by(bug, drug, country) %>%
-  summarize(f_ns = weighted.mean(f_ns, n_isolates)) %>%
-  ungroup()
+  summarize(n_ns = sum(n_ns),
+            n_isolates = sum(n_isolates)) %>%
+  ungroup() %>%
+  mutate(f_ns = n_ns / n_isolates)
 
 ause = use %>%
   group_by(drug, country) %>%

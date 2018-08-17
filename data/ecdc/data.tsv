@@ -1,77 +1,77 @@
-bug	drug	country	f_ns	did
-Escherichia coli	quinolone	Belgium	0.21601156467267846	2.695263157894737
-Escherichia coli	quinolone	Bulgaria	0.307752545027408	1.9147058823529413
-Escherichia coli	quinolone	Croatia	0.16245018997312574	1.686
-Escherichia coli	quinolone	Cyprus	0.43175675675675673	3.952
-Escherichia coli	quinolone	Denmark	0.13828194321206744	0.5226315789473684
-Escherichia coli	quinolone	Estonia	0.09970059880239521	1.0186666666666666
-Escherichia coli	quinolone	Finland	0.10071624125439009	1.1826315789473685
-Escherichia coli	quinolone	France	0.183624876679062	2.1563157894736844
-Escherichia coli	quinolone	Greece	0.2206810269799826	2.3636842105263156
-Escherichia coli	quinolone	Hungary	0.27624143320908984	2.050666666666667
-Escherichia coli	quinolone	Iceland	0.08328340323547034	0.7642857142857142
-Escherichia coli	quinolone	Ireland	0.2165730120852898	1.035
-Escherichia coli	quinolone	Italy	0.40134085580304807	3.698888888888889
-Escherichia coli	quinolone	Latvia	0.19666666666666666	1.2976923076923077
-Escherichia coli	quinolone	Lithuania	0.15846560846560848	1.138
-Escherichia coli	quinolone	Luxembourg	0.218159509202454	2.7073684210526316
-Escherichia coli	quinolone	Malta	0.31643895989422655	2.4355555555555557
-Escherichia coli	quinolone	Netherlands	0.12602826616979523	0.8891666666666667
-Escherichia coli	quinolone	Norway	0.09682571371531244	0.544375
-Escherichia coli	quinolone	Poland	0.26871033409172557	1.1185714285714285
-Escherichia coli	quinolone	Portugal	0.2988332574191514	2.6228571428571428
-Escherichia coli	quinolone	Romania	0.28606060606060607	3.496
-Escherichia coli	quinolone	Slovakia	0.38729838709677417	2.034
-Escherichia coli	quinolone	Slovenia	0.18854660347551344	1.4242105263157896
-Escherichia coli	quinolone	Sweden	0.11593419997908898	1.0788888888888888
-Escherichia coli	quinolone	United Kingdom	0.16368063701965802	0.58
-Streptococcus pneumoniae	beta_lactam	Belgium	0.04069364161849711	17.021052631578947
-Streptococcus pneumoniae	beta_lactam	Bulgaria	0.229607250755287	11.298235294117648
-Streptococcus pneumoniae	beta_lactam	Croatia	0.20475785896346643	15.804666666666666
-Streptococcus pneumoniae	beta_lactam	Cyprus	0.3333333333333333	20.096
-Streptococcus pneumoniae	beta_lactam	Denmark	0.042936708860759495	10.396315789473684
-Streptococcus pneumoniae	beta_lactam	Estonia	0.023769100169779286	6.386
-Streptococcus pneumoniae	beta_lactam	Finland	0.12745398773006136	9.624210526315789
-Streptococcus pneumoniae	beta_lactam	France	0.26501766784452296	21.13736842105263
-Streptococcus pneumoniae	beta_lactam	Hungary	0.14625228519195613	10.131333333333334
-Streptococcus pneumoniae	beta_lactam	Iceland	0.08797653958944282	11.65
-Streptococcus pneumoniae	beta_lactam	Ireland	0.18096207686434207	14.091666666666667
-Streptococcus pneumoniae	beta_lactam	Italy	0.10790273556231003	18.692222222222224
-Streptococcus pneumoniae	beta_lactam	Latvia	0.08108108108108109	8.346153846153847
-Streptococcus pneumoniae	beta_lactam	Lithuania	0.13610586011342155	13.113
-Streptococcus pneumoniae	beta_lactam	Luxembourg	0.10352422907488987	17.905789473684212
-Streptococcus pneumoniae	beta_lactam	Malta	0.2898550724637681	15.082222222222223
-Streptococcus pneumoniae	beta_lactam	Netherlands	0.015518251024790162	4.683333333333334
-Streptococcus pneumoniae	beta_lactam	Norway	0.032889459329375904	7.7631250000000005
-Streptococcus pneumoniae	beta_lactam	Poland	0.2464046021093001	13.277142857142858
-Streptococcus pneumoniae	beta_lactam	Portugal	0.12150259067357513	14.512857142857143
-Streptococcus pneumoniae	beta_lactam	Romania	0.3944954128440367	22.39
-Streptococcus pneumoniae	beta_lactam	Slovakia	0.13846153846153847	15.954
-Streptococcus pneumoniae	beta_lactam	Slovenia	0.12284644194756554	11.417368421052632
-Streptococcus pneumoniae	beta_lactam	Sweden	0.041657482918227906	8.302222222222222
-Streptococcus pneumoniae	beta_lactam	United Kingdom	0.04439236230785138	10.846666666666666
-Streptococcus pneumoniae	macrolide	Belgium	0.24746251441753173	2.953684210526316
-Streptococcus pneumoniae	macrolide	Bulgaria	0.1750841750841751	1.805294117647059
-Streptococcus pneumoniae	macrolide	Croatia	0.22131147540983606	2.638
-Streptococcus pneumoniae	macrolide	Cyprus	0.2892561983471074	3.114
-Streptococcus pneumoniae	macrolide	Denmark	0.05488607594936709	2.2573684210526315
-Streptococcus pneumoniae	macrolide	Estonia	0.038535645472061654	2.0033333333333334
-Streptococcus pneumoniae	macrolide	Finland	0.21895522388059702	1.6473684210526316
-Streptococcus pneumoniae	macrolide	France	0.2944229707344009	3.6126315789473686
-Streptococcus pneumoniae	macrolide	Hungary	0.2151652624756967	2.5873333333333335
-Streptococcus pneumoniae	macrolide	Iceland	0.14209115281501342	1.5171428571428571
-Streptococcus pneumoniae	macrolide	Ireland	0.16006423982869378	4.0275
-Streptococcus pneumoniae	macrolide	Italy	0.28067282321899734	5.002222222222223
-Streptococcus pneumoniae	macrolide	Latvia	0.04	1.2592307692307692
-Streptococcus pneumoniae	macrolide	Lithuania	0.16389548693586697	1.8539999999999999
-Streptococcus pneumoniae	macrolide	Luxembourg	0.19130434782608696	3.7931578947368423
-Streptococcus pneumoniae	macrolide	Malta	0.34838709677419355	3.67
-Streptococcus pneumoniae	macrolide	Netherlands	0.05630228404925275	1.2508333333333332
-Streptococcus pneumoniae	macrolide	Norway	0.07422570309718761	1.63625
-Streptococcus pneumoniae	macrolide	Poland	0.2960829493087558	2.2399999999999998
-Streptococcus pneumoniae	macrolide	Portugal	0.18588115794819707	3.2942857142857145
-Streptococcus pneumoniae	macrolide	Romania	0.3582089552238806	2.768
-Streptococcus pneumoniae	macrolide	Slovakia	0.2777777777777778	4.620666666666667
-Streptococcus pneumoniae	macrolide	Slovenia	0.17148217636022514	2.5957894736842104
-Streptococcus pneumoniae	macrolide	Sweden	0.05533188809745019	0.5577777777777778
-Streptococcus pneumoniae	macrolide	United Kingdom	0.07640287769784172	3.3833333333333333
+bug	drug	country	n_ns	n_isolates	f_ns	did
+Escherichia coli	quinolone	Belgium	6276	29054	0.21601156467267846	2.695263157894737
+Escherichia coli	quinolone	Bulgaria	786	2554	0.307752545027408	1.9147058823529413
+Escherichia coli	quinolone	Croatia	1753	10791	0.16245018997312574	1.686
+Escherichia coli	quinolone	Cyprus	639	1480	0.43175675675675673	3.952
+Escherichia coli	quinolone	Denmark	4987	36064	0.13828194321206744	0.5226315789473684
+Escherichia coli	quinolone	Estonia	333	3340	0.09970059880239521	1.0186666666666666
+Escherichia coli	quinolone	Finland	3642	36161	0.10071624125439009	1.1826315789473685
+Escherichia coli	quinolone	France	19357	105416	0.183624876679062	2.1563157894736844
+Escherichia coli	quinolone	Greece	4057	18384	0.2206810269799826	2.3636842105263156
+Escherichia coli	quinolone	Hungary	4595	16634	0.27624143320908984	2.050666666666667
+Escherichia coli	quinolone	Iceland	139	1669	0.08328340323547034	0.7642857142857142
+Escherichia coli	quinolone	Ireland	5627	25982	0.2165730120852898	1.035
+Escherichia coli	quinolone	Italy	10955	27296	0.40134085580304807	3.698888888888889
+Escherichia coli	quinolone	Latvia	236	1200	0.19666666666666666	1.2976923076923077
+Escherichia coli	quinolone	Lithuania	599	3780	0.15846560846560848	1.138
+Escherichia coli	quinolone	Luxembourg	889	4075	0.218159509202454	2.7073684210526316
+Escherichia coli	quinolone	Malta	718	2269	0.31643895989422655	2.4355555555555557
+Escherichia coli	quinolone	Netherlands	6358	50449	0.12602826616979523	0.8891666666666667
+Escherichia coli	quinolone	Norway	2910	30054	0.09682571371531244	0.544375
+Escherichia coli	quinolone	Poland	2244	8351	0.26871033409172557	1.1185714285714285
+Escherichia coli	quinolone	Portugal	8529	28541	0.2988332574191514	2.6228571428571428
+Escherichia coli	quinolone	Romania	472	1650	0.28606060606060607	3.496
+Escherichia coli	quinolone	Slovakia	1921	4960	0.38729838709677417	2.034
+Escherichia coli	quinolone	Slovenia	2387	12660	0.18854660347551344	1.4242105263157896
+Escherichia coli	quinolone	Sweden	6653	57386	0.11593419997908898	1.0788888888888888
+Escherichia coli	quinolone	United Kingdom	9209	56262	0.16368063701965802	0.58
+Streptococcus pneumoniae	beta_lactam	Belgium	704	17300	0.04069364161849711	17.021052631578947
+Streptococcus pneumoniae	beta_lactam	Bulgaria	76	331	0.229607250755287	11.298235294117648
+Streptococcus pneumoniae	beta_lactam	Croatia	241	1177	0.20475785896346643	15.804666666666666
+Streptococcus pneumoniae	beta_lactam	Cyprus	41	123	0.3333333333333333	20.096
+Streptococcus pneumoniae	beta_lactam	Denmark	424	9875	0.042936708860759495	10.396315789473684
+Streptococcus pneumoniae	beta_lactam	Estonia	14	589	0.023769100169779286	6.386
+Streptococcus pneumoniae	beta_lactam	Finland	831	6520	0.12745398773006136	9.624210526315789
+Streptococcus pneumoniae	beta_lactam	France	2400	9056	0.26501766784452296	21.13736842105263
+Streptococcus pneumoniae	beta_lactam	Hungary	240	1641	0.14625228519195613	10.131333333333334
+Streptococcus pneumoniae	beta_lactam	Iceland	30	341	0.08797653958944282	11.65
+Streptococcus pneumoniae	beta_lactam	Ireland	711	3929	0.18096207686434207	14.091666666666667
+Streptococcus pneumoniae	beta_lactam	Italy	284	2632	0.10790273556231003	18.692222222222224
+Streptococcus pneumoniae	beta_lactam	Latvia	27	333	0.08108108108108109	8.346153846153847
+Streptococcus pneumoniae	beta_lactam	Lithuania	72	529	0.13610586011342155	13.113
+Streptococcus pneumoniae	beta_lactam	Luxembourg	47	454	0.10352422907488987	17.905789473684212
+Streptococcus pneumoniae	beta_lactam	Malta	40	138	0.2898550724637681	15.082222222222223
+Streptococcus pneumoniae	beta_lactam	Netherlands	159	10246	0.015518251024790162	4.683333333333334
+Streptococcus pneumoniae	beta_lactam	Norway	205	6233	0.032889459329375904	7.7631250000000005
+Streptococcus pneumoniae	beta_lactam	Poland	257	1043	0.2464046021093001	13.277142857142858
+Streptococcus pneumoniae	beta_lactam	Portugal	469	3860	0.12150259067357513	14.512857142857143
+Streptococcus pneumoniae	beta_lactam	Romania	129	327	0.3944954128440367	22.39
+Streptococcus pneumoniae	beta_lactam	Slovakia	18	130	0.13846153846153847	15.954
+Streptococcus pneumoniae	beta_lactam	Slovenia	328	2670	0.12284644194756554	11.417368421052632
+Streptococcus pneumoniae	beta_lactam	Sweden	378	9074	0.041657482918227906	8.302222222222222
+Streptococcus pneumoniae	beta_lactam	United Kingdom	644	14507	0.04439236230785138	10.846666666666666
+Streptococcus pneumoniae	macrolide	Belgium	4291	17340	0.24746251441753173	2.953684210526316
+Streptococcus pneumoniae	macrolide	Bulgaria	52	297	0.1750841750841751	1.805294117647059
+Streptococcus pneumoniae	macrolide	Croatia	216	976	0.22131147540983606	2.638
+Streptococcus pneumoniae	macrolide	Cyprus	35	121	0.2892561983471074	3.114
+Streptococcus pneumoniae	macrolide	Denmark	542	9875	0.05488607594936709	2.2573684210526315
+Streptococcus pneumoniae	macrolide	Estonia	20	519	0.038535645472061654	2.0033333333333334
+Streptococcus pneumoniae	macrolide	Finland	1467	6700	0.21895522388059702	1.6473684210526316
+Streptococcus pneumoniae	macrolide	France	2666	9055	0.2944229707344009	3.6126315789473686
+Streptococcus pneumoniae	macrolide	Hungary	332	1543	0.2151652624756967	2.5873333333333335
+Streptococcus pneumoniae	macrolide	Iceland	53	373	0.14209115281501342	1.5171428571428571
+Streptococcus pneumoniae	macrolide	Ireland	598	3736	0.16006423982869378	4.0275
+Streptococcus pneumoniae	macrolide	Italy	851	3032	0.28067282321899734	5.002222222222223
+Streptococcus pneumoniae	macrolide	Latvia	15	375	0.04	1.2592307692307692
+Streptococcus pneumoniae	macrolide	Lithuania	69	421	0.16389548693586697	1.8539999999999999
+Streptococcus pneumoniae	macrolide	Luxembourg	88	460	0.19130434782608696	3.7931578947368423
+Streptococcus pneumoniae	macrolide	Malta	54	155	0.34838709677419355	3.67
+Streptococcus pneumoniae	macrolide	Netherlands	599	10639	0.05630228404925275	1.2508333333333332
+Streptococcus pneumoniae	macrolide	Norway	417	5618	0.07422570309718761	1.63625
+Streptococcus pneumoniae	macrolide	Poland	257	868	0.2960829493087558	2.2399999999999998
+Streptococcus pneumoniae	macrolide	Portugal	732	3938	0.18588115794819707	3.2942857142857145
+Streptococcus pneumoniae	macrolide	Romania	96	268	0.3582089552238806	2.768
+Streptococcus pneumoniae	macrolide	Slovakia	40	144	0.2777777777777778	4.620666666666667
+Streptococcus pneumoniae	macrolide	Slovenia	457	2665	0.17148217636022514	2.5957894736842104
+Streptococcus pneumoniae	macrolide	Sweden	536	9687	0.05533188809745019	0.5577777777777778
+Streptococcus pneumoniae	macrolide	United Kingdom	1062	13900	0.07640287769784172	3.3833333333333333
