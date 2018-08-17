@@ -5,6 +5,14 @@
 - Get more careful with the y-axis: how is resistance defined? among whom?
 - Epidemiologic phase: we're looking in a case where the resistant strains have spread and are mostly in some kind of equilibrium. This is implicit in our calculations where we look at the equilibrium values. Could be that resistance is *not* in equilibrium, of course.
 - Use `metafor` or something like it to ask whether there is heterogeneity in the slopes ($Q$ test, Higgins's $I^2$).
+- To test if an intervention had some effect, you need to know (i) magnitude, how big a change in use you need to make to observe a change, (ii) temporality, how long the intervention needs to be made for, and for how long you need to do measrements on the outcome, and (iii) geographical scale, how many people need to be the subject of the intervention if you're going to get some population-level effect. Here we address number 3. Previous research (?) has talked about #1, but those models maybe suck. TBD.
+    - We know that hospital-level interventions work at the level of hospitals. This is because the length scale of the intervention is comparable to the relevant length scale of infection. What's the relevant length scale in the outpatient setting?
+- CDDEP data for aggregations!
+- Small length scales means that you *can* do experiments. E.g., if the relevant scale was the whole US, then you'd be screwed from an inference point of view.
+- Do x-range and y-range explain the difference in slopes? Not in most cases.
+- Refactor everything using purrr, so that it's easier to extract data from the models, or whatever.
+- Refactor using correlations, since that's a more common way of measuring these relationships.
+- Discussion point: non equilibirum (eg colistin) is going to be a very different picture. Use this logic to justify why we picked these organisms, which we expect to be "at equilib" in some way.
 
 # Introduction
 
