@@ -612,3 +612,123 @@ islets %>%
 ```
 
 Colored points and lines show the results from this simulation. Grey boxes show values of the mixing parameter $\alpha$. Black lines show the cross-island simulations. Dotted lines show the subpopulation simulations. I expect that the cross-island and cross-islet simulations coincide for $\alpha = 0$ and that the cross-islet and subpopulation models will be similar when $\alpha = 1$.
+
+## Tunable geographical influence
+
+As a variation on the previous, imagine that the islands can interact with one another in a tunable way. First, arrange the $N$ islands in a ring. The interaction between two islands $i$ and $j$ will be a function of the distance between them $d(i, j) = \min( |i-j|, N - |i-j| )$ as well as a separation parameter $\alpha$. For $\alpha \to \infty$, the islands are completely separate; for $\alpha = 0$, the islands interact fully. Terms like $\beta S X$ in the original model become like:
+$$
+\beta \left( \sum_{j=1}^N W_{ij} S_j \right) X_i,
+$$
+where $\sum_j W_{ij} = 1$. For exponential decay in interaction, this is:
+$$
+W_{ij} = \frac{ \exp\{ -\alpha \, d(i,j) \} }{\sum_{j=1}^N \exp \{ -\alpha \, d(i,j) \} }.
+$$
+Alternatively, we can parameterize this using the distance $d$:
+$$
+W(d) = \frac{e^{-\alpha d}}{\sum_{d'=0}^{\lfloor n/2 \rfloor} e^{-\alpha d'} }
+$$
+
+For $\alpha = 0$, $W_{ij} = 1/N$ for all $i$ and $j$. For $\alpha \to \infty$, $W_{ij} = \mathbf{1}_{i=j}$. So, all told, we write:
+$$
+S_i' = \frac{ \sum_j W_{ij} S_j }{ \phi_i }
+$$
+and similarly for $R_i'$ and $D_i'$.
+
+Use can be distributed randomly across the ring, or there can be some autocorrelation, say via a sinusoid.
+
+```{r}
+ring_v2l = function(x) {
+  x %>%
+    matrix(ncol=4, dimnames=list(NULL, c('X', 'S', 'R', 'D'))) %>%
+    as_tibble() %>%
+    as.list()
+}
+
+ring_dist = function(i, j, n) min(abs(i - j), n - abs(i - j))
+
+ring_ode_func = function(t, state_vector, parms) {
+  state = ring_v2l(state_vector)
+  
+  with(c(state, parms), {
+    n = length(phii)
+    raw_weights = sapply(1:
+    weight = function(i, j) exp(-alpha * ring_dist(i, j, n)) / sum(exp(-alpha * 
+    raw_weights = outer(1:n, 1:n, FUN=function(i, j) exp(
+    
+    
+    prime_f = function(x) (1 - alpha) * x / phii + alpha * sum(x)
+    
+    Sprime = prime_f(S)
+    Rprime = prime_f(R)
+    Dprime = prime_f(D)
+    
+    dS = beta * (Sprime + Dprime) * X - (u + taui) * S - k * beta * (1 - cost) * Rprime * S
+    dR = beta * (1 - cost) * Rprime * X - u * R + taui * D
+    dD = k * beta * (1 - cost) * Rprime * S - (u + taui) * D
+    dX = -(dS + dR + dD)
+    
+    change_vector = c(dX, dS, dR, dD)
+    
+    stopifnot(abs(sum(change_vector)) < 1e-12)
+
+    list(c(dX, dS, dR, dD))
+  })
+}
+
+islet_sim = function(taui, k, alpha, tau50=1.5/12) {
+  n_islets = length(taui)
+  phii = rep(1 / n_islets, n_islets)
+  
+  stopifnot(length(phii) == length(taui))
+  stopifnot(sum(phii) == 1.0)
+  
+  parms = with(davies_base_parms,
+               c(davies_base_parms, taui=list(taui), phii=list(phii), alpha=alpha,
+                 k=k, cost=cost_function(beta, u, k, tau50)))
+  
+  state = data_frame(
+    X = phii * 0.990,
+    S = phii * 0.005,
+    R = phii * 0.005,
+    D = phii * 0
+  )
+  
+  state_vector = unlist(state)
+  
+  result = rootSolve::runsteady(state_vector, func=islet_ode_func, parms=parms)
+  
+  result$y %>%
+    islet_v2l() %>%
+    as_tibble() %>%
+    mutate(tau = taui, islet = seq_along(phii))
+
+}
+
+islets = crossing(island_tau = round(c(1.25, 1.50, 1.75) / 12, 3),
+                  delta_tau = seq(-0.1, 0.1, length.out = 11),
+                  k = c(1.0),
+                  alpha = c(0.0, 0.1, 0.5, 1.0)) %>%
+  mutate(tau = island_tau + delta_tau) %>%
+  group_by(island_tau, alpha, k) %>%
+  do(islet_sim(taui=.$tau, k=unique(.$k), alpha=unique(.$alpha))) %>%
+  ungroup() %>%
+  mutate(rho = R/(S + R + D))
+
+# compare with within-host neutral cross-island model
+# black lines
+comp1 = davies_cross %>%
+  filter(k == 1) %>%
+  crossing(island_tau = unique(islets$island_tau))
+
+# compare with within-host neutral model, within-island (subpop) model
+# dotted lines
+comp2 = davies_within %>%
+  filter(k == 1)
+
+islets %>%
+  ggplot(aes(tau, rho, color=factor(island_tau))) +
+  geom_point() + geom_line() +
+  geom_line(data=comp1, color='black') +
+  geom_line(data=comp2, linetype=2) +
+  facet_wrap(~ alpha)
+```
