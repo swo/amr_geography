@@ -1,5 +1,6 @@
 # To do
 
+- Call them "patches" rather than islands. Then it's all about how patches are connected. This is easier than islands and islets, etc.
 - What's up with ECDC vs. Kahlmeter?
 - Get more careful with the x-axis: how are DDDs defined for each study? among whom?
 - Get more careful with the y-axis: how is resistance defined? among whom?
