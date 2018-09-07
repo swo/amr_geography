@@ -23,6 +23,45 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 - I show that slopes within each island are more shallow than the cross-island relationship. It's also true that if you take a sample of within-island values from different islands, you'll also get a more shallow slope, just maybe not quite as shallow. I put that as a gray line.
 - I do the derivation of the subpopulation equations by assuming that the target group is small so that the island-wide $(S, R, D, X)$ is fixed. In fact, you can say that the target group, which is a fraction $f$ of the whole island, has use $\tau_1$ such that the remaining $1-f$ has use $\tau_0$ where $f \tau_1 + (1-f) \tau_0 = \tau$. In this case, you get the same equations as below. In other words, so long as the subpopulations have use such that the island-wide average use is $\tau$, then the cross-island relationship holds regardless of the size of the subgroups.
 
+## Outline
+
+- Theory
+  - Interactions between populations dilute $r ~ u$. Too small a scale gives low slopes.
+  - Slopes, correlations, and $\sigma_x^2$. We expect slopes to be similar, so $r^2 : \sigma_x \to [-1, 1]$.
+- MAUP
+  - ECDC, IMS/NHSN, MarketScan/RO
+  - Is there some level of aggregation that tends to deliver stronger slopes?
+- Smaller scale
+  - Medicare/RO: going down to HRRs isn't bad. I'm not sure this is very convincing.
+- Figures
+  - Model explanation, islands & ring illustration
+  - Tuning parameters and connectivity; how connectivity affects the slope
+  - Zonal & random samples, maybe in 3 separate plots? Or in one huge plot with lots of insets
+
+## Range of $x$-axis
+
+Imagine that $x$ and $y$ are linearly related:
+$$
+y_i = m x_i + b + \epsilon_i
+$$
+The variance $\sigma_y^2$ partitions:
+$$
+\sigma_y^2 = m^2 \sigma_x^2 + \sigma_\epsilon^2
+$$
+so that the correlation coefficient between $x$ and $y$, the fraction of $\sigma_y^2$ "explained" by $x$, is:
+$$
+\begin{aligned}
+r^2 &\approx \frac{m^2 \sigma_x^2}{\sigma_y^2} \\
+  &= \frac{m^2 \sigma_x^2}{m^2 \sigma_x^2 + \sigma_\epsilon^2} \\
+  &= \frac{1}{1 + \sigma_\epsilon / (m^2 \sigma_x^2)} \\
+  &= m^2 \frac{\sigma_x^2}{\sigma_y^2} + \mathcal{O}\left( \frac{\sigma_x^2}{\sigma_\epsilon^2} \right)^2 \text{ for } \sigma_x^2 \ll \sigma_\epsilon^2
+\end{aligned}
+$$
+In other words, the observed correlation coefficient is a function of the slope as well as of the scale of the $x$-axis. If $x$ varies over a small range, $r^2$ will tend to increase linearly with the square of the standard deviation of $x$.
+
+The correlation coefficient between them is, roughly speaking, the fraction of the variance $\sigma_y^2$ "explained" by $x$.
+so that
+
 # Introduction
 
 We expect that changing antibiotic use may have an effect on resistance. One complicating factor in this potential relationship is geographic scale. At what scale ---individual, community, state, country--- must an intervention take place?
@@ -738,3 +777,36 @@ rings %>%
 ```
 
 The original within-island simulation arises from this as the number of (equally-populated) islands goes to infinity, all other islands have a fixed use, and islands are well-mixed.
+
+### Weird uses
+
+What if islands had randomly mixed uses? Like, there's no spatial autocorrelation: each use is drawn from a random uniform distribution. Or, we just mix up the previous ones.
+
+```{r}
+ring_tau2 = runif(n_ring, 0, 3.0 / 12)
+ring_tau3 = sample(ring_tau)
+
+rings2 = data_frame(on_island_f = c(0.99, 0.50, 0.25, 0.10, 0.05)) %>%
+  mutate(alpha = f_to_alpha(on_island_f, n_ring)) %>%
+  group_by(on_island_f, alpha) %>%
+  do(ring_sim(taui = ring_tau2, k = 1.0, alpha = .$alpha)) %>%
+  ungroup() %>%
+  mutate(rho = R/(S + R + D))
+
+rings3 = data_frame(on_island_f = c(0.99, 0.50, 0.25, 0.10, 0.05)) %>%
+  mutate(alpha = f_to_alpha(on_island_f, n_ring)) %>%
+  group_by(on_island_f, alpha) %>%
+  do(ring_sim(taui = ring_tau3, k = 1.0, alpha = .$alpha)) %>%
+  ungroup() %>%
+  mutate(rho = R/(S + R + D))
+
+rings2 %>%
+  ggplot(aes(tau, rho, color = factor(on_island_f))) +
+  geom_point() +
+  geom_line()
+
+rings3 %>%
+  ggplot(aes(tau, rho, color = factor(on_island_f))) +
+  geom_point() +
+  geom_line()
+```
