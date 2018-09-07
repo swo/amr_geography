@@ -435,9 +435,80 @@ sample1 = function(n, k) {
   sample(c(1:k, sample(k, n - k, replace = TRUE)))
 }
 
+# given distances between things, create groups
+random_zones = function(distances, k) {
+  stopifnot(nrow(distances) == ncol(distances))
+  stopifnot(nrow(distances) >= k)
+  
+  centers = sample(1:nrow(distances), k)
+  zones = distances[, centers] %>%
+    apply(1, function(x) centers[which.min(x)])
+  
+  zones
+}
+
+verify_unit_data = function(unit_data) {
+  stopifnot(all(c('unit', 'long', 'lat') %in% names(unit_data)))
+  if (any(duplicated(unit_data$unit))) stop('duplicated units')
+}
+
+deg2rad = function(deg) deg * pi / 180
+
+haversine = function(long1, lat1, long2, lat2, R = 1.0) {
+  long1 = deg2rad(long1)
+  lat1 = deg2rad(lat1)
+  long2 = deg2rad(long2)
+  lat2 = deg2rad(lat2)
+  R * acos(pmin(1.0, sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(long2 - long1)))
+}
+
+unit_distances = function(unit_data) {
+  verify_unit_data(unit_data)
+  units = unit_data$unit
+  n_units = length(units)
+  
+  unit_data %>%
+    crossing(., .) %>%
+    arrange(unit, unit1) %>%
+    mutate(dist = haversine(long, lat, long1, lat1)) %$%
+    matrix(dist, ncol = n_units, nrow = n_units) %>%
+    set_rownames(units) %>%
+    set_colnames(units)
+}
+
+# marketscan unit data
+mud = marketscan %>%
+  filter(bugdrug == 'Ec/q') %>%
+  select(unit) %>%
+  distinct() %>%
+  left_join(state_data, by = c('unit' = 'state'))
+
+# marketscan distances
+msd = unit_distances(mud)
+
+# one random sample & random zone
+rs = sample1(length(mud$unit), 5)
+rz = random_zones(msd, 5)
+
+m %>%
+  as_tibble() %>%
+  left_join(data_frame(region = tolower(names(rz)), zone = rz), by = 'region') %>%
+  left_join(data_frame(region = mud$unit, sam = rs, by = 'region')) %>%
+  gather('key', 'value', rz, rs) %>%
+  ggplot(aes(x = long, y = lat)) +
+  geom_polygon(aes(fill = factor(agg)))
+
+data_frame(state = tolower(names(rz)), agg = rz) %>%
+  ggplot(aes(map_id = state)) +
+  geom_map(aes(fill = factor(agg)), map = m) +
+  expand_limits(x = m$long, y = m$lat) +
+  coord_map()
+```
+
+```{r}
 range1 = function(x) max(x) - min(x)
 
-maup_sim = function(ur, unit_data, ks, n_iterations=10, extra_groups=NULL) {
+maup_sim = function(useres, unit_data, ks, n_iterations = 10, extra_groups = NULL) {
   if (!all(c('unit', 'long', 'lat', 'population') %in% names(unit_data))) {
     stop('missing columns in unit_data')
   }
@@ -455,7 +526,7 @@ maup_sim = function(ur, unit_data, ks, n_iterations=10, extra_groups=NULL) {
     }
   }
   
-  bugdrugs = unique(ur$bugdrug)
+  bugdrugs = unique(useres$bugdrug)
 
   random_samples = function(k) {
     samples = as.character(sample1(n_units, k))
@@ -506,7 +577,7 @@ maup_sim = function(ur, unit_data, ks, n_iterations=10, extra_groups=NULL) {
 }
 ```
 
-```{r}
+```{r, eval = FALSE}
 marketscan_unit_data = state_data %>%
   rename(unit = state) %>%
   filter(unit %in% marketscan$unit)
@@ -534,7 +605,7 @@ marketscan_maup = maup_sim(marketscan, marketscan_unit_data, marketscan_ks,
                            extra_groups = census_groups)
 ```
 
-```{r}
+```{r, eval = FALSE}
 marketscan_maup %>%
   select(k, iteration, type, bugdrug, slope, cor) %>%
   gather('metric', 'estimate', slope, cor) %>%
@@ -581,7 +652,7 @@ ex4 %>%
 
 ## Using IMS/NHSN
 
-```{r}
+```{r, eval = FALSE}
 nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
   rename(state_abbreviation = state) %>%
   filter(state_abbreviation %in% state.abb) %>%
@@ -605,7 +676,7 @@ nhsn_maup = maup_sim(nhsn, nhsn_unit_data, c(4, 9, 20, 30, 40),
                      extra_groups = nhsn_extra_groups)
 ```
 
-```{r}
+```{r, eval = FALSE}
 nhsn_maup %>%
   select(k, iteration, type, bugdrug, slope, cor) %>%
   gather('metric', 'estimate', slope, cor) %>%
@@ -624,8 +695,9 @@ europe = read_tsv('../data/ecdc/data.tsv') %>%
     .$bug == 'Streptococcus pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
     .$bug == 'Streptococcus pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
   )) %>%
-  left_join(select(europe_centers, country, population), by='country') %>%
   select(unit = country, bugdrug, did, n_resistant = n_ns, n_isolates)
+  # left_join(select(europe_centers, country, population), by='country') %>%
+  # select(unit = country, bugdrug, did, n_resistant = n_ns, n_isolates)
 
 europe_units = read_tsv('../db/europe_centers/europe_centers.tsv') %>%
   filter(country %in% europe$unit) %>%
