@@ -19,6 +19,7 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 
 # To add
 
+- Why don't resistances in the time analysis go all the way up to 1?
 - Here I talk about changing the geographical scale of analysis; I think it might be more common to think about the geographical scale of transmission. If the scale of transmission is longer than the scale of the geographical analysis, then you're doing the same thing I talk about here, subdividing an island. (Conversely, if transmission scales are shorter than geographical scales, you might see a relationship.)
 - I show that slopes within each island are more shallow than the cross-island relationship. It's also true that if you take a sample of within-island values from different islands, you'll also get a more shallow slope, just maybe not quite as shallow. I put that as a gray line.
 - I do the derivation of the subpopulation equations by assuming that the target group is small so that the island-wide $(S, R, D, X)$ is fixed. In fact, you can say that the target group, which is a fraction $f$ of the whole island, has use $\tau_1$ such that the remaining $1-f$ has use $\tau_0$ where $f \tau_1 + (1-f) \tau_0 = \tau$. In this case, you get the same equations as below. In other words, so long as the subpopulations have use such that the island-wide average use is $\tau$, then the cross-island relationship holds regardless of the size of the subgroups.
@@ -38,59 +39,58 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
   - Tuning parameters and connectivity; how connectivity affects the slope
   - Zonal & random samples, maybe in 3 separate plots? Or in one huge plot with lots of insets
 
-## Range of $x$-axis
-
-Imagine that $x$ and $y$ are linearly related:
-$$
-y_i = m x_i + b + \epsilon_i
-$$
-The variance $\sigma_y^2$ partitions:
-$$
-\sigma_y^2 = m^2 \sigma_x^2 + \sigma_\epsilon^2
-$$
-so that the correlation coefficient between $x$ and $y$, the fraction of $\sigma_y^2$ "explained" by $x$, is:
-$$
-\begin{aligned}
-r^2 &\approx \frac{m^2 \sigma_x^2}{\sigma_y^2} \\
-  &= \frac{m^2 \sigma_x^2}{m^2 \sigma_x^2 + \sigma_\epsilon^2} \\
-  &= \frac{1}{1 + \sigma_\epsilon / (m^2 \sigma_x^2)} \\
-  &= m^2 \frac{\sigma_x^2}{\sigma_y^2} + \mathcal{O}\left( \frac{\sigma_x^2}{\sigma_\epsilon^2} \right)^2 \text{ for } \sigma_x^2 \ll \sigma_\epsilon^2
-\end{aligned}
-$$
-In other words, the observed correlation coefficient is a function of the slope as well as of the scale of the $x$-axis. If $x$ varies over a small range, $r^2$ will tend to increase linearly with the square of the standard deviation of $x$.
-
-The correlation coefficient between them is, roughly speaking, the fraction of the variance $\sigma_y^2$ "explained" by $x$.
-so that
-
 # Introduction
 
-We expect that changing antibiotic use may have an effect on resistance. One complicating factor in this potential relationship is geographic scale. At what scale ---individual, community, state, country--- must an intervention take place?
+We expect that changing antibiotic use may have an effect on resistance. One complicating factor in this potential relationship is geographic scale. At what scale ---individual, community, state, country--- must an intervention take place? Relatedly, at what geographic scale must an ecological analysis be conducted?
 
-To develop insight about this question, I present a schematic model of how the geographical scale of analysis can affect the apparent relationship between antibiotic use and resistance.
+If the intervention or analysis is performed at a length scale much shorter than the length scale of transmission, then the outcome will be due mostly to the exposure of individuals other than the ones under study. The effect will be "washed out". On the other hand, if the analysis is on a length scale musch shorter than the biologically-relevant scale, then areas with different exposures and outcomes will end up mixed together, limiting the study's ability to identify the relationship.
 
-Imagine that the world consists of islands. The people on each island interact with every other person on the island but not at all with people on other islands. Each island is sufficiently large so that susceptibility and resistance persist without dying out.
-
-I assume that there is some relationship between antibiotic use $\tau$ and resistance prevalence $\rho$ across islands, such that the average use $\tau$ on an island (along with other parameters that are constant across islands) determines the proportion of people who are uncolonized $X$, colonized with a sensitive strain $S$, or colonized with a resistance strain $R$. I define the resistance prevalence is the proportion of colonized people that are colonized with resistant strains $\rho := R/(1-X)$.
-
-If the islands' use-resistance pairs $(\tau, \rho)$ fall on a line, then performing the analysis at a larger geographic scale will produce points on the same line. In other words, if $\rho_i = m \tau_i + b$ for all islands $i$ in an archipelago, then the mean (archipelago-level) values $\overline{\rho}$ and $\overline{\tau}$ also obey $\overline{\rho} = m \overline{\tau} + b$. 
-
-In reality these points would not fall on a line but would be subject to some variance. By the law of large numbers, grouping islands into archipelagos would tend to decrease that variance. In reality the relationship between $\tau$ and $\rho$ is almost certainly some curve rather than a line, and the precise spline traced out by archipelago $(\tau, \rho)$ pairs will depend on the precise grouping.
-
-In contrast, going to smaller geographical scales ---subdividing an island--- could produce systematically different use-resistance relationships. To show this, consider an island with average use $\tau$ but with some distribution of use among its inhabitants. An islander with use $\tau^\star < \tau$ is more likely to have resistance than an islander with use $\tau$ from an island with average use $\tau^\star$ because they are subject to the infection pressure from the more-often-resistant strains carried by the other islanders. Conversely, an islander with use $\tau^\star > \tau$ on the $\tau$ island is less likely to have resistance than an islander with use $\tau^\star$ on an island with average use $\tau^\star$. Thus, within-island use-resistance relationships will tend to have weaker slopes than the cross-island relationship: an individual's use-resistance relationship is diluted by the activity of the other islanders.
-
-If within-island slopes are much shallower than cross-island slopes, then we can start to address the question of what length scales are relevant for AMR. For example, if you get the same slope whether grouping by county, state, or country, then it implies that the relevant length scale is shorter than a county size, meaning that we don't find evidence that the AMR length scale will invalidate a county-level intervention.
+To develop insight about this problem, I present a schematic model of how the geographical scale of analysis can affect the apparent relationship between antibiotic use and resistance.
 
 # Methods
 
-To test how cross-island and within-island slopes compare, I use a transmission model that displays sensitive-resistant coexistence to compute the relationship between $\tau$ and $\rho$ across islands, and I alter the model so it describes the relationship between use and resistance within an island. To show that these results are not specific to a single model's structure, I repeat the analysis with a second model of coexistence. I also use a second method of generating within-island relationships.
+## Summary of approaches
 
-## Cross-island models
+We use *theoretical* and *empirical* approaches.
 
-I use two cross-island models, the within-host neutrality model proposed by [Davies *et al.*](https://www.biorxiv.org/content/early/2018/01/03/217232) (doi:10.1101/217232), and the D-types model proposed by Lehtinen *et al*.
+First, we run simulations where the length scale of transmission is known, and the analysis is varied between units shorter and longer than that scale.
 
-### Within-host model
+Second, we re-analyze empirical, ecological-level data about use and resistance and determine which length scales of transmission are compatible with those data.
 
-In the within-host model, contact between sensitive-colonized $S$ and resistant-colonized $R$ hosts can lead the $S$ hosts to become dual-colonized $D$. These $D$ hosts act like $S$ hosts for purposes of infection, but if they are treated with antibiotics, then they become $R$.
+## Intuition behind the simulation approach
+
+Consider a set of islands. The inhabitants only have contact with other members of their island. The inhabitants of each island have some levels of average antibiotic use and antibiotic resistance. For simplicity, imagine that the use-resistance pairs $(\tau, \rho)$ fall on a line, subject to some noise.
+
+Clearly the correct scale of analysis is the island. Using a larger scale of analysis ---say, aggregating nearby islands and using their cross-island average use and resistance--- will decrease statistical power, as there are fewer independent units. On the other hand, too small a scale ---say, different populations on the same island--- means that the units are not independent, and the use-resistance relationship will be "washed out" by the population-average value.
+
+To see this, consider (*i*) a "lower-using-than-average" islander with use $\tau_\mathrm{lo}$ on an island with average use $\tau_\mathrm{hi} > \tau_\mathrm{lo}$ and (*ii*) a "low-and-average" islander with use $\tau_\mathrm{lo}$ on an island with average use $\tau_\mathrm{lo}$. The lower-than-average islander, being surrounded by individuals with a higher average probability of resistant carriage, is more likely to carry a resistant strain than the low-and-average islander. Conversely, a "higher-using-than-average" islander will benefit from the lower resistance probability of their neighbors.
+
+This logic helps explain why a hospitalized person, whether they are receiving antibiotics or not, is more likely to carry a resistant organism than a person with the same antibiotic use who is outside the hospital.
+
+We will use simulations to quantify the change in the measured use-resistance relationship when changing the length scale of the analysis.
+
+## Simulations and models
+
+Generally, we are interested in the relationship between antibiotic use $\tau$ and antibiotic resistance $\rho$. In most of these models, $\rho := R / (1-X)$, where $R$ is the proportion of the population carrying resistant bacteria, and $X$ is the proportion that are not carriers.
+
+I will run simulations using three analytical frameworks:
+
+1. Completely separate islands, each with different $\tau$ and $\rho$.
+1. A single large island, with one $(\tau, \rho)$ pair, that is strongly connected to small islands, each with its own $\tau$.
+1. A single island, in which individuals are tracked by their time since last treatment.
+
+As sensitivity analyses, I will also consider two more spatial arrangements:
+
+- The large and small island simulation, but with the relative size of the two islands being modulated
+- A ring of islands, each with their own $\tau$, with tunable connectivity
+
+I will use a dynamical modeling framework, the "within-host neutrality" (WHN) model presented by [Davies *et al.*](https://www.biorxiv.org/content/early/2018/01/03/217232) (doi:10.1101/217232), thats exhibit coexistence between susceptible and resistant organisms, with some relationship between $\tau$ and $\rho$. As a sensitivity analysis, I will repeat the analyses using the model presented by Lehtinen *et al*. (hereafter "D-types" model).
+
+## Model specifications
+
+### Cross-island, WHN model
+
+In the within-host neutrality model, contact between sensitive-colonized $S$ and resistant-colonized $R$ hosts can lead the $S$ hosts to become dual-colonized $D$. These $D$ hosts act like $S$ hosts for purposes of infection, but if they are treated with antibiotics, then they become $R$.
 $$
 \begin{aligned}
 \dot{S} &= \beta (S + D) X - (u + \tau) S - k \beta \underline{(1-c)} R S \\
@@ -103,7 +103,7 @@ where $X$ is uncolonized, $u$ is the natural recovery rate, $\tau$ is the antibi
 
 The parameter values are drawn from the manuscript: $u = 1 \text{ month}^{-1}$, $\beta = 4$ (I presume the units are also month$^{-1}$, $\tau \in [0, 4]$ courses per person per year (i.e., up to $1/3 \text{ month}^{-1}$, and $k \in \{0, 1/4, 1/2, 1\}$. In the manuscript, the cost $c$ was chosen such that $\rho = 1/2$ when $\tau = 1.5$ courses per person per year. To find these values, I used a symbolic computation program (SageMath) to directly solve the differential equations at equilibrium.
 
-```{r}
+```{r whn_parameters}
 davies_base_parms = list(
   beta = 4.0,
   u = 1.0
@@ -135,24 +135,24 @@ data_frame(
 
 As per the manuscript's method, the model is initiated with $X = 0.998$, $S = R = 0.001$, and $D = 0$, then run to equilibrium. The model is interrogated by altering $\tau$ and examining the equilibrium resistance prevalence $R/(1-X)$.
 
-### D-type models
+### Cross-island, D-type models
 
-In the D-types model, there $n$ "duration"-types, each with clearance rate $\mu_x$. Each type $x$ has sensitive and resistant strains, so the compartments are uncolonized $U$, sensitive-colonized $I_{xs}$, and $I_{xr}$. The D-types are subject to balancing selection, encoded by
+In the D-types model, there $n$ "duration"-types, each with clearance rate $\mu_i$. Each type $i$ has sensitive and resistant strains, so the compartments are uncolonized $X$, sensitive-colonized $S_i$, and $R_i$. The D-types are subject to balancing selection, encoded by
 $$
-v(I_x) = \left( 1 - \left[ \frac{I_{xs} + I_{xr}}{\sum_y (I_{ys} + I_{yr})} - \frac{1}{n} \right]\right)^k,
+v_i = \left( 1 - \left[ \frac{S_i + R_i}{\sum_j (S_j + R_j)} - \frac{1}{n} \right]\right)^k,
 $$
 where $k \geq 1$ is the force of that selection. Thus:
 $$
 \begin{aligned}
-\frac{dI_{xs}}{dt} &= \beta I_{xs} v(I_x) U - (\tau + \mu_x) I_{xs} \\
-\frac{dI_{xr}}{dt} &= \frac{\beta}{c_\beta} I_{xr} v(I_x) U - c_\mu \mu_x I_{xr},
+\dot{S}_i &= v_i \beta S_i X - (\tau + \mu_i) S_i \\
+\dot{R}_i &= v_i \frac{\beta}{c_\beta} R_i X - c_\mu \mu_i R_i \\
 \end{aligned}
 $$
 where $\beta$ is the transmission coefficient, $\tau$ is the antibiotic treatment rate, $c_\beta \geq 1$ and $c_\mu \geq 1$ are the fitness costs of resistance.
 
 The parameter values are drawn from the paper: $n = 16$, $\beta = 2$, $c_\beta = 1$, $c_\mu = 1.1$, $k = 15$, $\tau \in [0.04, 0.20]$, $\mu_x$ evenly spaced in $[0.5, 2]$.
 
-```{r}
+```{r dtypes_parameters}
 # swo: some parms are lists, some are vectors. pick one?
 dtypes_base_parms = list(
   n = 16,
@@ -168,42 +168,42 @@ dtypes_base_parms$mux = with(dtypes_base_parms,
                              seq(min_mu, max_mu, length=n))
 ```
 
-I initiated the model with $U=0.9$ and the remaining 10% of the population divided evenly among the $I_{xs}$ and $I_{xr}$. Again, $\tau$ is altered and the equilibrium resistance prevalence $\sum_x I_{xr} / \sum_x (I_{xs} + I_{xr})$ is examined.
+I initiated the model with $X=0.9$ and the remaining 10% of the population divided evenly among the $S_i$ and $R_i$. Again, $\tau$ is altered and the equilibrium resistance prevalence $\sum_i R_i / \sum_i (S_i + R_i)$ is examined.
 
-## Within-island models
+### Small-island, WHN model
 
-### Using the within-host model
+The big island has an antibiotic use $T$ that has fixed the population composition $(X, S, R, D)$ on that island. We stipulate that $X + S + R + D = 1$. The small island has use $\tau$ and composition $(x, s, r, d)$, also summing to unity. Given fixed big-island parameters, how does affecting the small-island $\tau$ change the small-island composition?
 
-To find the within-island relationship, imagine that the force of infection for an individual on the island is fixed by the island-wide population composition (for the within-host model, $X$, $S$, $R$, and $D$), determined by the island-wide average antibiotic use $\tau$. Consider a small group of islanders with antibiotic use $\tau^\star$. The group is small enough that we don't have to worry that antibiotic consumption within the group changes the force of infection on other members of the group. Analogous to the island-wide $X$, $S$, $R$, and $D$, there are group-specific values $\mathscr{X}$, $\mathscr{S}$, $\mathscr{R}$, and $\mathscr{D}$ such that:
+We assume that the small islands are small enough that changes in their use $\tau$ do not affect the large island or one another.
 $$
 \begin{aligned}
-\dot{\mathscr{S}} &= \beta (S + D) \mathscr{X} - (u + \tau^\star) \mathscr{S} - k \beta (1-c) R \mathscr{S} \\
-\dot{\mathscr{R}} &= \beta (1-c) R \mathscr{X} - u \mathscr{R} + \tau^\star \mathscr{D} \\
-\dot{\mathscr{D}} &= k \beta (1-c) R \mathscr{S} - (u + \tau^\star) \mathscr{D} \\
-1 &= \mathscr{X} + \mathscr{S} + \mathscr{R} + \mathscr{D}
+\dot{s} &= \beta (S + D) x - (u + \tau) s - k \beta (1-c) R s \\
+\dot{r} &= \beta (1-c) R x - u R + \tau d \\
+\dot{d} &= k \beta (1-c) R s - (u + \tau) d \\
+1 &= x + s + r + d \\
 \end{aligned}
 $$
 
-In these analyses, the island-wide $\tau$ is set; the cross-island equations are solved for and fixed at the equilibrium values $X$, $S$, $R$, and $D$; and then $\tau^\star$ is varied and these equations are solved for the equilibrium, within-island resistance prevalence $\rho^\star = \mathscr{R} / (1-\mathscr{X})$.
+In these analyses, the big-island $T$ is set; the big-island equations are solved for and fixed at the equilibrium values $X$, $S$, $R$, and $D$; and then $\tau$ is varied and these equations are solved for the equilibrium, small-island resistance prevalence $\rho = \mathscr{r} / (1-x)$.
 
-### Using the D-types model
+### Small-island, D-types model
 
-In the within-island model, the force of infection and the balancing selection
-are determined by the island-wide $I_{xs}$ and $I_{xr}$. People move between the
-within-island compartments $\mathscr{U}$, $\mathscr{I}_{xs}$, and $\mathscr{I}_{xr}$:
+The force of infection and the balancing selection
+are determined by the big-island $S_i$ and $R_i$. People move between the small-island compartments $x$, $s_i$, and $r_i$:
 $$
 \begin{aligned}
-\dot{\mathscr{I}}_{xs} &= \beta I_{xs} v(I_x) \mathscr{U} - (\tau^\star + \mu_x) \mathscr{I}_{xs} \\
-\dot{\mathscr{I}}_{xr} &= \frac{\beta}{c_\beta} I_{xr} v(I_x) \mathscr{U} - c_\mu \mu_x \mathscr{I}_{xr}
+\dot{s}_i &= V_i \beta S_i x - (\tau + \mu_i) S_i \\
+\dot{r}_i &= V_i \frac{\beta}{c_\beta} R_i x - c_\mu \mu_i r_i \\
 \end{aligned}
 $$
+The $V_i$ is the balancing force term, which I capitalized to emphasize that it depends on the big-island values.
 
-The within-island resistance prevalence will depend on all the D-types:
+The small-island resistance prevalence will depend on all the D-types:
 $$
-\rho^\star = \frac{\sum_x \mathscr{I}_{xr}}{\sum_x (\mathscr{I}_{xs} + \mathscr{I}_{xr})}.
+\rho  = \frac{\sum_i r_i}{\sum_i (s_i + r_i)}.
 $$
 
-### Using a time-since-treatment model
+### Time-since-treatment, WHN model
 
 Another way to model this within-island difference is to consider the time between individuals' treatments. This requires modifying the equations so that individuals can transfer between compartments at a single timestep (via colonization or recovery) or can move between time since treatment (via treatment or by "aging out"). I modify the within-host model to show this:
 $$
@@ -215,17 +215,15 @@ $$
   &\qquad \mathbf{1}_{t=1} \tau (S_\bullet + X_\bullet) - \mathbf{1}_{t \neq T} \alpha X_t + \mathbf{1}_{t \neq 1} \alpha X_{t-1}
 \end{aligned}
 $$
-where the subscript $t$ indicates time since treatment ($t=1$ means 0 to 1 month since treatment, $t=2$ means 1-2 months, etc.), $T$ is the number of time brackets recorded, the bullet indicates summation ($S_\bullet = \sum_t S_t$), $\mathbf{1}$ is the indicator function, and $1/\alpha$ is the duration of the time bracket. Note that treatment moves individuals out of the $X_t$ and $R_t$ compartments not because they change colonization status but because they move individuals back to $X_1$ and $R_1$.
+where the subscript $t$ indicates time since treatment ($t=1$ means 0 to 1 month since treatment, $t=2$ means 1-2 months, etc.), $T$ is the number of time brackets recorded, the bullet indicates summation ($S_\bullet = \sum_t S_t$), $\mathbf{1}$ is the indicator function, and $1/\alpha = 1 \text{ month}$ is the duration of the time bracket. Note that treatment moves individuals out of the $X_t$ and $R_t$ compartments not because they change colonization status but because they move individuals back to $X_1$ and $R_1$.
 
-I use $\alpha = u = 1 \text{ month}^{-1}$ and set $T = 72$ (i.e., recording up to 6 years since treatment). These equations are also solved numerically, setting all initial populations into the "just treated" compartments $t=1$.
+I set $T = 72$ (i.e., recording up to 6 years since treatment). These equations are also solved numerically, setting all initial populations into the "just treated" compartments $t=1$.
 
-To interrogate this model, a single island-wide $\tau$ is selected. An individual has a typical time $1/\tau^\star$ between treatments such that they tend to cycle between compartments with $t=1$ up to those with $t^\star = (1/\tau^\star)/(1/\alpha)$, displaying an average resistance proportion $\rho^\star = \sum_{t=0}^{t^\star} R_t / (S_t + R_t + D_t)$. The within-island relationship is then between $\tau^\star$ and $\rho^\star$.
+The resistance propotion $\rho_t = R_t / (S_t + R_t + D_t)$ depends on the time bracket. Individuals in bracket $t$, who were treated at most $t/\alpha$ ago, have "average use" $\alpha/t$.
 
 # Results
 
-## Within-host model
-
-### Within-host, cross-island
+## Cross-island, WHN model
 
 I reproduce Figure 2e from Davies *et al*., showing that resistance prevalence increases with antibiotic use, and a greater efficiency of co-colonization $k$ allows greater range of coexistence.
 
@@ -257,14 +255,17 @@ davies_cross_sim = function(tau, k, tau50=1.5/12) {
   result$y %>% as.list %>% as_tibble
 }
 
-davies_cross = crossing(tau = round(seq(0, 4, length.out=51) / 12, 3),
-                         k = c(0, 0.25, 0.5, 1.0)) %>%
-  group_by_all %>%
-  do(davies_cross_sim(.$tau, .$k)) %>%
-  ungroup() %>%
+davies_cross_all = crossing(
+  tau = round(seq(0, 4, length.out=51) / 12, 3),
+  k = c(0, 0.25, 0.5, 1.0)
+) %>%
+  mutate(model = map2(tau, k, davies_cross_sim)) %>%
+  unnest() %>%
   mutate(rho = R / (1 - X))
 
-davies_cross %>%
+davies_cross = davies_cross_all %>% filter(k == 1.0)
+
+davies_cross_all %>%
   ggplot(aes(tau, rho, color=factor(k), group=factor(k))) +
   geom_point(shape=0) +
   geom_line() +
@@ -274,28 +275,28 @@ davies_cross %>%
   theme_minimal()
 ```
 
-### Within-host, within-island
+In the remainder of this paper, we will stick to $k=1$ and set $\tau_{50} = 1.5 / 12$.
 
-These are the results from the two within-island simulations: the one with the fixed island population, and the one with recorded time since treatment.
+## Small-island, WHN model
 
-```{r davies_within_sim}
-davies_within_sim = function(island_tau, tau, k, tau50=1.5/12) {
-  # get the island-level results
-  island = davies_cross_sim(island_tau, k)
+```{r davies_small_sim}
+davies_small_sim = function(big_tau, tau, k = 1.0, tau50 = 1.5/12) {
+  # get the big-island results
+  big = davies_cross_sim(big_tau, k)
   
   parms = with(davies_base_parms,
-               c(davies_base_parms, tau=tau,
-                 k=k, cost=cost_function(beta, u, k, tau50)))
+               c(davies_base_parms, tau = tau,
+                 k = k, cost = cost_function(beta, u, k, tau50)))
 
-  # initial state is the island-level results
-  state = unlist(island)
+  # initial state is the big-island results
+  state = unlist(big)
   stopifnot(abs(sum(state) - 1) < 1e-6)
     
   ode_func = function(t, state, parms) {
     with(c(state, parms), {
-      dS = beta * (island$S + island$D) * X - (u + tau) * S - k * beta * (1 - cost) * island$R * S
-      dR = beta * (1 - cost) * island$R * X - u * R + tau * D
-      dD = k * beta * (1 - cost) * island$R * S - (u + tau) * D
+      dS = beta * (big$S + big$D) * X - (u + tau) * S - k * beta * (1 - cost) * big$R * S
+      dR = beta * (1 - cost) * big$R * X - u * R + tau * D
+      dD = k * beta * (1 - cost) * big$R * S - (u + tau) * D
       dX = -(dS + dR + dD)
 
       stopifnot(abs(sum(dX + dS + dR + dD)) < 1e-6)
@@ -303,34 +304,43 @@ davies_within_sim = function(island_tau, tau, k, tau50=1.5/12) {
     })
   }
 
-  result = rootSolve::runsteady(state, func=ode_func, parms=parms)
+  result = rootSolve::runsteady(state, func = ode_func, parms = parms)
   result$y %>% as.list %>% as_tibble
 }
 
-davies_within = crossing(island_tau = round(c(1.25, 1.50, 1.75) / 12, 3),
-                         delta_tau = seq(-0.1, 0.1, length.out = 11),
-                         k = c(0, 0.25, 0.5, 1.0)) %>%
-  mutate(tau = island_tau + delta_tau) %>%
-  group_by_all() %>%
-  do(davies_within_sim(unique(.$island_tau), .$tau, .$k)) %>%
-  ungroup() %>%
-  mutate(rho = R/(1-X))
+davies_small = crossing(big_tau = round(c(1.25, 1.50, 1.75) / 12, 3),
+                        delta_tau = seq(-0.1, 0.1, length.out = 11)) %>%
+  mutate(tau = big_tau + delta_tau) %>%
+  mutate(model = map2(big_tau, tau, davies_small_sim)) %>%
+  unnest() %>%
+  mutate(rho = R / (1 - X))
 ```
+
+```{r davies_small_plot}
+davies_small %>%
+  ggplot(aes(tau, rho)) +
+  geom_line(data = davies_cross) +
+  geom_vline(aes(xintercept = big_tau), color = 'gray', linetype = 2) +
+  geom_point(aes(color = factor(big_tau))) +
+  geom_line(aes(color = factor(big_tau)))
+```
+
+## Time-since-treatment, WHN model
 
 ```{r davies_time_sim}
 drop_last = function(x) x[-length(x)]
 
-davies_time_sim = function(tau, k, tau50=1.5/12, alpha=1.0, nT=72) {
+davies_time_sim = function(tau, k = 1.0, tau50 = 1.5 / 12, alpha = 1.0, nT = 72) {
   # nT = number of time intervals
   parms = with(davies_base_parms,
              c(davies_base_parms, tau=tau,
-               alpha=alpha, nT=nT,
-               k=k, cost=cost_function(beta, u, k, tau50)))
+               alpha = alpha, nT = nT,
+               k = k, cost = cost_function(beta, u, k, tau50)))
 
   # state is a matrix:
   # rows are X, S, R, D (=S_R); columns are time brackets
   # set all compartments to 0 except for the "just-treated" bracket
-  state = matrix(0, nrow=4, ncol=parms$nT)
+  state = matrix(0, nrow = 4, ncol = parms$nT)
   state[,1] = c(0.998, 0.001, 0.001, 0.0)
   state_c = as.vector(state)
   stopifnot(sum(state_c) == 1.0)
@@ -338,12 +348,12 @@ davies_time_sim = function(tau, k, tau50=1.5/12, alpha=1.0, nT=72) {
 ode_func = function(t, state_c, parms) {
     with(parms, {
       # unpack the state
-      state = matrix(state_c, nrow=4)
+      state = matrix(state_c, nrow = 4)
       stopifnot(ncol(state) == nT)
-      X = state[1,]
-      S = state[2,]
-      R = state[3,]
-      D = state[4,]
+      X = state[1, ]
+      S = state[2, ]
+      R = state[3, ]
+      D = state[4, ]
       
       Xo = sum(X)
       So = sum(S)
@@ -362,44 +372,43 @@ ode_func = function(t, state_c, parms) {
     })
   }
 
-  result = rootSolve::runsteady(state_c, func=ode_func, parms=parms)
+  result = rootSolve::runsteady(state_c, func = ode_func, parms = parms)
   end_state = result$y %>% matrix(nrow=4)
   
-  time = time=1:parms$nT
+  time = 1:parms$nT
   bind_rows(
-    data_frame(compartment='X', time, y=end_state[1,]),
-    data_frame(compartment='S', time, y=end_state[2,]),
-    data_frame(compartment='R', time, y=end_state[3,]),
-    data_frame(compartment='D', time, y=end_state[4,])
+    data_frame(compartment = 'X', time, y = end_state[1,]),
+    data_frame(compartment = 'S', time, y = end_state[2,]),
+    data_frame(compartment = 'R', time, y = end_state[3,]),
+    data_frame(compartment = 'D', time, y = end_state[4,])
   )
 }
 
-davies_time = crossing(tau = round(c(1.25, 1.5, 1.75) / 12, 3),
-                       k = c(0, 0.25, 0.5, 1.0)) %>%
-  group_by_all() %>%
-  do(davies_time_sim(.$tau, .$k)) %>%
-  ungroup()
-
-# package these raw time results to make them comparable to
-# the other within-island results
-davies_time_comp = davies_time %>%
-  rename(island_tau = tau) %>%
+davies_time = crossing(tau = round(c(1.25, 1.5, 1.75) / 12, 3)) %>%
+  mutate(model = map(tau, davies_time_sim)) %>%
+  unnest() %>%
+  rename(big_tau = tau) %>%
   spread(compartment, y) %>%
-  mutate(tau = 1/time, point_rho = R / (S + R + D)) %>%
-  group_by(k, island_tau) %>%
-  arrange(time) %>%
-  mutate(rho = cummean(point_rho)) %>%
-  ungroup() %>%
-  filter(tau < 4/12)
+  mutate(tau = 1 / time,
+         rho = R / (S + R + D))
 ```
 
-For the time simulation, I verify that there are enough time compartments so that they long-time-since-treatment compartments are nearly empty. The grid columns are values of co-colonization efficiency $k$; rows are values of island-level use $\tau$.
-
-```{r}
+```{r davies_time_plot}
 davies_time %>%
-  ggplot(aes(time, y, color=compartment)) +
+  ggplot(aes(tau, rho)) +
+  geom_line(data = davies_cross) +
+  geom_point(aes(color = factor(big_tau)), shape = 2) +
+  geom_line(aes(color = factor(big_tau)), linetype = 2)
+```
+
+For the time simulation, I verify that there are enough time compartments so that they long-time-since-treatment compartments are nearly empty. The columns are the $\tau$.
+
+```{r confirm_time_comparments}
+davies_time %>%
+  gather('compartment', 'value', D:X) %>%
+  ggplot(aes(time, value, color = compartment)) +
   geom_line() +
-  facet_grid(tau ~ k) +
+  facet_grid(~ big_tau) +
   xlab('Time since treatment (months)') +
   ylab('Proportion')
 ```
@@ -407,19 +416,19 @@ davies_time %>%
 I compare the cross-island, within-island fixed-population, and within-island recorded-time simulations by plotting all the results on the same plot. The black lines show the cross-island results (i.e., the results from Davies *et al*. Figure 2e, above). The circles show results from the within-island fixed-population simulation. The colored lines show the within-island recorded-time simulation. The color of the circles and lines shows the island-level average $\tau$ used in the simulations. (You can read off those values by looking at where the colored lines intercept the black lines: when the island-level $\tau$ and within-island use are the same, you get the same results.) Panels show values of co-colonization efficiency $k$.
 
 ```{r}
-ggplot(data=NULL, aes(tau, rho)) +
-  facet_wrap(~k) +
-  geom_line(data=davies_cross) +
-  geom_point(aes(color=factor(island_tau)), data=davies_within, shape=1) +
-  geom_line(aes(color=factor(island_tau)), data=davies_time_comp) +
-  geom_smooth(data=davies_within, color='gray', method='lm', se=FALSE) +
-  xlab('antibiotic use (tau)') +
-  ylab('resistance (rho = R/S+R+D)')
+davies_time_comp = davies_time %>% filter(tau < 0.3)
+
+ggplot(data = NULL, aes(tau, rho)) +
+  geom_line(data = filter(davies_cross, k == 1.0)) +
+  geom_point(data = davies_small, aes(color = factor(big_tau)), shape = 1) +
+  geom_line(data = davies_small, aes(color = factor(big_tau))) +
+  geom_point(data = davies_time_comp, aes(color = factor(big_tau)), shape = 2) +
+  geom_line(data = davies_time_comp, aes(color = factor(big_tau)), linetype = 2)
 ```
 
-## D-types model
+## Cross-island, D-types model
 
-```{r}
+```{r dtype_cross}
 dtypes_ode_func = function(t, Ixp, parms) {
   with(parms, {
     Ixs = Ixp[c(TRUE, FALSE)]
@@ -445,20 +454,19 @@ dtypes_cross_sim = function(tau) {
              y=result$y)
 }
 
-dtypes_cross = data_frame(tau = seq(0.04, 0.20, length.out=200)) %>%
-  group_by(tau) %>%
-  do(dtypes_cross_sim(.$tau)) %>%
-  ungroup() %>%
+dtypes_cross = data_frame(tau = seq(0.04, 0.20, length.out = 200)) %>%
+  mutate(model = map(tau, dtypes_cross_sim)) %>%
+  unnest() %>%
   group_by(tau, phenotype) %>%
-  summarize(y=sum(y)) %>%
+  summarize(y = sum(y)) %>%
   ungroup() %>%
   spread(phenotype, y) %>%
-  mutate(rho = R/(S+R))
+  mutate(rho = R / (S + R))
 ```
 
 I reproduce Figure 3 from Lehtinen *et al*.:
 
-```{r}
+```{r dtypes_cross_plot}
 dtypes_cross_sim(0.075) %>%
   ggplot(aes(factor(dtype), y, fill=phenotype)) +
   geom_col(position='dodge') +
@@ -468,8 +476,8 @@ dtypes_cross_sim(0.075) %>%
 
 I overlay the cross-island (black) and within-island (i.e., fixed-population; colored) results. The black line reproduces Lehtinen *et al*. Figure 4 ( with $n=16$).
 
-```{r}
-dtypes_within_sim = function(island_tau, tau) {
+```{r dtypes_small}
+dtypes_small_sim = function(island_tau, tau) {
   # compute the island-level results
   island_results = dtypes_cross_sim(island_tau)
   island_Ixp = island_results$y
@@ -505,24 +513,26 @@ dtypes_within_sim = function(island_tau, tau) {
   )
 }
 
-dtypes_within = crossing(
-    island_tau = c(0.075, 0.125, 0.175),
+dtypes_small = crossing(
+    big_tau = c(0.075, 0.125, 0.175),
     delta_tau = seq(-0.025, 0.025, length.out = 11)
 ) %>%
-  mutate(tau = island_tau + delta_tau) %>%
-  group_by(island_tau, tau) %>%
-  do(dtypes_within_sim(.$island_tau, .$tau)) %>%
-  group_by(island_tau, tau, phenotype) %>%
+  mutate(tau = big_tau + delta_tau) %>%
+  mutate(model = map2(big_tau, tau, dtypes_small_sim)) %>%
+  unnest() %>%
+  group_by(big_tau, tau, phenotype) %>%
   summarize(y = sum(y)) %>%
   ungroup() %>%
   spread(phenotype, y) %>%
   mutate(rho = R / (S + R))
+```
 
-dtypes_within %>%
+```{r dtypes_small_plot}
+dtypes_small %>%
   ggplot(aes(tau, rho)) +
-  geom_point(aes(color=factor(island_tau))) +
-  geom_line(aes(color=factor(island_tau))) +
-  geom_line(data=dtypes_cross)
+  geom_line(data = dtypes_cross) +
+  geom_point(aes(color = factor(big_tau))) +
+  geom_line(aes(color = factor(big_tau)))
 ```
 
 # Discussion
@@ -621,32 +631,23 @@ islet_sim = function(taui, k, alpha, tau50=1.5/12) {
 
 }
 
-islets = crossing(island_tau = round(c(1.25, 1.50, 1.75) / 12, 3),
+islets = crossing(big_tau = round(c(1.25, 1.50, 1.75) / 12, 3),
                   delta_tau = seq(-0.1, 0.1, length.out = 11),
                   k = c(1.0),
                   alpha = c(0.0, 0.1, 0.5, 1.0)) %>%
-  mutate(tau = island_tau + delta_tau) %>%
-  group_by(island_tau, alpha, k) %>%
+  mutate(tau = big_tau + delta_tau) %>%
+  group_by(big_tau, alpha, k) %>%
   do(islet_sim(taui=.$tau, k=unique(.$k), alpha=unique(.$alpha))) %>%
   ungroup() %>%
   mutate(rho = R/(S + R + D))
 
-# compare with within-host neutral cross-island model
-# black lines
-comp1 = davies_cross %>%
-  filter(k == 1) %>%
-  crossing(island_tau = unique(islets$island_tau))
-
 # compare with within-host neutral model, within-island (subpop) model
 # dotted lines
-comp2 = davies_within %>%
-  filter(k == 1)
-
 islets %>%
-  ggplot(aes(tau, rho, color=factor(island_tau))) +
+  ggplot(aes(tau, rho, color = factor(big_tau))) +
   geom_point() + geom_line() +
-  geom_line(data=comp1, color='black') +
-  geom_line(data=comp2, linetype=2) +
+  geom_line(data = davies_cross, color = 'black') +
+  geom_line(data = davies_small, linetype = 2) +
   facet_wrap(~ alpha)
 ```
 
@@ -706,7 +707,7 @@ ring_ode_func = function(t, state_vector, parms) {
   })
 }
 
-ring_sim = function(taui, k, alpha, tau50=1.5/12) {
+ring_sim = function(taui, alpha, k = 1.0, tau50 = 1.5/12) {
   n_islets = length(taui)
   phii = rep(1 / n_islets, n_islets)
   
@@ -750,63 +751,42 @@ ring_tau = (3.0 / 12) / floor(n_ring / 2) * ring_dist(1, 1:n_ring, n_ring)
 
 rings = data_frame(on_island_f = c(0.99, 0.50, 0.25, 0.10, 0.05)) %>%
   mutate(alpha = f_to_alpha(on_island_f, n_ring)) %>%
-  group_by(on_island_f, alpha) %>%
-  do(ring_sim(taui = ring_tau, k = 1.0, alpha = .$alpha)) %>%
-  ungroup() %>%
-  mutate(rho = R/(S + R + D))
+  mutate(model = map(alpha, ring_sim(ring_tau, alpha = .))) %>%
+  unnest() %>%
+  mutate(rho = R / (S + R + D))
 ```
 
-```{r}
+```{r ring_plot}
 # compare with within-host neutral cross-island model
 # black lines
-ring_comp1 = davies_cross %>%
-  filter(k == 1, tau <= 3 / 12) %>%
-  mutate(on_island_f = 1)
-
-# time model
-ring_comp2 = davies_time_comp %>%
-  filter(k == 1, island_tau == 1.5 / 12) %>%
-  mutate(on_island_f = NA)
-
 rings %>%
-  ggplot(aes(tau, rho, color = factor(on_island_f))) +
-  geom_point() +
-  geom_line() +
-  geom_line(data = ring_comp1) +
-  geom_line(data = ring_comp2)
+  ggplot(aes(tau, rho)) +
+  geom_line(data = filter(davies_cross, tau <= 0.25)) +
+  geom_line(data = filter(davies_small, big_tau == 0.125), linetype = 2) +
+  geom_point(aes(color = factor(on_island_f))) +
+  geom_line(aes(color = factor(on_island_f)))
 ```
+The colored points and lines show the ring simulations. The solid black line shows the original cross-island simulation. The dotted black line shows a small-island simulation (i.e., fraction on island approximately zero) with a big-island $\tau$ equal to the mean of the ring-island $\tau$.
 
-The original within-island simulation arises from this as the number of (equally-populated) islands goes to infinity, all other islands have a fixed use, and islands are well-mixed.
+### A ring with randomly arranged use
 
-### Weird uses
+What if islands had randomly mixed uses? Like, there's no spatial autocorrelation: each use is drawn from a random uniform distribution.
 
-What if islands had randomly mixed uses? Like, there's no spatial autocorrelation: each use is drawn from a random uniform distribution. Or, we just mix up the previous ones.
+Now, a larger on-island proportion is required to see a result.
 
-```{r}
-ring_tau2 = runif(n_ring, 0, 3.0 / 12)
-ring_tau3 = sample(ring_tau)
+```{r, eval = FALSE}
+ring_tau = runif(n_ring, 0, 3.0 / 12)
 
 rings2 = data_frame(on_island_f = c(0.99, 0.50, 0.25, 0.10, 0.05)) %>%
   mutate(alpha = f_to_alpha(on_island_f, n_ring)) %>%
-  group_by(on_island_f, alpha) %>%
-  do(ring_sim(taui = ring_tau2, k = 1.0, alpha = .$alpha)) %>%
-  ungroup() %>%
-  mutate(rho = R/(S + R + D))
-
-rings3 = data_frame(on_island_f = c(0.99, 0.50, 0.25, 0.10, 0.05)) %>%
-  mutate(alpha = f_to_alpha(on_island_f, n_ring)) %>%
-  group_by(on_island_f, alpha) %>%
-  do(ring_sim(taui = ring_tau3, k = 1.0, alpha = .$alpha)) %>%
-  ungroup() %>%
-  mutate(rho = R/(S + R + D))
+  mutate(model = map(alpha, ~ ring_sim(ring_tau2, alpha = .))) %>%
+  unnest() %>%
+  mutate(rho = R / (S + R + D))
 
 rings2 %>%
-  ggplot(aes(tau, rho, color = factor(on_island_f))) +
-  geom_point() +
-  geom_line()
-
-rings3 %>%
-  ggplot(aes(tau, rho, color = factor(on_island_f))) +
-  geom_point() +
-  geom_line()
+  ggplot(aes(tau, rho)) +
+  geom_line(data = davies_cross) +
+  geom_line(data = filter(davies_small, big_tau == 0.125), linetype = 2) +
+  geom_point(aes(color = factor(on_island_f))) +
+  geom_smooth(aes(color = factor(on_island_f)), se = FALSE, size = 0.5)
 ```
