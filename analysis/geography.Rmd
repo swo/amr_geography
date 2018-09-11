@@ -751,7 +751,7 @@ ring_tau = (3.0 / 12) / floor(n_ring / 2) * ring_dist(1, 1:n_ring, n_ring)
 
 rings = data_frame(on_island_f = c(0.99, 0.50, 0.25, 0.10, 0.05)) %>%
   mutate(alpha = f_to_alpha(on_island_f, n_ring)) %>%
-  mutate(model = map(alpha, ring_sim(ring_tau, alpha = .))) %>%
+  mutate(model = map(alpha, ~ ring_sim(ring_tau, alpha = .))) %>%
   unnest() %>%
   mutate(rho = R / (S + R + D))
 ```
@@ -774,8 +774,8 @@ What if islands had randomly mixed uses? Like, there's no spatial autocorrelatio
 
 Now, a larger on-island proportion is required to see a result.
 
-```{r, eval = FALSE}
-ring_tau = runif(n_ring, 0, 3.0 / 12)
+```{r random_ring}
+ring_tau2 = runif(n_ring, 0, 3.0 / 12)
 
 rings2 = data_frame(on_island_f = c(0.99, 0.50, 0.25, 0.10, 0.05)) %>%
   mutate(alpha = f_to_alpha(on_island_f, n_ring)) %>%
