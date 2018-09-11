@@ -11,11 +11,13 @@ knitr::opts_chunk$set(
   cache=TRUE, autodep=TRUE)
 pdf.options(useDingbats=FALSE, useKerning=FALSE)
 
-library(purrr)
+state_map = map_data('state')
+map = purrr::map
 ```
 
 # To do
 
+- If we take $n_1$ points from $N(0, \sigma^2_1)$ and $n_2$ from $N(0, \sigma^2_2)$, how do we evaluate if $\sigma^2_1 = \sigma^2_2$?
 - Weighted regressions?
 - Correlations and slopes
 - Use haversine for groupings
@@ -91,7 +93,7 @@ medicare_hrr_models = medicare_hrr %>%
 
 To the eye, it looks like the state and HRR points lie on similar lines:
 
-```{r}
+```{r medicare_levels_plot}
 bind_rows(
   medicare_state %>% mutate(level='state'),
   medicare_hrr %>% mutate(level='hrr')
@@ -158,9 +160,7 @@ nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
 
 # Results
 
-## MAUP
-
-### MarketScan
+## MarketScan
 
 ```{r maup_db}
 state_census = read_tsv('../db/census/state_census.tsv') %>%
@@ -169,7 +169,7 @@ state_census = read_tsv('../db/census/state_census.tsv') %>%
   summarize(population = mean(population))
 
 state_data = data_frame(
-  state = state.name,
+  unit = state.name,
   state_abbreviation = state.abb,
   region = state.region,
   division = state.division,
@@ -203,12 +203,14 @@ marketscan = marketscan_use %>%
   select(unit = state, bugdrug, did, n_resistant, n_isolates)
 ```
 
-```{r marketscan_maup_random}
+```{r marketscan_maup_setup}
 # group n items into k groups, with at least 1 item in each group
 sample1 = function(n, k) {
   stopifnot(n >= k)
   sample(c(1:k, sample(k, n - k, replace = TRUE)))
 }
+
+renumber = function(x) match(x, unique(x))
 
 # given distances between things, create groups
 random_zones = function(distances, k) {
@@ -219,7 +221,7 @@ random_zones = function(distances, k) {
   zones = distances[, centers] %>%
     apply(1, function(x) centers[which.min(x)])
   
-  zones
+  renumber(zones)
 }
 
 verify_unit_data = function(unit_data) {
@@ -250,107 +252,117 @@ unit_distances = function(unit_data) {
     set_rownames(units) %>%
     set_colnames(units)
 }
-
-# marketscan unit data
-mud = marketscan %>%
-  filter(bugdrug == 'Ec/q') %>%
-  select(unit) %>%
-  distinct() %>%
-  left_join(state_data, by = c('unit' = 'state'))
-
-# marketscan distances
-msd = unit_distances(mud)
-
-# one random sample & random zone
-rs = sample1(length(mud$unit), 5)
-rz = random_zones(msd, 5)
-
-m %>%
-  as_tibble() %>%
-  left_join(data_frame(region = tolower(names(rz)), zone = rz), by = 'region') %>%
-  left_join(data_frame(region = mud$unit, sam = rs, by = 'region')) %>%
-  gather('key', 'value', rz, rs) %>%
-  ggplot(aes(x = long, y = lat)) +
-  geom_polygon(aes(fill = factor(agg)))
-
-data_frame(state = tolower(names(rz)), agg = rz) %>%
-  ggplot(aes(map_id = state)) +
-  geom_map(aes(fill = factor(agg)), map = m) +
-  expand_limits(x = m$long, y = m$lat) +
-  coord_map()
 ```
 
-```{r}
-range1 = function(x) max(x) - min(x)
-
-maup_sim = function(useres, unit_data, ks, n_iterations = 10, extra_groups = NULL) {
-  if (!all(c('unit', 'long', 'lat', 'population') %in% names(unit_data))) {
-    stop('missing columns in unit_data')
-  }
-  if (any(duplicated(unit_data$unit))) stop('duplicated units')
-  if (!all(c('unit', 'bugdrug', 'did', 'n_resistant', 'n_isolates') %in% names(ur))) {
-    stop('missing columns in use-resistance (ur)')
-  }
-  
-  n_units = nrow(unit_data)
-  if (max(ks) > n_units) stop('at least one k is greater than no. units')
-  
-  if (!is.null(extra_groups)) {
-    if (!all(c('k', 'type', 'group') %in% names(extra_groups))) {
-      stop('missing columns in extra_groups')
-    }
-  }
-  
-  bugdrugs = unique(useres$bugdrug)
-
-  random_samples = function(k) {
-    samples = as.character(sample1(n_units, k))
-    data_frame(unit = unit_data$unit, group = samples)
-  }
-
-  unit_distances = unit_data %>%
-    select(long, lat) %>%
-    dist() %>%
-    as.matrix() %>%
-    set_colnames(unit_data$unit) %>%
-    set_rownames(unit_data$unit)
-
-  random_zones = function(k) {
-    centers = sample(unit_data$unit, k)
-    zones = unit_distances[, centers] %>%
-      apply(1, function(x) centers[which.min(x)])
-    
-    data_frame(unit = unit_data$unit, group = zones)
-  }
-  
-  data_f = function(bugdrug_, group_) {
-    ur %>%
-      left_join(unit_data, by = 'unit') %>%
-      filter(bugdrug == bugdrug_) %>%
-      left_join(group_, by = 'unit') %>%
-      group_by(group) %>%
-      summarize(pct_res = sum(n_resistant) / sum(n_isolates) * 100,
-                did = weighted.mean(did, w = population))
-  }
-  
-  # iterations for each k
-  k_it = crossing(k = ks, iteration = 1:n_iterations)
-  
-  # add in the sample and zone
-  bind_rows(
-    k_it %>% mutate(type = 'sample', group = map(k, random_samples)),
-    k_it %>% mutate(type = 'zone', group = map(k, random_zones))
-  ) %>%
-    bind_rows(extra_groups) %>%
-    crossing(bugdrug = bugdrugs) %>%
-    mutate(data = map2(bugdrug, group, data_f),
-           model = map(data, ~ lm(pct_res ~ did, data = .)),
-           slope = map_dbl(model, ~ coef(.)[2]),
-           cor = map_dbl(data, ~ cor(.$did, .$pct_res)),
-           did_range = map_dbl(data, ~ range1(.$did)),
-           res_range = map_dbl(data, ~ range1(.$pct_res)))
+```{r marketscan_maup}
+data_f = function(bd) {
+  marketscan %>%
+    filter(bugdrug == bd) %>%
+    left_join(select(state_data, unit, population), by = 'unit')
 }
+
+random_group = function(group_type, unit_distances, k) {
+  if (group_type == 'sample') {
+    sample1(nrow(unit_distances), k)
+  } else if (group_type == 'zone') {
+    random_zones(unit_distances, k)
+  } else {
+    stop('control flow error')
+  }
+}
+
+aggregate = function(df, group) {
+  mutate(df, group = group) %>%
+    group_by(group) %>%
+    summarize(did = weighted.mean(did, w = population),
+              n_resistant = sum(n_resistant),
+              n_isolates = sum(n_isolates)) %>%
+    mutate(pct_res = n_resistant / n_isolates * 100)
+}
+
+n_iterations = 100
+
+marketscan_maup = crossing(
+  bugdrug = c('Sp/bl', 'Sp/m', 'Ec/q'),
+  k = c(4, 9, 20, 30),
+  group_type = c('sample', 'zone'),
+  iteration = 1:n_iterations
+) %>%
+  mutate(
+    data = map(bugdrug, data_f),
+    unit_data = map(data, ~ filter(state_data, unit %in% .$unit)),
+    unit_distances = map(unit_data, unit_distances),
+    group = pmap(list(group_type, unit_distances, k), random_group),
+    group_data = map2(data, group, aggregate),
+    model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+    slope = map_dbl(model, ~ coef(.)[2])
+  )
 ```
+
+```{r marketscan_maup_plot}
+marketscan_maup %>%
+  group_by(k, group_type, bugdrug) %>%
+  summarize(mean = mean(slope),
+            sd = sd(slope),
+            cil = mean - sd,
+            ciu = mean + sd) %>%
+  ggplot(aes(factor(k), mean, color = group_type)) +
+  facet_wrap(~ bugdrug, scales = 'free_y') +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = cil, ymax = ciu), position = position_dodge(width = 0.5), width = 0.5)
+
+marketscan_maup %>%
+  ggplot(aes(factor(k), slope, color = group_type)) +
+  facet_wrap(~ bugdrug, scales = 'free_y') +
+  geom_boxplot()
+```
+
+```{r extremal_maps}
+marketscan_maup_ext = marketscan_maup %>%
+  group_by(bugdrug, k, group_type) %>%
+  filter(slope %in% c(min(slope), max(slope))) %>%
+  mutate(extremum = if_else(slope == max(slope), 'max', 'min')) %>%
+  ungroup() 
+
+marketscan_maup_ext %>%
+  select(bugdrug, k, group_type, group_data, extremum) %>%
+  unnest() %>%
+  ggplot(aes(did, pct_res, color = extremum)) +
+  facet_grid(k ~ bugdrug + group_type, scales = 'free') +
+  geom_point() +
+  geom_smooth(method = 'lm')
+```
+
+```{r extremal_maps}
+marketscan_maup_ext %>%
+  filter(k == 4) %>%
+  select(bugdrug, data, group, group_type, extremum) %>%
+  unnest() %>%
+  left_join(hex_map, by = c('unit' = 'state')) %>%
+  ggplot(aes(x, y)) +
+  facet_grid(bugdrug ~ group_type + extremum) +
+  geom_polygon(aes(group = unit, fill = factor(group))) +
+  geom_polygon(data = hex_map, aes(group = state), color = 'black', fill = NA) +
+  scale_fill_brewer(palette = 'Accent') +
+  theme_void() +
+  theme(legend.position = 'none') +
+  ggtitle('k = 4')
+
+marketscan_maup_ext %>%
+  filter(k == 20) %>%
+  select(bugdrug, data, group, group_type, extremum) %>%
+  unnest() %>%
+  left_join(hex_map, by = c('unit' = 'state')) %>%
+  ggplot(aes(x, y)) +
+  facet_grid(bugdrug ~ group_type + extremum) +
+  geom_polygon(aes(group = unit, fill = factor(group))) +
+  geom_polygon(data = hex_map, aes(group = state), color = 'black', fill = NA) +
+  theme_void() +
+  theme(legend.position = 'none') +
+  ggtitle('k = 20')
+```
+
+**swo**: need to do the canonical groupings
 
 ```{r, eval = FALSE}
 marketscan_unit_data = state_data %>%
@@ -380,67 +392,43 @@ marketscan_maup = maup_sim(marketscan, marketscan_unit_data, marketscan_ks,
                            extra_groups = census_groups)
 ```
 
-```{r, eval = FALSE}
-marketscan_maup %>%
-  select(k, iteration, type, bugdrug, slope, cor) %>%
-  gather('metric', 'estimate', slope, cor) %>%
-  ggplot(aes(factor(k), estimate, color=type)) +
-  geom_boxplot() +
-  geom_jitter() +
-  facet_wrap(metric ~ bugdrug, scales='free_y')
-
-# swo:
-# - add invisible data to get all factor levels
-# - only THEN plot the "actual" data, w/o boxplots
-
-ex4 = marketscan_maup %>%
-  filter(k == 4, type == 'zone') %>%
-  group_by(bugdrug) %>%
-  filter(cor %in% c(min(cor), max(cor))) %>%
-  mutate(extremum = if_else(cor == max(cor), 'max', 'min')) %>%
-  ungroup()
-
-ex4 %>%
-  select(bugdrug, extremum, data) %>%
-  unnest() %>%
-  ggplot(aes(did, pct_res)) +
-  geom_point() +
-  stat_smooth(method = 'lm', se = FALSE) +
-  facet_grid(extremum ~ bugdrug, scales='free')
-  
-map_f = function(group_) {
-  state_map %>%
-    left_join(group_, by = 'unit') %>%
-    ggplot(aes(long, lat, group = map_group, fill = group)) +
-    geom_polygon(color = 'black') +
-    coord_map() +
-    theme(legend.position = 'none',
-          axis.title.x = element_blank(),
-          axis.title.y = element_blank())
-}
-
-ex4 %>%
-  mutate(plot = map(group, map_f)) %>%
-  pull(plot) %>%
-  { ggpubr::ggarrange(plotlist = .) }
-```
-
-### Using IMS/NHSN
+## IMS/NHSN CAUTIs
 
 ```{r, eval = FALSE}
 nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
   rename(state_abbreviation = state) %>%
   filter(state_abbreviation %in% state.abb) %>%
   mutate(state_id = match(state_abbreviation, state.abb),
-         state = state.name[state_id],
+         unit = state.name[state_id],
          bugdrug = 'Ec/q',
          did = us_europe_convert('quinolone', rx_1k_year)) %>%
-  select(unit = state, bugdrug, did, n_resistant, n_isolates)
+  left_join(select(state_data, unit, population), by = 'unit') %>%
+  select(unit, bugdrug, did, n_resistant, n_isolates, population)
 
 nhsn_unit_data = state_data %>%
-  rename(unit = state) %>%
   filter(unit %in% nhsn$unit)
 
+nhsn_distances = unit_distances(nhsn_unit_data)
+
+ks = c(4, 9, 20, 30)
+
+nhsn_maup = crossing(
+  bugdrug = c('Sp/bl', 'Sp/m', 'Ec/q'),
+  k = ks,
+  group_type = c('sample', 'zone'),
+  iteration = 1:n_iterations
+) %>%
+  mutate(
+    group = map2(group_type, k, ~ random_group(.x, nhsn_distances, .y)),
+    group_data = map(group, ~ aggregate(nhsn, .)),
+    model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+    slope = map_dbl(model, ~ coef(.)[2])
+  )
+```
+
+***swo**: need other groups
+
+```{r, eval = FALSE}
 nhsn_extra_groups = data_frame(
   k = 50,
   type = 'actual',
@@ -451,34 +439,34 @@ nhsn_maup = maup_sim(nhsn, nhsn_unit_data, c(4, 9, 20, 30, 40),
                      extra_groups = nhsn_extra_groups)
 ```
 
-```{r, eval = FALSE}
+```{r}
 nhsn_maup %>%
-  select(k, iteration, type, bugdrug, slope, cor) %>%
-  gather('metric', 'estimate', slope, cor) %>%
-  ggplot(aes(factor(k), estimate, color=type)) +
-  geom_boxplot() +
-  geom_jitter() +
-  facet_wrap(metric ~ bugdrug, scales='free_y')
+  ggplot(aes(factor(k), slope, color = group_type)) +
+  geom_boxplot()
 ```
 
-### Europe
+## Europe
 
 ```{r}
+europe_units = read_tsv('../db/europe_centers/europe_centers.tsv') %>%
+  #filter(country %in% europe$unit) %>%
+  mutate(unit_id = 1:n()) %>%
+  select(unit = country, long = longitude, lat = latitude, population, unit_id)
+
 europe = read_tsv('../data/ecdc/data.tsv') %>%
   mutate(bugdrug = case_when(
     .$bug == 'Escherichia coli' & .$drug == 'quinolone' ~ 'Ec/q',
     .$bug == 'Streptococcus pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
     .$bug == 'Streptococcus pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
   )) %>%
-  select(unit = country, bugdrug, did, n_resistant = n_ns, n_isolates)
-  # left_join(select(europe_centers, country, population), by='country') %>%
-  # select(unit = country, bugdrug, did, n_resistant = n_ns, n_isolates)
+  rename(unit = country) %>%
+  left_join(select(europe_units, unit, population), by ='unit') %>%
+  select(unit, bugdrug, did, n_resistant = n_ns, n_isolates, population)
+```
 
-europe_units = read_tsv('../db/europe_centers/europe_centers.tsv') %>%
-  filter(country %in% europe$unit) %>%
-  mutate(unit_id = 1:n()) %>%
-  select(unit = country, long = longitude, lat = latitude, population, unit_id)
+**swo**
 
+```{r, eval=FALSE}
 europe_extra = data_frame(
   k = nrow(europe_units),
   type = 'actual',
@@ -490,6 +478,27 @@ europe_maup = maup_sim(europe, europe_units, ks = c(5, 10, 15, 20),
 ```
 
 ```{r}
+europe_maup = crossing(
+  bugdrug = c('Sp/bl', 'Sp/m', 'Ec/q'),
+  k = c(4, 9, 20, 25),
+  group_type = c('sample', 'zone'),
+  iteration = 1:n_iterations
+) %>%
+  mutate(
+    data = map(bugdrug, ~ filter(europe, bugdrug == .)),
+    unit_data = map(data, ~ filter(europe_units, unit %in% .$unit)),
+    unit_distances = map(unit_data, unit_distances),
+    group = pmap(list(group_type, unit_distances, k), random_group),
+    group_data = map2(data, group, aggregate),
+    model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+    slope = map_dbl(model, ~ coef(.)[2])
+  )
+
+europe_maup %>%
+  ggplot(aes(factor(k), slope, color = group_type)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_boxplot()
+
 europe_maup %>%
   select(k, iteration, type, bugdrug, slope, cor) %>%
   gather('metric', 'estimate', slope, cor) %>%
