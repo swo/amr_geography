@@ -17,12 +17,38 @@ map = purrr::map
 
 # To do
 
-- If we take $n_1$ points from $N(0, \sigma^2_1)$ and $n_2$ from $N(0, \sigma^2_2)$, how do we evaluate if $\sigma^2_1 = \sigma^2_2$?
-- Weighted regressions?
+- If we take $n_1$ points from $N(0, \sigma^2_1)$ and $n_2$ from $N(0, \sigma^2_2)$, how do we evaluate if $\sigma^2_1 = \sigma^2_2$? Brown-Forsythe test
 - Correlations and slopes
 - Cite that guy for European centers?
 - Read Blanquart for geographical stuff
 - Include refs re: azithromycin
+
+# Take-aways
+
+## Simulation
+
+- Moving to too small a length scale will really hurt the observed relationship
+- Bigger length scales should give you worse power (because of decreased $n$) but no change in consistency.
+
+## Empirical
+- When you have more ways to choose how to aggregate the data, you can get many different results.
+    - It's not obvious if there's one "correct" choice for how to aggregate.
+    - It's not easy to look by eye and say, "this aggregation scheme will lead to a big/small use/res."
+    - The canonical groupings are not obviously in the middle of the pack.
+- Metrics were stable across many values of $k$.
+    - Or, conversely, you could focus on how much they changed.
+    - But I think it's pretty remarkable that you see similar relationships, on average, no matter how you aggregate.
+- There's no general trend in higher vs. lower slopes depending on the size of the aggregates.
+    - For Marketscan, bigger aggregates tend to have stronger median relationships (albeit with more variance).
+    - For Europe, really big aggregates perform worse, suggesting that there are some cross-region differences in the use/resistance relationship.
+- It's anecdotal, but for Marketscan, no clear data that the slope drops off when going from state to HRR.
+
+## Synthesized
+
+- Azithromycin trials suggest that you can go to really small length scales (sub-kebele).
+- UK stuff suggests that you can go from CCG to practice level and still not have a problem.
+- Our data suggests that going to larger scales isn't problematic, and that going to smaller scales is mostly limited by data collection.
+- So, in conclusion, it seems like you should go as low as you can, and not worry too much.
 
 # Methods
 
@@ -274,7 +300,8 @@ aggregate = function(df, group) {
     summarize(did = weighted.mean(did, w = population),
               n_resistant = sum(n_resistant),
               n_isolates = sum(n_isolates)) %>%
-    mutate(pct_res = n_resistant / n_isolates * 100)
+    mutate(n_susceptible = n_isolates - n_resistant,
+           pct_res = n_resistant / n_isolates * 100)
 }
 
 # helper function for canonical groupings
@@ -320,8 +347,12 @@ marketscan_maup = try_load('results/marketscan_maup.rds', {
       group = pmap(list(group_type, unit_distances, k), random_group),
       group_data = map2(data, group, aggregate),
       linear_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+      weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
       slope = map_dbl(linear_model, ~ coef(.)[2]),
-      cor_model = map(group_data, ~ cor.test(.$pct_res, .$did)),
+      weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)[2]),
+      logistic_model = map(group_data, ~ glm(cbind(n_resistant, n_susceptible) ~ did, data = ., family = 'binomial')),
+      log_odds_ratio = map_dbl(logistic_model, ~ coef(.)[2]),
+      cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
       cor = map_dbl(cor_model, ~ .$estimate)
     )
 })
@@ -351,11 +382,11 @@ marketscan_maup %>%
   geom_errorbar(aes(ymin = cil, ymax = ciu), position = position_dodge(width = 0.5), width = 0.5)
 
 marketscan_maup %>%
-  select(bugdrug, k, group_type, cor, slope) %>%
-  gather('metric', 'value', cor, slope) %>%
+  select(bugdrug, k, group_type, cor, slope, log_odds_ratio) %>%
+  gather('metric', 'value', cor, slope, log_odds_ratio) %>%
   ggplot(aes(factor(k), value, color = group_type)) +
   facet_wrap(~ bugdrug + metric, scales = 'free') +
-  geom_boxplot()
+  geom_violin()
 ```
 
 ```{r extremal_maps}
