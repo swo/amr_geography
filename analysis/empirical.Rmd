@@ -257,9 +257,7 @@ unit_distances = function(unit_data) {
 }
 ```
 
-**swo**: refactor a la Europe: just merge the pop data into the regular data
-
-```{r marketscan_maup}
+```{r maup_helper_functions}
 random_group = function(group_type, unit_distances, k) {
   if (group_type == 'sample') {
     sample1(nrow(unit_distances), k)
@@ -279,7 +277,20 @@ aggregate = function(df, group) {
     mutate(pct_res = n_resistant / n_isolates * 100)
 }
 
-n_iterations = 100
+# helper function for canonical groupings
+state_group = function(states, level) {
+  state_id = match(states, state.name)
+  
+  if (level == 'state') {
+    renumber(state_id)
+  } else if (level == 'region') {
+    renumber(state.region[state_id])
+  } else if (level == 'division') {
+    renumber(state.division[state_id])
+  } else {
+    stop('control flow error')
+  }
+}
 
 try_load = function(fn, expr, force_run = FALSE) {
   if (!force_run && file.exists(fn)) {
@@ -289,6 +300,10 @@ try_load = function(fn, expr, force_run = FALSE) {
     write_rds(value, fn)
   }
 }
+```
+
+```{r marketscan_maup_compute}
+n_iterations = 100
 
 marketscan_maup = try_load('results/marketscan_maup.rds', {
   marketscan %>%
@@ -304,24 +319,12 @@ marketscan_maup = try_load('results/marketscan_maup.rds', {
       unit_distances = map(unit_data, unit_distances),
       group = pmap(list(group_type, unit_distances, k), random_group),
       group_data = map2(data, group, aggregate),
-      model = map(group_data, ~ lm(pct_res ~ did, data = .)),
-      slope = map_dbl(model, ~ coef(.)[2])
+      linear_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+      slope = map_dbl(linear_model, ~ coef(.)[2]),
+      cor_model = map(group_data, ~ cor.test(.$pct_res, .$did)),
+      cor = map_dbl(cor_model, ~ .$estimate)
     )
 })
-
-state_group = function(states, level) {
-  state_id = match(states, state.name)
-  
-  if (level == 'state') {
-    renumber(state_id)
-  } else if (level == 'region') {
-    renumber(state.region[state_id])
-  } else if (level == 'division') {
-    renumber(state.division[state_id])
-  } else {
-    stop('control flow error')
-  }
-}
 
 marketscan_canonical = marketscan %>%
   nest(-bugdrug) %>%
@@ -348,8 +351,10 @@ marketscan_maup %>%
   geom_errorbar(aes(ymin = cil, ymax = ciu), position = position_dodge(width = 0.5), width = 0.5)
 
 marketscan_maup %>%
-  ggplot(aes(factor(k), slope, color = group_type)) +
-  facet_wrap(~ bugdrug, scales = 'free') +
+  select(bugdrug, k, group_type, cor, slope) %>%
+  gather('metric', 'value', cor, slope) %>%
+  ggplot(aes(factor(k), value, color = group_type)) +
+  facet_wrap(~ bugdrug + metric, scales = 'free') +
   geom_boxplot()
 ```
 
