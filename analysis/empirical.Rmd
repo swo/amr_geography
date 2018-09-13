@@ -75,8 +75,6 @@ us_europe_convert = function(drug_, piy) {
 
 #### Medicare & ResistanceOpen
 
-This is a nice chance to ask if going to a smaller scale gives you different regression coefficients. I compare the slopes of the use/resistance relationship when using HRRs and states.
-
 ```{r medicare_ro}
 ro_bugdrugs = data_frame(
   bug = c('S. pneumoniae', 'S. pneumoniae', 'E. coli'),
@@ -100,6 +98,64 @@ medicare = bind_rows(
          did = us_europe_convert(drug_group, total_use * 1000)) %>%
   select(level, bug, drug = drug_group, unit, did, pct_res)
 ```
+
+### MarketScan
+
+```{r marketscan_data}
+marketscan_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv') %>%
+  rename(drug=drug_group) %>%
+  mutate(bugdrug = case_when(
+    .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
+    .$bug == 'S. pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
+    .$bug == 'S. pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
+  )) %>%
+  filter(!is.na(bugdrug)) %>%
+  mutate(n_resistant = as.integer(round(f_ns * n_isolates))) %>%
+  select(bugdrug, drug, state, n_resistant, n_isolates)
+
+marketscan_use = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
+  rename(drug = drug_group) %>%
+  filter(drug %in% c('quinolone', 'beta_lactam', 'macrolide')) %>%
+  mutate(did = us_europe_convert(drug, total_use * 1000))
+
+marketscan = marketscan_use %>%
+  inner_join(marketscan_res, by=c('drug', 'state')) %>%
+  rename(unit = state) %>%
+  left_join(select(state_data, unit, population), by = 'unit') %>%
+  select(unit, bugdrug, did, n_resistant, n_isolates, population)
+```
+
+### ECDC
+
+```{r ecdc}
+rename_bug = function(x) {
+  sapply(x, function(y) {
+    switch(y, 'Escherichia coli'='E. coli', 'Streptococcus pneumoniae'='S. pneumoniae', y)
+  })
+}
+
+ecdc = read_tsv('../data/ecdc/data.tsv') %>%
+  mutate(bug = rename_bug(bug),
+         pct_res = 100 * f_ns,
+         dataset='ECDC') %>%
+  select(dataset, bug, drug, geo_unit=country, did, n_resistant=n_ns, n_isolates, pct_res)
+```
+
+### NHSN/IMS
+
+```{r nhsn_ims}
+nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
+  mutate(dataset='NHSN/IMS', bug='E. coli', drug='quinolone',
+         pct_res = 100 * n_resistant / n_isolates,
+         did = us_europe_convert(drug, rx_1k_year)) %>%
+  select(dataset, bug, drug, geo_unit=state, did, pct_res, n_isolates)
+```
+
+# Results
+
+## Medicare & ResistanceOpen
+
+This is a nice chance to ask if going to a smaller scale gives you different regression coefficients. I compare the slopes of the use/resistance relationship when using HRRs and states.
 
 To the eye, it looks like the state and HRR points lie on similar lines:
 
@@ -138,35 +194,11 @@ medicare %>%
   kable()
 ```
 
-### ECDC
+## MAUP
 
-```{r ecdc}
-rename_bug = function(x) {
-  sapply(x, function(y) {
-    switch(y, 'Escherichia coli'='E. coli', 'Streptococcus pneumoniae'='S. pneumoniae', y)
-  })
-}
+How do the use/resistance relationships change depending on geographical groupings? To answer this, I create many random aggregates, zonally coherent or not, and compare those to the canonical groupings (state, division, region).
 
-ecdc = read_tsv('../data/ecdc/data.tsv') %>%
-  mutate(bug = rename_bug(bug),
-         pct_res = 100 * f_ns,
-         dataset='ECDC') %>%
-  select(dataset, bug, drug, geo_unit=country, did, n_resistant=n_ns, n_isolates, pct_res)
-```
-
-### NHSN/IMS
-
-```{r nhsn_ims}
-nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
-  mutate(dataset='NHSN/IMS', bug='E. coli', drug='quinolone',
-         pct_res = 100 * n_resistant / n_isolates,
-         did = us_europe_convert(drug, rx_1k_year)) %>%
-  select(dataset, bug, drug, geo_unit=state, did, pct_res, n_isolates)
-```
-
-# Results
-
-## MarketScan
+### MarketScan
 
 ```{r maup_db}
 state_census = read_tsv('../db/census/state_census.tsv') %>%
@@ -185,30 +217,6 @@ state_data = data_frame(
   mutate_if(is.factor, as.character) %>%
   inner_join(state_census, by = 'state_abbreviation') %>%
   mutate(unit_id = 1:n())
-```
-
-```{r marketscan_maup_data}
-marketscan_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv') %>%
-  rename(drug=drug_group) %>%
-  mutate(bugdrug = case_when(
-    .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
-    .$bug == 'S. pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
-    .$bug == 'S. pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
-  )) %>%
-  filter(!is.na(bugdrug)) %>%
-  mutate(n_resistant = as.integer(round(f_ns * n_isolates))) %>%
-  select(bugdrug, drug, state, n_resistant, n_isolates)
-
-marketscan_use = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
-  rename(drug = drug_group) %>%
-  filter(drug %in% c('quinolone', 'beta_lactam', 'macrolide')) %>%
-  mutate(did = us_europe_convert(drug, total_use * 1000))
-
-marketscan = marketscan_use %>%
-  inner_join(marketscan_res, by=c('drug', 'state')) %>%
-  rename(unit = state) %>%
-  left_join(select(state_data, unit, population), by = 'unit') %>%
-  select(unit, bugdrug, did, n_resistant, n_isolates, population)
 ```
 
 ```{r marketscan_maup_setup}
@@ -354,17 +362,15 @@ marketscan_maup = try_load('results/marketscan_maup.rds', {
 }, force_run = TRUE)
 ```
 
-```{r marketscan_maup_plot}
-marketscan_maup %>%
-  group_by(k, group_type, bugdrug) %>%
-  summarize(mean = mean(slope),
-            cil = quantile(slope, 0.25),
-            ciu = quantile(slope, 0.75)) %>%
-  ggplot(aes(factor(k), mean, color = group_type)) +
-  facet_wrap(~ bugdrug, scales = 'free') +
-  geom_point(position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = cil, ymax = ciu), position = position_dodge(width = 0.5), width = 0.5)
+There are multiple metrics I could use, but they all seem to tell the same story. Here I'm showing:
 
+- linear regression slope
+- log odds ratio from a logistic regression
+- Spearman correlation
+
+I think the Spearman correlation is easiest to visualize because it has the limited range.
+
+```{r}
 marketscan_maup %>%
   select(bugdrug, k, group_type, cor, slope, log_odds_ratio) %>%
   gather('metric', 'value', cor, slope, log_odds_ratio) %>%
@@ -372,6 +378,27 @@ marketscan_maup %>%
   facet_wrap(~ bugdrug + metric, scales = 'free') +
   geom_violin()
 ```
+
+```{r marketscan_maup_plot}
+marketscan_maup %>%
+  ggplot(aes(factor(k), cor, color = group_type)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_violin() +
+  ggtitle('Correlations, violin')
+
+marketscan_maup %>%
+  group_by(k, group_type, bugdrug) %>%
+  summarize(mean = mean(cor),
+            cil = quantile(cor, 0.25),
+            ciu = quantile(cor, 0.75)) %>%
+  ggplot(aes(factor(k), mean, color = group_type)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_point(position = position_dodge(width = 0.5)) +
+  geom_errorbar(aes(ymin = cil, ymax = ciu), position = position_dodge(width = 0.5), width = 0.5) +
+  ggtitle('Correlations, IQR')
+```
+
+What are the configurations that lead to the extremal slopes?
 
 ```{r extremal_slopes}
 marketscan_maup_ext = marketscan_maup %>%
@@ -437,7 +464,7 @@ marketscan_maup_ext %>%
   ggtitle('k = 20')
 ```
 
-## IMS/NHSN CAUTIs
+### IMS/NHSN CAUTIs
 
 **swo** refactor functions to match marketscan
 
@@ -505,20 +532,20 @@ nhsn_maup = try_load('results/nhsn_maup.rds', {
 ```{r nhsn_maup_plot}
 nhsn_maup %>%
   group_by(k, group_type) %>%
-  summarize(mean = mean(slope),
-            q25 = quantile(slope, 0.25),
-            q75 = quantile(slope, 0.75)) %>%
+  summarize(mean = mean(cor),
+            q25 = quantile(cor, 0.25),
+            q75 = quantile(cor, 0.75)) %>%
   ggplot(aes(factor(k), mean, color = group_type)) +
   geom_point(position = position_dodge(width = 0.5)) +
   geom_errorbar(aes(ymin = q25, ymax = q75),
                 position = position_dodge(width = 0.5), width = 0.5)
 
 nhsn_maup %>%
-  ggplot(aes(factor(k), slope, color = group_type)) +
+  ggplot(aes(factor(k), cor, color = group_type)) +
   geom_boxplot()
 ```
 
-## Europe
+### Europe
 
 ```{r europe_data}
 europe_units = read_tsv('../db/europe_centers/europe_centers.tsv') %>%
@@ -591,9 +618,9 @@ europe_maup = try_load('results/europe_maup.rds', {
 ```{r europe_maup_plot}
 europe_maup %>%
   group_by(k, group_type, bugdrug) %>%
-  summarize(mean = mean(slope),
-            q25 = quantile(slope, 0.25),
-            q75 = quantile(slope, 0.75)) %>%
+  summarize(mean = mean(cor),
+            q25 = quantile(cor, 0.25),
+            q75 = quantile(cor, 0.75)) %>%
   ggplot(aes(factor(k), mean, color = group_type)) +
   geom_point(position = position_dodge(width = 0.5)) +
   facet_wrap(~ bugdrug, scales = 'free') +
@@ -601,7 +628,7 @@ europe_maup %>%
                 position = position_dodge(width = 0.5), width = 0.5)
 
 europe_maup %>%
-  ggplot(aes(factor(k), slope, color = group_type)) +
+  ggplot(aes(factor(k), cor, color = group_type)) +
   facet_wrap(~ bugdrug, scales = 'free') +
   geom_boxplot()
 ```
