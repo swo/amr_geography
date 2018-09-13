@@ -101,6 +101,25 @@ medicare = bind_rows(
 
 ### MarketScan
 
+```{r maup_db}
+state_census = read_tsv('../db/census/state_census.tsv') %>%
+  filter(between(year, 2011, 2014)) %>%
+  group_by(state_abbreviation) %>%
+  summarize(population = mean(population))
+
+state_data = data_frame(
+  unit = state.name,
+  state_abbreviation = state.abb,
+  region = state.region,
+  division = state.division,
+  long = state.center$x,
+  lat = state.center$y
+) %>%
+  mutate_if(is.factor, as.character) %>%
+  inner_join(state_census, by = 'state_abbreviation') %>%
+  mutate(unit_id = 1:n())
+```
+
 ```{r marketscan_data}
 marketscan_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv') %>%
   rename(drug=drug_group) %>%
@@ -199,25 +218,6 @@ medicare %>%
 How do the use/resistance relationships change depending on geographical groupings? To answer this, I create many random aggregates, zonally coherent or not, and compare those to the canonical groupings (state, division, region).
 
 ### MarketScan
-
-```{r maup_db}
-state_census = read_tsv('../db/census/state_census.tsv') %>%
-  filter(between(year, 2011, 2014)) %>%
-  group_by(state_abbreviation) %>%
-  summarize(population = mean(population))
-
-state_data = data_frame(
-  unit = state.name,
-  state_abbreviation = state.abb,
-  region = state.region,
-  division = state.division,
-  long = state.center$x,
-  lat = state.center$y
-) %>%
-  mutate_if(is.factor, as.character) %>%
-  inner_join(state_census, by = 'state_abbreviation') %>%
-  mutate(unit_id = 1:n())
-```
 
 ```{r marketscan_maup_setup}
 # group n items into k groups, with at least 1 item in each group
