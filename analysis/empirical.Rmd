@@ -283,21 +283,6 @@ aggregate = function(df, group) {
            pct_res = n_resistant / n_isolates * 100)
 }
 
-# helper function for canonical groupings
-state_group = function(states, level) {
-  state_id = match(states, state.name)
-  
-  if (level == 'state') {
-    renumber(state_id)
-  } else if (level == 'region') {
-    renumber(state.region[state_id])
-  } else if (level == 'division') {
-    renumber(state.division[state_id])
-  } else {
-    stop('control flow error')
-  }
-}
-
 try_load = function(fn, expr, force_run = FALSE) {
   if (!force_run && file.exists(fn)) {
     read_rds(fn)
@@ -309,48 +294,70 @@ try_load = function(fn, expr, force_run = FALSE) {
 ```
 
 ```{r marketscan_maup_compute}
+# create a hierarchical list: marketscan_maup_data$`Ec/q`$data
+marketscan_maup_data = marketscan %>%
+  nest(-bugdrug) %>%
+  mutate(
+    state_id = map(data, ~ match(.$unit, state.name)),
+    unit_data = map(data, ~ filter(state_data, unit %in% .$unit)),
+    n_units = map_int(unit_data, nrow),
+    unit_distances = map(unit_data, unit_distances)
+  ) %>%
+  gather('key', 'value', -bugdrug) %>%
+  nest(key, value, .key = 'value_tbl') %>%
+  mutate(value_list = map(value_tbl, ~ setNames(.$value, .$key))) %$%
+  setNames(value_list, bugdrug)
+
+marketscan_group = function(bugdrug, k, group_type) {
+  bugdrug_data = marketscan_maup_data[[bugdrug]]
+  
+  switch(group_type,
+         'sample' = sample1(bugdrug_data$n_units, k),
+         'zone' = random_zones(marketscan_maup_data[[bugdrug]]$unit_distances, k),
+         'region' = renumber(state.region[bugdrug_data$state_id]),
+         'division' = renumber(state.division[bugdrug_data$state_id]),
+         'state' = bugdrug_data$state_id
+  )
+}
+
 n_iterations = 100
 
 marketscan_maup = try_load('results/marketscan_maup.rds', {
-  marketscan %>%
-    nest(-bugdrug) %>%
-    crossing(
-      k = c(4, 9, 20, 30),
-      group_type = c('sample', 'zone'),
-      iteration = 1:n_iterations
-    ) %>%
+  canonical = crossing(
+    bugdrug = marketscan$bugdrug,
+    group_type = c('region', 'division', 'state')
+  )
+  
+  crossing(
+    bugdrug = marketscan$bugdrug,
+    k1 = c(4, 9, 20, 30),
+    group_type = c('sample', 'zone'),
+    iteration = 1:n_iterations
+  ) %>%
+    bind_rows(canonical) %>%
     mutate(
-      data = map(bugdrug, ~ filter(marketscan, bugdrug == .)),
-      unit_data = map(data, ~ filter(state_data, unit %in% .$unit)),
-      unit_distances = map(unit_data, unit_distances),
-      group = pmap(list(group_type, unit_distances, k), random_group),
-      group_data = map2(data, group, aggregate),
+      group = pmap(list(bugdrug, k1, group_type), marketscan_group),
+      k = map_int(group, ~ length(unique(.))),
+      group_data = map2(bugdrug, group, ~ aggregate(marketscan_maup_data[[.x]]$data, .y)),
+      group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
+      # regular linear models
       linear_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+      slope = map_dbl(linear_model, ~ coef(.)['did']),
+      # weighted linear models
       weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
-      slope = map_dbl(linear_model, ~ coef(.)[2]),
-      weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)[2]),
+      weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)['did']),
+      # logistic regression
       logistic_model = map(group_data, ~ glm(cbind(n_resistant, n_susceptible) ~ did, data = ., family = 'binomial')),
-      log_odds_ratio = map_dbl(logistic_model, ~ coef(.)[2]),
+      log_odds_ratio = map_dbl(logistic_model, ~ coef(.)['did']),
+      # Spearman correlation
       cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
       cor = map_dbl(cor_model, ~ .$estimate)
     )
-})
-
-marketscan_canonical = marketscan %>%
-  nest(-bugdrug) %>%
-  crossing(level = c('state', 'region', 'division')) %>%
-  mutate(group_type = 'canonical',
-         group = map2(data, level, ~ state_group(.x$unit, .y)),
-         k = map_int(group, ~ length(unique(.))),
-         group_data = map2(data, group, aggregate),
-         model = map(group_data, ~ lm(pct_res ~ did, data = .)),
-         slope = map_dbl(model, ~ coef(.)[2])
-  )
+}, force_run = TRUE)
 ```
 
 ```{r marketscan_maup_plot}
 marketscan_maup %>%
-  bind_rows(marketscan_canonical) %>%
   group_by(k, group_type, bugdrug) %>%
   summarize(mean = mean(slope),
             cil = quantile(slope, 0.25),
@@ -373,21 +380,25 @@ marketscan_maup_ext = marketscan_maup %>%
   group_by(bugdrug, k, group_type) %>%
   filter(slope %in% c(min(slope), max(slope))) %>%
   mutate(extremum = if_else(slope == max(slope), 'max', 'min')) %>%
-  ungroup() 
+  ungroup() %>%
+  mutate(unit = map(bugdrug, ~ marketscan_maup_data[[.]]$data$unit))
 
 marketscan_maup_ext %>%
+  filter(group_type != 'canonical') %>%
   select(bugdrug, k, group_type, group_data, extremum) %>%
   unnest() %>%
   ggplot(aes(did, pct_res, color = extremum)) +
   facet_grid(k ~ bugdrug + group_type, scales = 'free') +
+  geom_hline(yintercept = 0.0, color = 'gray') +
   geom_point() +
-  geom_smooth(method = 'lm')
+  geom_smooth(method = 'lm') +
+  theme_classic()
 ```
 
 ```{r extremal_maps}
 marketscan_maup_ext %>%
   filter(k == 4) %>%
-  select(bugdrug, data, group, group_type, extremum) %>%
+  select(bugdrug, unit, group, group_type, extremum) %>%
   unnest() %>%
   left_join(hex_map, by = c('unit' = 'state')) %>%
   ggplot(aes(x, y)) +
@@ -400,8 +411,21 @@ marketscan_maup_ext %>%
   ggtitle('k = 4')
 
 marketscan_maup_ext %>%
+  filter(k == 9) %>%
+  select(bugdrug, unit, group, group_type, extremum) %>%
+  unnest() %>%
+  left_join(hex_map, by = c('unit' = 'state')) %>%
+  ggplot(aes(x, y)) +
+  facet_grid(bugdrug ~ group_type + extremum) +
+  geom_polygon(aes(group = unit, fill = factor(group))) +
+  geom_polygon(data = hex_map, aes(group = state), color = 'black', fill = NA) +
+  theme_void() +
+  theme(legend.position = 'none') +
+  ggtitle('k = 9')
+
+marketscan_maup_ext %>%
   filter(k == 20) %>%
-  select(bugdrug, data, group, group_type, extremum) %>%
+  select(bugdrug, unit, group, group_type, extremum) %>%
   unnest() %>%
   left_join(hex_map, by = c('unit' = 'state')) %>%
   ggplot(aes(x, y)) +
@@ -411,36 +435,6 @@ marketscan_maup_ext %>%
   theme_void() +
   theme(legend.position = 'none') +
   ggtitle('k = 20')
-```
-
-**swo**: need to do the canonical groupings
-
-```{r, eval = FALSE}
-marketscan_unit_data = state_data %>%
-  rename(unit = state) %>%
-  filter(unit %in% marketscan$unit)
-
-state_grouping = data_frame(
-  k = n_units,
-  group = map(1, ~ select(unit_data, unit, group = unit_id))
-)
-
-division_grouping = data_frame(
-  k = length(unique(unit_data$division)),
-  group = map(1, ~ select(unit_data, unit, group = division))
-)
-
-region_grouping = data_frame(
-  k = length(unique(unit_data$region)),
-  group = map(1, ~ select(unit_data, unit, group = region))
-)
-
-census_groups = bind_rows(state_grouping, division_grouping, region_grouping) %>%
-  mutate(type = 'actual')
-
-marketscan_ks = c(4, 9, 20, 30, 40)
-marketscan_maup = maup_sim(marketscan, marketscan_unit_data, marketscan_ks,
-                           extra_groups = census_groups)
 ```
 
 ## IMS/NHSN CAUTIs
