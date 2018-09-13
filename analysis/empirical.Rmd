@@ -308,35 +308,33 @@ marketscan_maup_data = marketscan %>%
   mutate(value_list = map(value_tbl, ~ setNames(.$value, .$key))) %$%
   setNames(value_list, bugdrug)
 
-marketscan_group = function(bugdrug, k, group_type) {
-  bugdrug_data = marketscan_maup_data[[bugdrug]]
-  
+maup_group = function(maup_data, k, group_type) {
   switch(group_type,
-         'sample' = sample1(bugdrug_data$n_units, k),
-         'zone' = random_zones(marketscan_maup_data[[bugdrug]]$unit_distances, k),
-         'region' = renumber(state.region[bugdrug_data$state_id]),
-         'division' = renumber(state.division[bugdrug_data$state_id]),
-         'state' = bugdrug_data$state_id
+         'sample' = sample1(maup_data$n_units, k),
+         'zone' = random_zones(maup_data$unit_distances, k),
+         'region' = renumber(state.region[maup_data$state_id]),
+         'division' = renumber(state.division[maup_data$state_id]),
+         'state' = maup_data$state_id
   )
 }
 
 n_iterations = 100
 
+marketscan_canonical = crossing(
+  bugdrug = marketscan$bugdrug,
+  group_type = c('region', 'division', 'state')
+)
+
 marketscan_maup = try_load('results/marketscan_maup.rds', {
-  canonical = crossing(
-    bugdrug = marketscan$bugdrug,
-    group_type = c('region', 'division', 'state')
-  )
-  
   crossing(
     bugdrug = marketscan$bugdrug,
     k1 = c(4, 9, 20, 30),
     group_type = c('sample', 'zone'),
     iteration = 1:n_iterations
   ) %>%
-    bind_rows(canonical) %>%
+    bind_rows(marketscan_canonical) %>%
     mutate(
-      group = pmap(list(bugdrug, k1, group_type), marketscan_group),
+      group = pmap(list(bugdrug, k1, group_type), ~ maup_group(marketscan_maup_data[[..1]], ..2, ..3)),
       k = map_int(group, ~ length(unique(.))),
       group_data = map2(bugdrug, group, ~ aggregate(marketscan_maup_data[[.x]]$data, .y)),
       group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
@@ -439,6 +437,8 @@ marketscan_maup_ext %>%
 
 ## IMS/NHSN CAUTIs
 
+**swo** refactor functions to match marketscan
+
 ```{r nhsn}
 nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
   rename(state_abbreviation = state) %>%
@@ -447,46 +447,61 @@ nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
          unit = state.name[state_id],
          bugdrug = 'Ec/q',
          did = us_europe_convert('quinolone', rx_1k_year)) %>%
+  arrange(unit) %>%
   left_join(select(state_data, unit, population), by = 'unit') %>%
   select(unit, bugdrug, did, n_resistant, n_isolates, population)
 
-nhsn_unit_data = state_data %>%
-  filter(unit %in% nhsn$unit)
+nhsn_maup_data = nhsn %>%
+  nest(-bugdrug) %>%
+  mutate(
+    state_id = map(data, ~ match(.$unit, state.name)),
+    unit_data = map(data, ~ filter(state_data, unit %in% .$unit)),
+    n_units = map_int(unit_data, nrow),
+    unit_distances = map(unit_data, unit_distances)
+  ) %>%
+  gather('key', 'value', -bugdrug) %>%
+  nest(key, value, .key = 'value_tbl') %>%
+  mutate(value_list = map(value_tbl, ~ setNames(.$value, .$key))) %$%
+  setNames(value_list, bugdrug)
 
-nhsn_distances = unit_distances(nhsn_unit_data)
+nhsn_canonical = crossing(
+  bugdrug = 'Ec/q',
+  group_type = c('region', 'division', 'state')
+)
 
 ks = c(4, 9, 20, 30)
 
 nhsn_maup = try_load('results/nhsn_maup.rds', {
   crossing(
-    bugdrug = c('Sp/bl', 'Sp/m', 'Ec/q'),
-    k = ks,
+    bugdrug = 'Ec/q',
+    k1 = ks,
     group_type = c('sample', 'zone'),
     iteration = 1:n_iterations
   ) %>%
+    bind_rows(nhsn_canonical) %>%
     mutate(
-      group = map2(group_type, k, ~ random_group(.x, nhsn_distances, .y)),
-      group_data = map(group, ~ aggregate(nhsn, .)),
-      model = map(group_data, ~ lm(pct_res ~ did, data = .)),
-      slope = map_dbl(model, ~ coef(.)[2])
+      group = pmap(list(bugdrug, k1, group_type), ~ maup_group(nhsn_maup_data[[..1]], ..2, ..3)),
+      k = map_int(group, ~ length(unique(.))),
+      group_data = map2(bugdrug, group, ~ aggregate(nhsn_maup_data[[.x]]$data, .y)),
+      group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
+      # regular linear models
+      linear_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+      slope = map_dbl(linear_model, ~ coef(.)['did']),
+      # weighted linear models
+      weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
+      weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)['did']),
+      # logistic regression
+      logistic_model = map(group_data, ~ glm(cbind(n_resistant, n_susceptible) ~ did, data = ., family = 'binomial')),
+      log_odds_ratio = map_dbl(logistic_model, ~ coef(.)['did']),
+      # Spearman correlation
+      cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
+      cor = map_dbl(cor_model, ~ .$estimate)
     )
-})
-
-nhsn_canonical = nhsn %>%
-  crossing(level = c('state', 'region', 'division')) %>%
-  nest(-level) %>%
-  mutate(group_type = 'canonical',
-         group = map2(data, level, ~ state_group(.x$unit, .y)),
-         k = map_int(group, ~ length(unique(.))),
-         group_data = map2(data, group, aggregate),
-         model = map(group_data, ~ lm(pct_res ~ did, data = .)),
-         slope = map_dbl(model, ~ coef(.)[2])
-  )
+}, force_run = TRUE)
 ```
 
 ```{r nhsn_maup_plot}
 nhsn_maup %>%
-  bind_rows(nhsn_canonical) %>%
   group_by(k, group_type) %>%
   summarize(mean = mean(slope),
             q25 = quantile(slope, 0.25),
