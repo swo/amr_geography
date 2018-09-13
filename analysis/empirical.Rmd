@@ -18,9 +18,7 @@ map = purrr::map
 # To do
 
 - If we take $n_1$ points from $N(0, \sigma^2_1)$ and $n_2$ from $N(0, \sigma^2_2)$, how do we evaluate if $\sigma^2_1 = \sigma^2_2$? Brown-Forsythe test
-- Correlations and slopes
 - Cite that guy for European centers?
-- Read Blanquart for geographical stuff
 - Include refs re: azithromycin
 
 # Take-aways
@@ -91,72 +89,53 @@ ro_hrr = read_tsv('../data/ms-medicare-ro/abg_hrr.tsv')
 medicare_state_use = read_tsv('../data/ms-medicare-ro/ineq_medicare_state.tsv')
 medicare_hrr_use = read_tsv('../data/ms-medicare-ro/ineq_medicare_hrr.tsv')
 
-medicare_state = inner_join(medicare_state_use, ro_state, by=c('drug_group', 'state')) %>%
-  inner_join(ro_bugdrugs) %>%
-  mutate(dataset='Medicare (state)',
-         pct_res=100*f_ns,
+medicare = bind_rows(
+  inner_join(medicare_state_use, ro_state, by = c('drug_group', 'state')) %>%
+    mutate(level = 'state', unit = state),
+  inner_join(medicare_hrr_use, ro_hrr, by = c('drug_group', 'hrr')) %>%
+    mutate(level = 'hrr', unit = as.character(hrr))
+) %>%
+  inner_join(ro_bugdrugs, by = c('bug', 'drug_group')) %>%
+  mutate(pct_res = 100 * f_ns,
          did = us_europe_convert(drug_group, total_use * 1000)) %>%
-  select(dataset, bug, drug=drug_group, geo_unit=state, did, pct_res)
-
-medicare_hrr = inner_join(medicare_hrr_use, ro_hrr, by=c('drug_group', 'hrr')) %>%
-  inner_join(ro_bugdrugs) %>%
-  mutate(dataset='Medicare (HRR)',
-         pct_res=100*f_ns,
-         did = us_europe_convert(drug_group, total_use * 1000),
-         geo_unit = as.character(hrr)
-         ) %>%
-  select(dataset, bug, drug=drug_group, geo_unit, did, pct_res)
-
-medicare_state_models = medicare_state %>%
-  group_by(bug, drug) %>%
-  do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
-  ungroup()
-
-medicare_hrr_models = medicare_hrr %>%
-  group_by(bug, drug) %>%
-  do(tidy(lm(pct_res ~ did, data=.), conf.int=TRUE)) %>%
-  ungroup()
+  select(level, bug, drug = drug_group, unit, did, pct_res)
 ```
 
 To the eye, it looks like the state and HRR points lie on similar lines:
 
 ```{r medicare_levels_plot}
-bind_rows(
-  medicare_state %>% mutate(level='state'),
-  medicare_hrr %>% mutate(level='hrr')
-) %>%
-  ggplot(aes(did, pct_res, color=level)) +
-  facet_wrap(~ bug + drug, scales='free_x') +
+medicare %>%
+  ggplot(aes(did, pct_res, color = level)) +
+  facet_wrap(~ bug + drug, scales = 'free_x') +
   geom_point() +
-  geom_smooth(method='lm')
+  geom_smooth(method = 'lm')
 ```
 
 Looking at just the regression results emphasizes that:
 
 ```{r}
-bind_rows(
-  medicare_state_models %>% mutate(level='state'),
-  medicare_hrr_models %>% mutate(level='hrr')
-) %>%
-  filter(term == 'did') %>%
-  ggplot(aes(level, estimate, ymin=conf.low, ymax=conf.high)) +
+medicare %>%
+  nest(unit, did, pct_res) %>%
+  mutate(model = map(data, ~ lm(pct_res ~ did, data = .)),
+         slope = map_dbl(model, ~ coef(.)['did']),
+         conf.low = map_dbl(model, ~ confint(.)['did', 1]),
+         conf.high = map_dbl(model, ~ confint(.)['did', 2])) %>%
+  ggplot(aes(level, slope, ymin = conf.low, ymax = conf.high)) +
   facet_wrap(~ bug + drug) +
   geom_point() +
   geom_errorbar()
 ```
 
-And I could do something more sophisticated, by running a model $\rho ~ \tau$ and another one $\rho ~ \tau + \tau \times L$, where $L$ is a dummy variable encoding whether the level of the analysis is state or HRR. All those interaction terms are not statistically significant.
+And I could do something more sophisticated, by running a model $\rho ~ \tau + \tau \times L$, where $L$ is a dummy variable encoding whether the level of the analysis is state or HRR. All those interaction terms are not statistically significant.
 
 ```{r}
-bind_rows(
-  medicare_state %>% mutate(level='state'),
-  medicare_hrr %>% mutate(level='hrr')
-) %>%
-  mutate(at_hrr = as.integer(level == 'hrr')) %>%
-  group_by(bug, drug) %>%
-  do(tidy(lm(did ~ pct_res * at_hrr, data=.), conf.int=TRUE)) %>%
-  select(-std.error, -statistic) %>%
-  filter(term == 'pct_res:at_hrr')
+medicare %>%
+  mutate(level = as.integer(level == 'hrr')) %>%
+  nest(level, unit, did, pct_res) %>%
+  mutate(model = map(data, ~ lm(pct_res ~ did * level, data = .)),
+         interaction_pval = map_dbl(model, ~ summary(.)$coefficients['did:level', 'Pr(>|t|)'])) %>%
+  select(bug, drug, interaction_pval) %>%
+  kable()
 ```
 
 ### ECDC
