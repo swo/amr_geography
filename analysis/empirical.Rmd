@@ -373,7 +373,7 @@ marketscan_maup %>%
   geom_violin()
 ```
 
-```{r extremal_maps}
+```{r extremal_slopes}
 marketscan_maup_ext = marketscan_maup %>%
   group_by(bugdrug, k, group_type) %>%
   filter(slope %in% c(min(slope), max(slope))) %>%
@@ -394,6 +394,8 @@ marketscan_maup_ext %>%
 ```
 
 ```{r extremal_maps}
+hex_map = read_tsv('~/grad/db/us_hex.tsv')
+
 marketscan_maup_ext %>%
   filter(k == 4) %>%
   select(bugdrug, unit, group, group_type, extremum) %>%
@@ -535,39 +537,59 @@ europe = read_tsv('../data/ecdc/data.tsv') %>%
 ```
 
 ```{r europe_maup_compute}
-europe_maup = try_load('results/europe_maup.rds', {
-  europe %>%
-    nest(-bugdrug) %>%
-    crossing(
-      k = c(4, 9, 20, 25),
-      group_type = c('sample', 'zone'),
-      iteration = 1:n_iterations
-    ) %>%
-    mutate(
-      unit_data = map(data, ~ filter(europe_units, unit %in% .$unit)),
-      unit_distances = map(unit_data, unit_distances),
-      group = pmap(list(group_type, unit_distances, k), random_group),
-      group_data = map2(data, group, aggregate),
-      model = map(group_data, ~ lm(pct_res ~ did, data = .)),
-      slope = map_dbl(model, ~ coef(.)[2])
-    )
-})
+europe_names = unique(europe$unit)
 
-europe_canonical = europe %>%
+europe_maup_data = europe %>%
   nest(-bugdrug) %>%
   mutate(
-    group_type = 'canonical',
-    k = map_int(data, nrow),
-    group = map(k, ~ 1:.),
-    group_data = map2(data, group, aggregate),
-    model = map(group_data, ~ lm(pct_res ~ did, data = .)),
-    slope = map_dbl(model, ~ coef(.)[2])
-  )
+    state_id = map(data, ~ match(.$unit, europe_names)),
+    unit_data = map(data, ~ filter(europe_units, unit %in% .$unit)),
+    n_units = map_int(unit_data, nrow),
+    unit_distances = map(unit_data, unit_distances)
+  ) %>%
+  gather('key', 'value', -bugdrug) %>%
+  nest(key, value, .key = 'value_tbl') %>%
+  mutate(value_list = map(value_tbl, ~ setNames(.$value, .$key))) %$%
+  setNames(value_list, bugdrug)
+
+# swo: come up with a better name than "state"
+europe_canonical = crossing(
+  bugdrug = unique(europe$bugdrug),
+  group_type = 'state'
+)
+
+# swo: improve this, so we have one function for all
+europe_maup = try_load('results/europe_maup.rds', {
+  crossing(
+    bugdrug = unique(europe$bugdrug),
+    k1 = c(4, 9, 20),
+    group_type = c('sample', 'zone'),
+    iteration = 1:n_iterations
+  ) %>%
+    bind_rows(europe_canonical) %>%
+    mutate(
+      group = pmap(list(bugdrug, k1, group_type), ~ maup_group(europe_maup_data[[..1]], ..2, ..3)),
+      k = map_int(group, ~ length(unique(.))),
+      group_data = map2(bugdrug, group, ~ aggregate(europe_maup_data[[.x]]$data, .y)),
+      group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
+      # regular linear models
+      linear_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+      slope = map_dbl(linear_model, ~ coef(.)['did']),
+      # weighted linear models
+      weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
+      weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)['did']),
+      # logistic regression
+      logistic_model = map(group_data, ~ glm(cbind(n_resistant, n_susceptible) ~ did, data = ., family = 'binomial')),
+      log_odds_ratio = map_dbl(logistic_model, ~ coef(.)['did']),
+      # Spearman correlation
+      cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
+      cor = map_dbl(cor_model, ~ .$estimate)
+    )
+}, force_run = TRUE)
 ```
 
-```{r europe_map_plot}
+```{r europe_maup_plot}
 europe_maup %>%
-  bind_rows(europe_canonical) %>%
   group_by(k, group_type, bugdrug) %>%
   summarize(mean = mean(slope),
             q25 = quantile(slope, 0.25),
