@@ -17,6 +17,320 @@ knitr::opts_chunk$set(
 pdf.options(useDingbats=FALSE, useKerning=FALSE)
 ```
 
+# Introduction
+
+## Background
+
+- At what length scale should analyses be conducted, or should interventions be implemented?
+- Lit re: azithro experiments suggest that scales can be really small
+- UK UTI papers suggest that you can go from CCG to practice level and not see any real change
+- Our work suggested that relationships are the same at the state and HRR levels
+- But questions remain, and there a rigorous answer to this question should be attempted
+
+## Approach
+
+- Here we use theoretical models and empirical analyses to determine if there is an important geographical scale for conducting these analyses (and, by extension, a guess at what scales are good for doing interventions)
+- We use a dynamical model that exhibits S/R coexistence, modifying its geographical scales and units of analysis to determine the theoretical boundaries for analyses
+- We then use empirical use/resistance data from the US and Europe to check if we are near this scale
+
+# Methods
+
+## Theory
+
+### Within-host neutral (WHN) model
+
+#### Base model
+
+I will use a dynamical modeling framework, the within-host neutrality (WHN) model presented by [Davies *et al.*](https://www.biorxiv.org/content/early/2018/01/03/217232) (doi:10.1101/217232), thats exhibit coexistence between susceptible and resistant organisms, with some relationship between antibiotic use $\tau$ and resistance prevalence $\rho = R / (1 - X)$.
+
+In this model, individuals may be uncolonized $X$, carry a susceptible $S$ or resistant $R$ organism, or be dual-carriers $D$. Carriers naturally clear at a rate $u$. Antibiotics are used at a rate $\tau$ that clears $S \to X$ and removes dual carriage $D \to R$. The fitness cost of resistance is encoded by $c$, which modulates the resistant strain's transmission.
+$$
+\begin{aligned}
+\dot{S} &= \beta \frac{S + D}{N} X - (u + \tau) S - \beta \underbrace{(1-c)} \frac{R}{N} S \\
+\dot{R} &= \beta (1-c) \frac{R}{N} X - u R + \tau D \\
+\dot{D} &= \beta (1-c) \frac{R}{N} S - (u + \tau) D \\
+\dot{X} &= -(\dot{S} + \dot{R} + \dot{D}) \\
+N &= X + S + R + D
+\end{aligned}
+$$
+For simplicity, I set $k = 1$ in these equations and in all the simulations. The braced term was missing in the bioRxiv manuscript.
+
+#### Parameters
+
+```{r whn_parameters}
+whn_base_parms = list(
+  beta = 4.0,
+  u = 1.0,
+  tau50 = 1.5 / 12
+)
+
+# swo: always using davies base parms, so just bake those into the cost function?
+# tau50 is the tau at which resistance prevalence is 50%
+cost_function = function(beta, u, tau50) {
+  k = 1.0
+  
+  1/2*(3*beta*k*tau50 - (3*k - 2)*tau50^2 - (k - 2)*u^2 + (beta*k - 4*(k - 1)*tau50)*u - 
+    sqrt(beta^2*k^2*tau50^2 + (k^2 - 4*k + 4)*tau50^4 + (k^2 - 4*k + 4)*u^4 - 2*(beta*k^2 -
+    2*beta*k)*tau50^3 - 2*(beta*k^2 - 2*beta*k + 8*(k - 1)*tau50)*u^3 + (beta^2*k^2 -
+    2*(k^2 + 12*k - 12)*tau50^2 + 2*(beta*k^2 + 6*beta*k)*tau50)*u^2 - 2*(beta^2*k^2*tau50 +
+    8*(k - 1)*tau50^3 - (beta*k^2 + 6*beta*k)*tau50^2)*u))/(beta*k*tau50 - k*tau50^2 - k*u^2 +
+    (beta*k - 2*k*tau50)*u)
+}
+
+whn_base_parms$cost = with(
+  whn_base_parms,
+  cost_function(beta, u, tau50)
+)
+
+whn_base_parms
+```
+
+#### Patch model
+
+To simulate the effects of geography, there are $n$ patches, indexed $i \in [0; n - 1]$, each of size $N_i$. Migration between the patches is slow compared to the transmission dynamics, so each $N_i$ remains fixed.
+
+We arrange the patches in a ring. The distance between two patches is
+$$
+d(i, j) = \min \left( |i-j|, n - |i-j \right).
+$$
+There is a geometrically-decaying, tunable interaction $\epsilon \in [0, 1]$ between the patches:
+$$
+\beta_{ij} = \beta \frac{\epsilon^{d(i, j)}}{\sum_{k = 0}^{n-1} \epsilon^{d(0, k)}}.
+$$
+Note that $\sum_j \beta_{ij} = \beta$ so that varying $\epsilon$ changes how the contacts are distributed, but the number of contacts is fixed.
+
+For $\epsilon = 0$, all contacts are in the same patch: $\beta_{ij} = \beta$ for $i = j$ and zero otherwise. For $\epsilon = 1$, all the patches function as a single, well-mixed population: $\beta_{ij} = \beta/n$. For intermediate values, the strength of interaction decays geometrically with the distance between two patches.
+
+```{r patch_viz}
+ring_dist = function(i, j, n) pmin(abs(i - j), n - abs(i - j))
+
+beta_ij = function(i, j, n, epsilon) {
+  num = epsilon ** ring_dist(i, j, n)
+  den = sum(epsilon ** ring_dist(0, 0:(n - 1), n))
+  num / den
+}
+
+f = function(n, epsilon) {
+  patches = data_frame(
+    i = 1:n,
+    theta = seq(0, 2 * pi, length.out = n + 1) %>% head(-1),
+    x = cos(theta),
+    y = sin(theta),
+    fill = ring_dist(1, i, n)
+  )
+  
+  edges = crossing(
+    patches,
+    rename_all(patches, ~ str_c(., '2'))
+  ) %>%
+    mutate(beta = beta_ij(i, i2, n, epsilon),
+           size = 10 * beta)
+  
+  stopifnot((edges %>% filter(i == 1) %$% sum(beta)) == 1.0)
+  
+  ggplot(NULL, aes(x, y)) +
+    geom_segment(data = edges, aes(xend = x2, yend = y2, size = size)) +
+    geom_point(data = patches, aes(fill = fill),
+               size = 10.0, shape = 21, stroke = 1.0) +
+    xlim(-1.1, 1.1) +
+    ylim(-1.1, 1.1) +
+    coord_fixed() +
+    scale_size_identity() +
+    scale_fill_distiller(palette = 'OrRd', direction = 1, guide = 'none') +
+    theme_void()
+}
+
+f(10, 0.0) + ggtitle("eps = 0")
+f(16, 0.1) + ggtitle("eps = 0.1")
+f(10, 1.0) + ggtitle("eps = 1.0")
+```
+
+The model is now
+$$
+\begin{aligned}
+\dot{S}_i &= \sum_j \beta_{ij} \frac{S_j + D_j}{N_j} X_i - (u + \tau_i) S_i - (1-c) \sum_j \beta_{ij} \frac{R_j}{N_j} S_i \\
+\dot{R}_i &= (1-c) \sum_j \beta_{ij} \frac{R_j}{N_j} X_i - u R_i + \tau_i D_i \\
+\dot{D}_i &= (1-c) \sum_j \beta_{ij} \frac{R_j}{N_j} S_i - (u + \tau_i) D_i \\
+\dot{X}_i &= -(\dot{S}_i + \dot{R}_i + \dot{D}_i) \\
+N_i &= X_i + S_i + R_i + D_i
+\end{aligned}
+$$
+
+### D-types model
+
+**swo figure out how D-types works with N**
+
+As a sensitivity analysis, I will repeat the analyses using the model presented by Lehtinen *et al*. (hereafter "D-types" model).
+
+In the D-types model, there a fixed number of "duration"-types, each with clearance rate $\mu_i$. Each type $i$ has sensitive and resistant strains, so the compartments are uncolonized $X$, sensitive-colonized $S_i$, and $R_i$. The D-types are subject to balancing selection, encoded by
+$$
+v_i = \left( 1 - \left[ \frac{S_i + R_i}{\sum_j (S_j + R_j)} - \frac{1}{n} \right]\right)^k,
+$$
+where $k \geq 1$ is the force of that selection. Thus:
+$$
+\begin{aligned}
+\dot{S}_i &= v_i \beta S_i X - (\tau + \mu_i) S_i \\
+\dot{R}_i &= v_i \frac{\beta}{c_\beta} R_i X - c_\mu \mu_i R_i \\
+\end{aligned}
+$$
+where $\beta$ is the transmission coefficient, $\tau$ is the antibiotic treatment rate, $c_\beta \geq 1$ and $c_\mu \geq 1$ are the fitness costs of resistance.
+
+# Results
+
+```{r whn_patch}
+# start vector x at position i, and loop around
+# roll(1:5, 3) == c(3, 4, 5, 1, 2)
+roll = function(x, i) c(x[i: length(x)], x[-(i: length(x))])
+
+# vector to data frame
+patch_unpack = function(x) {
+  matrix(x, ncol = 4) %>%
+    as_tibble() %>%
+    setNames(c('X', 'S', 'R', 'D'))
+}
+
+# data frame to vector
+patch_pack = function(df) {
+  stopifnot(names(df) == c('X', 'S', 'R', 'D'))
+  unlist(df)
+}
+
+patch_ode_func = function(t, state_vector, parms) {
+  state = patch_unpack(state_vector)
+  
+  #str(parms)
+  
+  with(c(state, parms), {
+    n_patch = nrow(state)
+    stopifnot(dim(betaij) == rep(n_patch, 2))
+    
+    N = X + S + R + D
+    
+    dS = (betaij %*% ((S + D) / N)) * X - (u + taui) * S - (1 - cost) * (betaij %*% (R / N)) * S
+    dR = (1 - cost) * (betaij %*% (R / N)) * X - u * R + taui * D
+    dD = (1 - cost) * (betaij %*% (R / N)) * S - (u + taui) * D
+    dX = -(dS + dR + dD)
+    
+    #dX = -beta * (prime(S) + prime(D) + (1 - cost) * prime(R)) * X + taui * S + u * (S + R + D)
+    
+    #stopifnot(all(abs(dX + dS + dR + dD) < 1e-12))
+    #str(list(c(dX, dS, dR, dD)))
+    #cat(dX + dS + dR + dD, '\n')
+    
+    list(c(dX, dS, dR, dD))
+  })
+}
+
+ring_dists = function(n) ring_dist(1, 1:n, n)
+
+patch_sim = function(taui, epsilon) {
+  n_patch = length(taui)
+
+  parms = with(whn_base_parms, {
+    decays = epsilon ** ring_dists(n_patch)
+    beta1j = beta * decays / sum(decays)
+    betaij = sapply(1:n_patch, function(i) roll(beta1j, i))
+    
+    c(whn_base_parms, list(
+      taui = taui, epsilon = epsilon,
+      betaij = betaij
+    ))
+  })
+  
+  state = data_frame(
+    X = rep(0.990 / n_patch, n_patch),
+    S = rep(0.005 / n_patch, n_patch),
+    R = S,
+    D = 0
+  )
+  
+  state_vector = patch_pack(state)
+  
+  result = rootSolve::runsteady(state_vector, func = patch_ode_func, parms = parms)
+  
+  result$y %>%
+    patch_unpack() %>%
+    mutate(tau = taui,
+           patch = seq_along(taui),
+           rho = R / (S + R + D))
+}
+
+ring_ramp = function(n) {
+  d = ring_dists(n)
+  d / max(d)
+}
+
+patches = crossing(
+  n_patch = c(4, 16, 32),
+  epsilon = c(0, 0.1, 0.25, 0.5, 1.0)
+) %>%
+  mutate(taui = map(n_patch, ~ (0.05 + 0.15 * ring_ramp(.))),
+         results = map2(taui, epsilon, patch_sim))
+```
+
+We are in one of the universes defined by $\epsilon$ and $n$. We don't know which one we're in.
+
+```{r}
+patches %>%
+  unnest() %>%
+  filter(patch <= (n_patch / 2 + 1)) %>%
+  ggplot(aes(taui, rho, color = factor(epsilon))) +
+  facet_grid(~ n_patch) +
+  geom_point() +
+  geom_line()
+
+patches %>%
+  mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
+         slope = map_dbl(linear_model, ~ coef(.)['tau'])) %>%
+  ggplot(aes(factor(n_patch), factor(epsilon))) +
+  geom_tile(aes(fill = slope))
+
+patches %>%
+  mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
+         slope = map_dbl(linear_model, ~ coef(.)['tau'])) %>%
+  ggplot(aes(factor(epsilon), slope, color = factor(n_patch), group = factor(n_patch))) +
+  geom_point() +
+  geom_line()
+```
+
+The question is, if we group *upwards*, treating many patches as if they were one, do we do any better? Not really: same slopes!
+
+```{r}
+kcluster = function(x, k) {
+  if (length(x) < k) {
+    stop('length(x) < k')
+  } else if (k == length(x)) {
+    1:k
+  } else {
+    kmeans(x, k)$cluster
+  }
+}
+
+aggregate = function(df, groups) {
+  df %>%
+    mutate(group = groups) %>%
+    group_by(group) %>%
+    summarize_all(mean)
+}
+
+patches %>%
+  mutate(
+    model = map(results, ~ lm(rho ~ tau, data = .)),
+    slope = map_dbl(model, ~ coef(.)['tau']),
+    group = map(taui, ~ kcluster(., 4)),
+    group_data = map2(results, group, aggregate),
+    group_model = map(group_data, ~ lm(rho ~ tau, data = .)),
+    group_slope = map_dbl(group_model, ~ coef(.)['tau'])
+  ) %>%
+  ggplot(aes(slope, group_slope)) +
+  geom_abline() +
+  geom_point(aes(color = factor(epsilon), shape = factor(n_patch)), size = 3)
+```
+
+## WHN with totally isolated patches
+
+---
+
 # To add
 
 - Rework "mixing" coefficient like Blanquart *et al*.'s $\epsilon \in [0, 1 - 1/n]$, where $\beta_{i \to j} = \beta (1-\epsilon)$ if $i = j$ and $\beta \epsilon / (n-1)$ otherwise.
@@ -416,7 +730,7 @@ davies_time %>%
 
 I compare the cross-island, within-island fixed-population, and within-island recorded-time simulations by plotting all the results on the same plot. The black lines show the cross-island results (i.e., the results from Davies *et al*. Figure 2e, above). The circles show results from the within-island fixed-population simulation. The colored lines show the within-island recorded-time simulation. The color of the circles and lines shows the island-level average $\tau$ used in the simulations. (You can read off those values by looking at where the colored lines intercept the black lines: when the island-level $\tau$ and within-island use are the same, you get the same results.) Panels show values of co-colonization efficiency $k$.
 
-```{r}
+```{r davies_time_comp}
 davies_time_comp = davies_time %>% filter(tau < 0.3)
 
 ggplot(data = NULL, aes(tau, rho)) +
@@ -550,27 +864,159 @@ The fact that the within-island slopes are really shallow implies that, if an an
 
 This toy moel is limited because there's only one length scale. In reality there aren't completely-separated, well-mixed islands; instead there's a network of length scales. I expect that having multiple length scales would soften this weaking of slopes with shorter length scales so that you don't see a sudden cliff.
 
-# Addenda
+# New framework
 
-## Two length scales
+There are $n$ patches, each with $N_i$ individuals. Each patch has its own antibiotic use rate $\tau_i$. Transmission between the patches is modulated by a mixing parameter $\epsilon \in [0, 1 - 1/n]$ such that
+$$
+\beta_{i \to j} = \begin{cases}
+  \beta (1 - \epsilon) &\text{for } i = j \\
+  \beta \epsilon / (n - 1) &\text{for } i \neq j
+\end{cases}
+$$
+For $\epsilon = 0$, all the patches are completely separate. For $\epsilon = 1 - 1/n$, $\beta_{i \to j} = \beta / n$ for all $i$ and $j$. Then terms in the model will look like
+$$
+\dot{S}_i = \sum_j \beta_{j \to i} \frac{S_j}{N_j} X_i + \ldots
+$$
+The summation simplifies:
+$$
+\begin{aligned}
+\sum_j \beta_{j \to i} S_j &= \beta (1 - \epsilon) S_i + \sum_{j \neq i} \frac{\beta \epsilon}{n - 1} S_j \\
+  &=\beta (1 - \epsilon) S_i - \frac{\beta \epsilon}{n - 1} S_i + \sum_j \frac{\beta \epsilon}{n - 1} S_j  \\
+  &= \beta \left[ \left(1 - \frac{\epsilon}{1 - 1/n} \right) S_i + \sum_j \frac{\epsilon}{1 - 1/n} \frac{S_j}{n} \right] \\
+  &= \beta \left[ (1 - \epsilon') S_i + \epsilon' \overline{S} \right]
+\end{aligned}
+$$
+where $\epsilon = \epsilon' (1 - 1/n)$, such that $0 \leq \epsilon' \leq 1$, and $\overline{S}$ is the average value of $S_i$ over patches.
 
-Divide an island into islets. Each of the $N$ islets $i$ has use $\tau_i$ such that $\tau = (1/N)\sum_i \tau_i$ and size $\phi_i$ such that $\sum_i \phi_i = 1$. Introduce some parameter $\alpha \in [0, 1]$ that encodes the amount of mixing between the islets. For $\alpha = 0$, the islets are completely separate; for $\alpha = 1$, they are all completely mixed. Setting $\alpha = 1$ reproduces the cross-island results, while setting $\alpha = 0$ creates new cross-island-type results, only with the islet values $\tau_i$ rather than the island-wide values $\tau$.
-
+The WHN model is then:
 $$
 \begin{aligned}
 \dot{S}_i &= \beta (S_i' + D_i') X_i - (u + \tau_i) S_i - k \beta (1-c) R_i' S_i \\
-\dot{R}_i &= \beta R_i' X_i - u R_i + \tau_i D_i \\
+\dot{R}_i &= \beta (1-c) R_i' X_i - u R_i + \tau_i D_i \\
 \dot{D}_i &= k \beta (1-c) R_i' S_i - (u + \tau_i) D_i \\
 \phi_i &= X_i + S_i + R_i + D_i \\
-1 &= \sum_i \phi_i \\
-\tau &= (1/N) \sum_i \tau_i
 \end{aligned}
 $$
-where the primes indicate the scaled, cross-islet forces of infection:
+where the primes indicate the force of infection from all patches on this patch $i$:
 $$
-S_i' \equiv (1-\alpha) \frac{S_i}{\phi_i} + \alpha \sum_j S_j
+S_i' = (1 - \epsilon') S_i + \epsilon' \overline{S}
 $$
 and similarly for $R_i'$ and $D_i'$.
+
+**swo** need to be more careful if we allow the population sizes to change. that's why I had that weird $\phi_i$ term in the older stuff.
+
+For $\epsilon' = 0$, the points $(\tau_i, \rho_i)$ will reproduce the $(\tau, \rho)$ that comes from varying $\tau$ in a single, isolated population. For $\epsilon' = 1$, there is just one well-mixed population, and only the average values like $\overline{S}$, etc. determined by average use will matter. At intermediate values, each patch is drawn toward the mean composition.
+
+```{r}
+patch_v2l = function(x) {
+  matrix(x, ncol = 4) %>%
+    as_tibble() %>%
+    setNames(c('X', 'S', 'R', 'D'))
+}
+
+patch_l2v = function(x) {
+  stopifnot(names(x) == c('X', 'S', 'R', 'D'))
+  unlist(x)
+}
+
+patch_ode_func = function(t, state_vector, parms) {
+  state = patch_v2l(state_vector)
+  
+  with(c(state, parms), {
+    prime = function(x) (1 - epsilon) * x + epsilon * mean(x)
+    
+    dS = beta * (prime(S) + prime(D)) * X - (u + taui) * S - k * beta * (1 - cost) * prime(R) * S
+    dR = beta * (1 - cost) * prime(R) * X - u * R + taui * D
+    dD = k * beta * (1 - cost) * prime(R) * S - (u + taui) * D
+    # dX = -(dS + dR + dD)
+    dX = -beta * (prime(S) + prime(D) + (1 - cost) * prime(R)) * X + taui * S + u * (S + R + D)
+    
+    stopifnot(all(abs(dX + dS + dR + dD) < 1e-12))
+    #str(list(c(dX, dS, dR, dD)))
+    #cat(dX + dS + dR + dD, '\n')
+    
+    list(c(dX, dS, dR, dD))
+  })
+}
+
+patch_sim = function(taui, epsilon, k = 1.0, tau50 = 1.5/12) {
+  n_patch = length(taui)
+
+  parms = with(davies_base_parms,
+               c(davies_base_parms, taui = list(taui), epsilon = epsilon,
+                 k = k, cost = cost_function(beta, u, k, tau50)))
+  
+  state = data_frame(
+    # X = rep(0.990, n_patch) / n_patch,
+    # S = rep(0.005, n_patch) / n_patch,
+    X = rep(0.990, n_patch),
+    S = rep(0.005, n_patch),
+    R = S,
+    D = 0
+  )
+  
+  state_vector = patch_l2v(state)
+  
+  result = rootSolve::runsteady(state_vector, func = patch_ode_func, parms = parms)
+  
+  result$y %>%
+    patch_v2l() %>%
+    mutate(tau = taui, patch = seq_along(taui))
+}
+
+patches = crossing(
+  n_patch = c(2, 10, 20),
+  epsilon = c(0, 0.5, 1.0)
+) %>%
+  mutate(taui = map(n_patch, ~ seq(0, 4.0 / 12, length.out = .)),
+         results = map2(taui, epsilon, patch_sim))
+
+patches %>%
+  unnest() %>%
+  mutate(rho = R / (S + R + D)) %>%
+  ggplot(aes(taui, rho)) +
+  facet_grid(epsilon ~ n_patch) +
+  geom_point()
+```
+
+**swo update** with new names and framework
+
+```{r, eval = FALSE}
+# x = patch_sim(taui = seq(0, 4.0 / 12, length.out = 100),
+#               epsilon = 0.0)
+
+
+# 
+# patches %>%
+#   unnest() %>%
+#   mutate(rho = R / (S + R + D)) %>%
+#   ggplot(aes(taui, rho)) +
+#   facet_grid(epsilon ~ n_patch) +
+#   geom_point()
+  
+#   big_tau = round(c(1.25, 1.50, 1.75) / 12, 3),
+#                    delta_tau = seq(-0.1, 0.1, length.out = 11),
+#                    k = c(1.0),
+#                    alpha = c(0.0, 0.1, 0.5, 1.0)) %>%
+#   mutate(tau = big_tau + delta_tau) %>%
+#   group_by(big_tau, alpha, k) %>%
+#   do(islet_sim(taui=.$tau, k=unique(.$k), alpha=unique(.$alpha))) %>%
+#   ungroup() %>%
+#   mutate(rho = R/(S + R + D))
+# 
+# # compare with within-host neutral model, within-island (subpop) model
+# # dotted lines
+# islets %>%
+#   ggplot(aes(tau, rho, color = factor(big_tau))) +
+#   geom_point() + geom_line() +
+#   geom_line(data = davies_cross, color = 'black') +
+#   geom_line(data = davies_small, linetype = 2) +
+#   facet_wrap(~ alpha)
+```
+
+# Sensitivity
+
+## Old islets
 
 ```{r}
 islet_v2l = function(x) {
