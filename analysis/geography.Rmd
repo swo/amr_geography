@@ -17,6 +17,16 @@ knitr::opts_chunk$set(
 pdf.options(useDingbats=FALSE, useKerning=FALSE)
 ```
 
+# To add
+
+- "Population" rather than patch, because could be geographic or demographic
+- Assumes equilibrated resistance. This means something about time and about the pathogens available in every population.
+- When does population, rather than use, control resistance?
+    - Hospital vs. community for some organisms
+    - Which school/day care or family?
+- Prediction is that, when there is just nearly as much transmission within population as across, then you'll get a breakdown in the use-resistance relationship. In other words, in these cases, the thing that controls resistance is population, rather than use. That's because population-level resistance is determined by population-level use and only weakly modulated by sub-population use.
+- Maybe "tranmission population" means that transmission is greater within the group than across groups. "Analytical population" is how we do the analysis. When we pick multiple analytical populations within one transmission population, then we get weak within-tranmission-population relationships.
+
 # Introduction
 
 ## Background
@@ -101,7 +111,8 @@ Note that $\sum_j \beta_{ij} = \beta$ so that varying $\epsilon$ changes how the
 
 For $\epsilon = 0$, all contacts are in the same patch: $\beta_{ij} = \beta$ for $i = j$ and zero otherwise. For $\epsilon = 1$, all the patches function as a single, well-mixed population: $\beta_{ij} = \beta/n$. For intermediate values, the strength of interaction decays geometrically with the distance between two patches.
 
-```{r patch_viz}
+```{r}
+#swo: these are actually useful functions
 ring_dist = function(i, j, n) pmin(abs(i - j), n - abs(i - j))
 
 beta_ij = function(i, j, n, epsilon) {
@@ -109,40 +120,84 @@ beta_ij = function(i, j, n, epsilon) {
   den = sum(epsilon ** ring_dist(0, 0:(n - 1), n))
   num / den
 }
+```
 
-f = function(n, epsilon) {
-  patches = data_frame(
-    i = 1:n,
-    theta = seq(0, 2 * pi, length.out = n + 1) %>% head(-1),
-    x = cos(theta),
-    y = sin(theta),
-    fill = ring_dist(1, i, n)
+```{r patch_viz}
+circle = function(cx, cy, r, n = 100) {
+  theta = seq(0, 2 * pi, length.out = n)
+  
+  data_frame(
+    order = 1:n,
+    x = cx + r * cos(theta),
+    y = cy + r * sin(theta)
+  )
+}
+
+wedges_f = function(cx, cy, r, n_wedge, n_arc = 100) {
+  if (n_wedge == 1) {
+    theta = seq(0, 2 * pi, length.out = n_arc)
+    return(data_frame(
+      wedge = 1,
+      x = cx + r * cos(theta),
+      y = cy + r * sin(theta)
+    ))
+  }
+  
+  thetas = function(i) {
+    2 * pi * seq((i - 1.5) / n_wedge, (i - 0.5) / n_wedge, length.out = n_arc)
+  }
+  
+  data_frame(wedge = 1:n_wedge) %>%
+    mutate(data = map(wedge, ~ data_frame(
+      x = cx + r * c(0, cos(thetas(.))),
+      y = cy + r * c(0, sin(thetas(.)))
+    ))) %>%
+    unnest()
+}
+
+ring_scale = Vectorize(function(i, n, scale = 1.0) {
+  if (n == 1) return(0)
+  
+  # rescale so that i=1 -> -scale, i=max dist -> +scale
+  dists = ring_dist(1, 1:n, n)
+  approx(x = c(min(dists), max(dists)),
+         y = scale * c(-1, 1),
+         xout = ring_dist(i, 1, n))$y
+})
+
+ring_viz = function(n_wedge, r, R = 1.0) {
+  n_circle = length(n_wedge)
+  
+  centers = data_frame(
+    center = 1:n_circle,
+    n_wedge = n_wedge,
+    center_theta = seq(0, 2 * pi, length.out = n_circle + 1) %>% head(-1),
+    center_x = R * cos(center_theta),
+    center_y = R * sin(center_theta)
   )
   
-  edges = crossing(
-    patches,
-    rename_all(patches, ~ str_c(., '2'))
-  ) %>%
-    mutate(beta = beta_ij(i, i2, n, epsilon),
-           size = 10 * beta)
+  circles = centers %>%
+    mutate(circles = map2(center_x, center_y, ~ circle(.x, .y, r))) %>%
+    select(center, circles) %>%
+    unnest()
   
-  stopifnot((edges %>% filter(i == 1) %$% sum(beta)) == 1.0)
+  wedges = centers %>%
+    mutate(data = pmap(list(cx = center_x, cy = center_y, r, n_wedge), wedges_f)) %>%
+    select(center, data) %>%
+    unnest() %>%
+    mutate(group = interaction(center, wedge)) %>%
+    mutate(fill = 1 * ring_scale(center, n_circle) + 1 * ring_scale(wedge, n_wedge))
   
   ggplot(NULL, aes(x, y)) +
-    geom_segment(data = edges, aes(xend = x2, yend = y2, size = size)) +
-    geom_point(data = patches, aes(fill = fill),
-               size = 10.0, shape = 21, stroke = 1.0) +
-    xlim(-1.1, 1.1) +
-    ylim(-1.1, 1.1) +
+    geom_path(data = circles, aes(group = center), color = 'black', size = 2) +
+    geom_polygon(data = wedges, aes(group = group, fill = fill), color = 'black') +
     coord_fixed() +
-    scale_size_identity() +
-    scale_fill_distiller(palette = 'OrRd', direction = 1, guide = 'none') +
+    scale_fill_distiller(direction = 1, palette = 'Oranges', guide = 'none') +
     theme_void()
 }
 
-f(10, 0.0) + ggtitle("eps = 0")
-f(16, 0.1) + ggtitle("eps = 0.1")
-f(10, 1.0) + ggtitle("eps = 1.0")
+ring_viz(rep(1, 4), 0.5)
+ring_viz(rep(6, 4), 0.5)
 ```
 
 The model is now
@@ -155,6 +210,29 @@ $$
 N_i &= X_i + S_i + R_i + D_i
 \end{aligned}
 $$
+
+#### Sub-patch model (APs nested within TPs)
+
+Say you have transmission populations with tranmission coefficients $\beta_{i \to j}$. Then there are analytical populations nested within those TPs. Say $i_j$ is the $j$-th AP in the $i$-th TP.
+
+We have three rules:
+
+- Nested APs interact with one another according to their relative sizes.
+- Other TPs interact with APs according to their relative sizes.
+- Each AP interacts with other TPs the same way.
+
+In equations, this is:
+$$
+\begin{aligned}
+\beta_{i_\mu \to i_\nu} &= \frac{N_{i_\mu}}{N_i} \beta_{i \to i} \\
+\beta_{i_\mu \to j} &= \frac{N_{i_\mu}}{N_i} \beta_{i \to j} \\
+\beta_{i \to j_\mu} &= \beta_{i \to j}
+\end{aligned}
+$$
+
+This equations ensure that, as far as the transmission and clearance terms are concerned, the APs $i_\mu$ act like a single TP $i$.
+
+The one difference is that the treatment terms cannot be written out with a "combined" use $\tau_1$ (except in the trivial case where $\tau_a = \tau_b$). Having separate $\tau_a$ and $\tau_b$ means that patch 1 might achieve a different composition than would be possible for any common $\tau$.
 
 ### D-types model
 
@@ -177,6 +255,8 @@ where $\beta$ is the transmission coefficient, $\tau$ is the antibiotic treatmen
 
 # Results
 
+## Perfect spatial linear
+
 ```{r whn_patch}
 # start vector x at position i, and loop around
 # roll(1:5, 3) == c(3, 4, 5, 1, 2)
@@ -198,8 +278,6 @@ patch_pack = function(df) {
 patch_ode_func = function(t, state_vector, parms) {
   state = patch_unpack(state_vector)
   
-  #str(parms)
-  
   with(c(state, parms), {
     n_patch = nrow(state)
     stopifnot(dim(betaij) == rep(n_patch, 2))
@@ -210,12 +288,6 @@ patch_ode_func = function(t, state_vector, parms) {
     dR = (1 - cost) * (betaij %*% (R / N)) * X - u * R + taui * D
     dD = (1 - cost) * (betaij %*% (R / N)) * S - (u + taui) * D
     dX = -(dS + dR + dD)
-    
-    #dX = -beta * (prime(S) + prime(D) + (1 - cost) * prime(R)) * X + taui * S + u * (S + R + D)
-    
-    #stopifnot(all(abs(dX + dS + dR + dD) < 1e-12))
-    #str(list(c(dX, dS, dR, dD)))
-    #cat(dX + dS + dR + dD, '\n')
     
     list(c(dX, dS, dR, dD))
   })
@@ -261,8 +333,8 @@ ring_ramp = function(n) {
 }
 
 patches = crossing(
-  n_patch = c(4, 16, 32),
-  epsilon = c(0, 0.1, 0.25, 0.5, 1.0)
+  n_patch = c(4, 8, 16, 32, 64),
+  epsilon = c(0, 0.01, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0)
 ) %>%
   mutate(taui = map(n_patch, ~ (0.05 + 0.15 * ring_ramp(.))),
          results = map2(taui, epsilon, patch_sim))
@@ -281,19 +353,23 @@ patches %>%
 
 patches %>%
   mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
-         slope = map_dbl(linear_model, ~ coef(.)['tau'])) %>%
+         slope = map_dbl(linear_model, ~ coef(.)['tau']),
+         ring_scale = epsilon ** n_patch) %>%
   ggplot(aes(factor(n_patch), factor(epsilon))) +
   geom_tile(aes(fill = slope))
 
 patches %>%
   mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
          slope = map_dbl(linear_model, ~ coef(.)['tau'])) %>%
-  ggplot(aes(factor(epsilon), slope, color = factor(n_patch), group = factor(n_patch))) +
+  ggplot(aes(epsilon, slope, color = factor(n_patch), group = factor(n_patch))) +
   geom_point() +
-  geom_line()
+  geom_line() +
+  ylim(0, 7)
 ```
 
-The question is, if we group *upwards*, treating many patches as if they were one, do we do any better? Not really: same slopes!
+### Going upwards
+
+If we group *upwards*, treating many patches as if they were one, do we do any better? Not really: same slopes!
 
 ```{r}
 kcluster = function(x, k) {
@@ -327,17 +403,94 @@ patches %>%
   geom_point(aes(color = factor(epsilon), shape = factor(n_patch)), size = 3)
 ```
 
-## WHN with totally isolated patches
+### Fixing the ring "size"
+
+Increasing $n$ and decrease $\epsilon$ both make it harder for transmission to make it from one end of the ring to the other. Another way to think about scale would be to say that there's a fixed difficulty of getting from one side to the other (e.g., the US is such-and-such a size) but that it's unclear how big the relevant "chunks" are.
+
+The means fixing the antipode-to-antipode transmission rate
+$$
+\beta_{1 \to \left\lfloor \tfrac{n}{2} \right\rfloor + 1}
+  = \beta \frac{\epsilon^{\left\lfloor \tfrac{n}{2} \right\rfloor}}{\sum_{i = 1}^n \epsilon^i}
+$$
+and, when varying $n$, altering $\epsilon$ to take account for that.
+
+```{r}
+ef = function(n, ba) {
+  antipode = n %/% 2 + 1
+  f = function(eps) beta_ij(1, antipode, n, eps)
+  obj = function(eps) (f(eps) - ba) ** 2
+  
+  optim(0.5, obj, method = 'Brent', lower = 0.0, upper = 1.0)$par
+}
+
+x = crossing(
+  n_patch = c(4, 16, 64)
+) %>%
+  mutate(taui = map(n_patch, ~ (0.05 + 0.15 * ring_ramp(.))),
+         epsilon = map_dbl(n_patch, ~ ef(., 0.001)),
+         results = map2(taui, epsilon, patch_sim))
+
+x %>%
+  unnest() %>%
+  ggplot(aes(taui, rho, color = factor(n_patch))) +
+  geom_point() +
+  geom_line()
+```
+
+Seems like maybe I should be accounting for all possible paths, but that gets a little crazy. I'm not trying to do a Feynman integral here!
+
+### Sub-patch model
+
+$\epsilon$ is some fixed parameter; we're not going to have much help with that. $n$ we can increase if we expand the scope of our study: if we include more places, and a greater diversity of $\tau$, then we're more likely to succeed.
+
+```{r}
+ring_viz(4, 0.5, 0.4) + ggtitle("If we live in this world...")
+ring_viz(40, 0.25, 0.05) + ggtitle("But we use analytical units like this...")
+```
+
+The critical insight is: if we have stronger differences *across* units than *within* units, then we can go to larger sizes, but we can't go to smaller ones, because we might be dividing up the patches.
+
+## No spatial autocorrelation
+
+In this case, just a little bit of mixing causes ruination.
+
+```{r}
+# patches no autocorrelation
+pnac = crossing(
+  n_patch = c(4, 16, 32),
+  epsilon = c(0, 0.1, 0.25, 0.5, 1.0)
+) %>%
+  mutate(taui = map(n_patch, ~ runif(., 0.05, 0.20)),
+         results = map2(taui, epsilon, patch_sim))
+
+pnac_models = pnac %>%
+  mutate(
+    model = map(results, ~ lm(rho ~ tau, data = .)),
+    slope = map_dbl(model, ~ coef(.)['tau']),
+    group = map(taui, ~ kcluster(., 4)),
+    group_data = map2(results, group, aggregate),
+    group_model = map(group_data, ~ lm(rho ~ tau, data = .)),
+    group_slope = map_dbl(group_model, ~ coef(.)['tau'])
+  )
+
+pnac_models %>%
+  select(n_patch, epsilon, taui, results) %>%
+  unnest() %>%
+  ggplot(aes(taui, rho, color = factor(epsilon))) +
+  facet_wrap(~ n_patch) +
+  geom_smooth(method = 'lm', se = FALSE) +
+  geom_point()
+```
+
+## Empirical
 
 ---
 
 # To add
 
-- Rework "mixing" coefficient like Blanquart *et al*.'s $\epsilon \in [0, 1 - 1/n]$, where $\beta_{i \to j} = \beta (1-\epsilon)$ if $i = j$ and $\beta \epsilon / (n-1)$ otherwise.
 - Why don't resistances in the time analysis go all the way up to 1?
 - Here I talk about changing the geographical scale of analysis; I think it might be more common to think about the geographical scale of transmission. If the scale of transmission is longer than the scale of the geographical analysis, then you're doing the same thing I talk about here, subdividing an island. (Conversely, if transmission scales are shorter than geographical scales, you might see a relationship.)
 - I show that slopes within each island are more shallow than the cross-island relationship. It's also true that if you take a sample of within-island values from different islands, you'll also get a more shallow slope, just maybe not quite as shallow. I put that as a gray line.
-- I do the derivation of the subpopulation equations by assuming that the target group is small so that the island-wide $(S, R, D, X)$ is fixed. In fact, you can say that the target group, which is a fraction $f$ of the whole island, has use $\tau_1$ such that the remaining $1-f$ has use $\tau_0$ where $f \tau_1 + (1-f) \tau_0 = \tau$. In this case, you get the same equations as below. In other words, so long as the subpopulations have use such that the island-wide average use is $\tau$, then the cross-island relationship holds regardless of the size of the subgroups.
 
 ## Outline
 
@@ -418,7 +571,7 @@ where $X$ is uncolonized, $u$ is the natural recovery rate, $\tau$ is the antibi
 
 The parameter values are drawn from the manuscript: $u = 1 \text{ month}^{-1}$, $\beta = 4$ (I presume the units are also month$^{-1}$, $\tau \in [0, 4]$ courses per person per year (i.e., up to $1/3 \text{ month}^{-1}$, and $k \in \{0, 1/4, 1/2, 1\}$. In the manuscript, the cost $c$ was chosen such that $\rho = 1/2$ when $\tau = 1.5$ courses per person per year. To find these values, I used a symbolic computation program (SageMath) to directly solve the differential equations at equilibrium.
 
-```{r whn_parameters}
+```{r whn_parameters2}
 davies_base_parms = list(
   beta = 4.0,
   u = 1.0

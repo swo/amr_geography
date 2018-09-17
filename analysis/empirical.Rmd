@@ -17,6 +17,7 @@ map = purrr::map
 
 # To do
 
+- Cf. what I saw in geography. The critical question is whether there are stronger relationships *across* compared to *within* the zones. If so, then we might go up in length scale. If they are the same, no evidence against going down.
 - If we take $n_1$ points from $N(0, \sigma^2_1)$ and $n_2$ from $N(0, \sigma^2_2)$, how do we evaluate if $\sigma^2_1 = \sigma^2_2$? Brown-Forsythe test
 - Cite that guy for European centers?
 - Include refs re: azithromycin
