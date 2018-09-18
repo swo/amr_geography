@@ -20,7 +20,6 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 # To add
 
 - "Population" rather than patch, because could be geographic or demographic
-- Assumes equilibrated resistance. This means something about time and about the pathogens available in every population.
 - When does population, rather than use, control resistance?
     - Hospital vs. community for some organisms
     - Which school/day care or family?
@@ -32,16 +31,28 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 ## Background
 
 - At what length scale should analyses be conducted, or should interventions be implemented?
-- Lit re: azithro experiments suggest that scales can be really small
-- UK UTI papers suggest that you can go from CCG to practice level and not see any real change
-- Our work suggested that relationships are the same at the state and HRR levels
+- Experiments and cross-sectional studies suggest that the scale could be really small
+    - Lit re: azithro experiments suggest that scales can be really small
+    - UK UTI papers suggest that you can go from CCG to practice level and not see any real change
+    - Our work suggested that relationships are the same at the state and HRR levels
+    - Transmission is known to be strong at the level of families and schools/day cares
+- In other cases, the population or setting, rather than individual use, appears to control resistance
+    - E.g., our race thing, where non-whites get less drug and have more resistance
+    - Hospitals, where the difference between hospital or not is much greater than individual use
+    - Suggestions that doing an analysis might not be expected to work at all because the US is one big well-mixed pot
 - But questions remain, and there a rigorous answer to this question should be attempted
 
 ## Approach
 
-- Here we use theoretical models and empirical analyses to determine if there is an important geographical scale for conducting these analyses (and, by extension, a guess at what scales are good for doing interventions)
-- We use a dynamical model that exhibits S/R coexistence, modifying its geographical scales and units of analysis to determine the theoretical boundaries for analyses
-- We then use empirical use/resistance data from the US and Europe to check if we are near this scale
+- We distinguish between an "analytical population", the individuals whose pooled use and resistance are the units of analysis, and "transmission populations". Transmission populations have proportionally more contacts within their group than outside their group: $\beta_{i \leftarrow i} / N_i > \beta_{i \leftarrow j} / N_j$ for all $j \neq i$.
+- We assume there are some true transmission populations that we don't know *a priori*. The questions are:
+    - What are the risks of making our analytical populations much smaller than the transmission populations?
+    - Much larger?
+    - Can we discover what the TPs are?
+- We use theoretical models and empirical analyses to assess these questions
+    - We use a dynamical model that exhibits S/R coexistence, modifying its geographical scales and units of analysis to determine the theoretical boundaries for analyses
+        - We assume "equilibrated resistance", meaning that antibiotic use is slowly changing in time, that each population has access to the same pool of pathogen strains, that strains are equally fit in different populations (excepting antibiotic use), and that resistance levels have equilibrated
+    - We then use empirical use/resistance data from the US and Europe to check if we are near this scale
 
 # Methods
 
@@ -95,21 +106,46 @@ whn_base_parms$cost = with(
 whn_base_parms
 ```
 
-#### Patch model
+#### Population model
 
-To simulate the effects of geography, there are $n$ patches, indexed $i \in [0; n - 1]$, each of size $N_i$. Migration between the patches is slow compared to the transmission dynamics, so each $N_i$ remains fixed.
+There are $n$ populations, indexed $i \in [0; n - 1]$, each of size $N_i$. Changes in population membership are slow compared to the transmission dynamics, so each $N_i$ remains fixed.
 
-We arrange the patches in a ring. The distance between two patches is
+In a first simulation, the populations are all transmission populations. A parameter $\epsilon \in [0, 1]$ controls the relative amount of interactions within versus between the transmission populations. Let $\beta'_{i \leftarrow j}$ be the the contacts for individuals in $i$ that are in $j$ so that $\beta_{i \leftarrow j} = \beta \beta'_{i \leftarrow j}$, where $\beta$ is a constant. We require that $\sum_j \beta'_{i \leftarrow j} = 1$. When tuning $\epsilon$:
 $$
-d(i, j) = \min \left( |i-j|, n - |i-j \right).
+\begin{aligned}
+\beta'_{i \leftarrow i} &= 1 - \epsilon (1 - 1 / n) \\
+\beta'_{i \leftarrow j} &= \epsilon / n \qquad (i \neq j)
+\end{aligned}
 $$
-There is a geometrically-decaying, tunable interaction $\epsilon \in [0, 1]$ between the patches:
-$$
-\beta_{ij} = \beta \frac{\epsilon^{d(i, j)}}{\sum_{k = 0}^{n-1} \epsilon^{d(0, k)}}.
-$$
-Note that $\sum_j \beta_{ij} = \beta$ so that varying $\epsilon$ changes how the contacts are distributed, but the number of contacts is fixed.
 
-For $\epsilon = 0$, all contacts are in the same patch: $\beta_{ij} = \beta$ for $i = j$ and zero otherwise. For $\epsilon = 1$, all the patches function as a single, well-mixed population: $\beta_{ij} = \beta/n$. For intermediate values, the strength of interaction decays geometrically with the distance between two patches.
+The model is now
+$$
+\begin{aligned}
+\dot{S}_i &= \sum_j \beta_{i \leftarrow j} \frac{S_j + D_j}{N_j} X_i - (u + \tau_i) S_i - (1-c) \sum_j \beta_{i \leftarrow j} \frac{R_j}{N_j} S_i \\
+\dot{R}_i &= (1-c) \sum_j \beta_{i \leftarrow j} \frac{R_j}{N_j} X_i - u R_i + \tau_i D_i \\
+\dot{D}_i &= (1-c) \sum_j \beta_{i \leftarrow j} \frac{R_j}{N_j} S_i - (u + \tau_i) D_i \\
+\dot{X}_i &= -(\dot{S}_i + \dot{R}_i + \dot{D}_i) \\
+N_i &= X_i + S_i + R_i + D_i
+\end{aligned}
+$$
+
+#### Nested model
+
+To simulated the effect of going to too small populations, we consider the situation where the analytical populations are nested within transmission populations.
+
+To make the nested analytical populations behave like a single transmission population, we have three rules:
+
+- Nested APs interact with one another according to their relative sizes.
+- Other TPs interact with APs according to their relative sizes.
+- Each AP interacts with other TPs the same way.
+
+In equations, this is:
+$$
+\beta_{i_\mu \leftarrow j_\nu} = \frac{N_{j_\nu}}{N_j} \beta_{i \leftarrow j}
+$$
+If one of the two populations has no subpopulation, then the fraction $N / N$ is just unity.
+
+This equations ensure that, as far as the transmission and clearance terms are concerned, the APs $i_\mu$ act like a single TP $i$. The one difference is that the treatment terms cannot be written with a "combined" use $\tau_i$ (except in the trivial case where $\tau_{i_\mu} = \tau_{i_\nu}$). So different compositions of S/R/D might result from separating the groups in this way.
 
 ```{r}
 #swo: these are actually useful functions
@@ -200,39 +236,16 @@ ring_viz(rep(1, 4), 0.5)
 ring_viz(rep(6, 4), 0.5)
 ```
 
-The model is now
+##### With different scales
+
+Say we have $n_\uparrow$ superpopulations with $n_\downarrow$ populations each. The superpopulations mix with constant $\epsilon_\uparrow$ and the populations mix with constant $\epsilon_\downarrow$ within each superpopulation:
 $$
-\begin{aligned}
-\dot{S}_i &= \sum_j \beta_{ij} \frac{S_j + D_j}{N_j} X_i - (u + \tau_i) S_i - (1-c) \sum_j \beta_{ij} \frac{R_j}{N_j} S_i \\
-\dot{R}_i &= (1-c) \sum_j \beta_{ij} \frac{R_j}{N_j} X_i - u R_i + \tau_i D_i \\
-\dot{D}_i &= (1-c) \sum_j \beta_{ij} \frac{R_j}{N_j} S_i - (u + \tau_i) D_i \\
-\dot{X}_i &= -(\dot{S}_i + \dot{R}_i + \dot{D}_i) \\
-N_i &= X_i + S_i + R_i + D_i
-\end{aligned}
+\beta_{{i_\mu} \leftarrow {j_\nu}} = \begin{cases}
+  \left[ 1 - \epsilon_\uparrow (1 - 1/n_\uparrow) \right] \times \left[ 1 - \epsilon_\downarrow (1 - 1/n_\downarrow) \right] & i = j, \mu = \nu \\
+  \left[ 1 - \epsilon_\uparrow (1 - 1/n_\uparrow) \right] \times (\epsilon_\downarrow / n_\downarrow) & i = j, \mu \neq \nu \\
+  (\epsilon_\uparrow / n_\uparrow) \times (1 / n_\downarrow) & i \neq j
+\end{cases}
 $$
-
-#### Sub-patch model (APs nested within TPs)
-
-Say you have transmission populations with tranmission coefficients $\beta_{i \to j}$. Then there are analytical populations nested within those TPs. Say $i_j$ is the $j$-th AP in the $i$-th TP.
-
-We have three rules:
-
-- Nested APs interact with one another according to their relative sizes.
-- Other TPs interact with APs according to their relative sizes.
-- Each AP interacts with other TPs the same way.
-
-In equations, this is:
-$$
-\begin{aligned}
-\beta_{i_\mu \to i_\nu} &= \frac{N_{i_\mu}}{N_i} \beta_{i \to i} \\
-\beta_{i_\mu \to j} &= \frac{N_{i_\mu}}{N_i} \beta_{i \to j} \\
-\beta_{i \to j_\mu} &= \beta_{i \to j}
-\end{aligned}
-$$
-
-This equations ensure that, as far as the transmission and clearance terms are concerned, the APs $i_\mu$ act like a single TP $i$.
-
-The one difference is that the treatment terms cannot be written out with a "combined" use $\tau_1$ (except in the trivial case where $\tau_a = \tau_b$). Having separate $\tau_a$ and $\tau_b$ means that patch 1 might achieve a different composition than would be possible for any common $\tau$.
 
 ### D-types model
 
@@ -255,32 +268,28 @@ where $\beta$ is the transmission coefficient, $\tau$ is the antibiotic treatmen
 
 # Results
 
-## Perfect spatial linear
+## WHN transmission populations
 
-```{r whn_patch}
-# start vector x at position i, and loop around
-# roll(1:5, 3) == c(3, 4, 5, 1, 2)
-roll = function(x, i) c(x[i: length(x)], x[-(i: length(x))])
-
+```{r whn}
 # vector to data frame
-patch_unpack = function(x) {
+whn_unpack = function(x) {
   matrix(x, ncol = 4) %>%
     as_tibble() %>%
     setNames(c('X', 'S', 'R', 'D'))
 }
 
 # data frame to vector
-patch_pack = function(df) {
+whn_pack = function(df) {
   stopifnot(names(df) == c('X', 'S', 'R', 'D'))
   unlist(df)
 }
 
-patch_ode_func = function(t, state_vector, parms) {
-  state = patch_unpack(state_vector)
+whn_ode_func = function(t, state_vector, parms) {
+  state = whn_unpack(state_vector)
   
   with(c(state, parms), {
-    n_patch = nrow(state)
-    stopifnot(dim(betaij) == rep(n_patch, 2))
+    n_pop = nrow(state)
+    stopifnot(dim(betaij) == rep(n_pop, 2))
     
     N = X + S + R + D
     
@@ -293,15 +302,15 @@ patch_ode_func = function(t, state_vector, parms) {
   })
 }
 
-ring_dists = function(n) ring_dist(1, 1:n, n)
-
-patch_sim = function(taui, epsilon) {
-  n_patch = length(taui)
+whn_sim = function(taui, epsilon) {
+  n_pop = length(taui)
 
   parms = with(whn_base_parms, {
-    decays = epsilon ** ring_dists(n_patch)
-    beta1j = beta * decays / sum(decays)
-    betaij = sapply(1:n_patch, function(i) roll(beta1j, i))
+    betaij = matrix(beta * epsilon / n_pop, ncol = n_pop, nrow = n_pop)
+    diag(betaij) <- beta * (1 - epsilon * (1 - 1 / n_pop))
+    
+    stopifnot(all(rowSums(betaij) == beta))
+    stopifnot(all(colSums(betaij) == beta))
     
     c(whn_base_parms, list(
       taui = taui, epsilon = epsilon,
@@ -310,61 +319,120 @@ patch_sim = function(taui, epsilon) {
   })
   
   state = data_frame(
-    X = rep(0.990 / n_patch, n_patch),
-    S = rep(0.005 / n_patch, n_patch),
+    X = rep(0.990 / n_pop, n_pop),
+    S = rep(0.005 / n_pop, n_pop),
     R = S,
     D = 0
   )
   
-  state_vector = patch_pack(state)
+  state_vector = whn_pack(state)
   
-  result = rootSolve::runsteady(state_vector, func = patch_ode_func, parms = parms)
+  result = rootSolve::runsteady(state_vector, func = whn_ode_func, parms = parms)
   
   result$y %>%
-    patch_unpack() %>%
+    whn_unpack() %>%
     mutate(tau = taui,
-           patch = seq_along(taui),
+           pop = seq_along(taui),
            rho = R / (S + R + D))
 }
 
-ring_ramp = function(n) {
-  d = ring_dists(n)
-  d / max(d)
-}
-
-patches = crossing(
-  n_patch = c(4, 8, 16, 32, 64),
-  epsilon = c(0, 0.01, 0.1, 0.2, 0.4, 0.6, 0.8, 1.0)
+whn1 = crossing(
+  n_pop = c(4, 8, 16),
+  epsilon = c(0, 0.01, 0.1, 0.2, 1.0)
 ) %>%
-  mutate(taui = map(n_patch, ~ (0.05 + 0.15 * ring_ramp(.))),
-         results = map2(taui, epsilon, patch_sim))
+  mutate(taui = map(n_pop, ~ seq(0.05, 0.2, length.out = .)),
+         results = map2(taui, epsilon, whn_sim))
 ```
 
 We are in one of the universes defined by $\epsilon$ and $n$. We don't know which one we're in.
 
 ```{r}
-patches %>%
+whn1 %>%
   unnest() %>%
-  filter(patch <= (n_patch / 2 + 1)) %>%
   ggplot(aes(taui, rho, color = factor(epsilon))) +
-  facet_grid(~ n_patch) +
+  facet_grid(~ n_pop) +
   geom_point() +
   geom_line()
 
-patches %>%
+whn1 %>%
   mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
          slope = map_dbl(linear_model, ~ coef(.)['tau']),
-         ring_scale = epsilon ** n_patch) %>%
-  ggplot(aes(factor(n_patch), factor(epsilon))) +
-  geom_tile(aes(fill = slope))
+         cil = map_dbl(linear_model, ~ confint(.)['tau', 1]),
+         ciu = map_dbl(linear_model, ~ confint(.)['tau', 2])) %>%
+  ggplot(aes(factor(epsilon), slope, ymin = cil, ymax = ciu)) +
+  facet_wrap(~ n_pop) +
+  geom_pointrange()
+```
 
-patches %>%
-  mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
-         slope = map_dbl(linear_model, ~ coef(.)['tau'])) %>%
-  ggplot(aes(epsilon, slope, color = factor(n_patch), group = factor(n_patch))) +
+## WHN nested populations
+
+```{r}
+# subpops have size = 1 / (szie of their superpop)
+subpop_size_f = function(superpop) sapply(superpop, function(x) 1 / sum(superpop == x))
+stopifnot(all(subpop_size_f(c(1, 2, rep(3, 3), 2, 5)) == c(1.0, 0.5, rep(1 / 3, 3), 0.5, 1.0)))
+
+renumber = function(x) match(x, unique(x))
+
+whn_nest_sim = function(taui, superpop, epsilon) {
+  stopifnot(length(superpop) == length(taui))
+  n_pop = length(taui)
+  n_superpop = length(unique(superpop))
+  
+  # renumber superpop ids to 1, ..., no. superpops
+  superpop = renumber(superpop)
+  stopifnot(max(superpop) == n_superpop)
+  
+  superpop_size = 1 / n_superpop # assume equal pop sizes
+  pop_size = subpop_size_f(superpop)
+  
+  # make the (unscaled) superpop contact matrix
+  beta_super = matrix(epsilon / n_superpop, ncol = n_superpop, nrow = n_superpop)
+  diag(beta_super) <- 1 - epsilon * (1 - 1 / n_superpop)
+  
+  # make the population contact matrix
+  contact = outer(1:n_pop, 1:n_pop, Vectorize(function(i, j) {
+    pop_size[j] * beta_super[superpop[i], superpop[j]]
+  }))
+
+  stopifnot(all(rowSums(contact) == 1.0))
+  stopifnot(all(colSums(contact) == 1.0))
+
+  parms = with(whn_base_parms, {
+    betaij = beta * contact
+    
+    c(whn_base_parms, list(
+      taui = taui, epsilon = epsilon,
+      betaij = betaij
+    ))
+  })
+  
+  state = data_frame(
+    X = rep(0.990 / n_pop, n_pop),
+    S = rep(0.005 / n_pop, n_pop),
+    R = S,
+    D = 0
+  )
+  
+  state_vector = whn_pack(state)
+  
+  result = rootSolve::runsteady(state_vector, func = whn_ode_func, parms = parms)
+  
+  result$y %>%
+    whn_unpack() %>%
+    mutate(pop = seq_along(taui),
+           superpop = superpop[pop],
+           tau = taui,
+           rho = R / (S + R + D))
+}
+
+x = whn_nest_sim(taui = rep(seq(0.05, 0.20, length.out = 4), each = 4) + 0.01 * rep(seq(-1, 1, length.out = 4), 4),
+                 superpop = rep(1:4, each = 4),
+                 epsilon = 0.0)
+
+ggplot(x, aes(tau, rho, color = factor(superpop))) +
   geom_point() +
   geom_line() +
-  ylim(0, 7)
+  ylim(0, 1)
 ```
 
 ### Going upwards
