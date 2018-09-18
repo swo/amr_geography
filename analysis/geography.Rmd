@@ -367,35 +367,29 @@ whn1 %>%
 ## WHN nested populations
 
 ```{r}
-# subpops have size = 1 / (szie of their superpop)
-subpop_size_f = function(superpop) sapply(superpop, function(x) 1 / sum(superpop == x))
-stopifnot(all(subpop_size_f(c(1, 2, rep(3, 3), 2, 5)) == c(1.0, 0.5, rep(1 / 3, 3), 0.5, 1.0)))
-
-renumber = function(x) match(x, unique(x))
-
-whn_nest_sim = function(taui, superpop, epsilon) {
-  stopifnot(length(superpop) == length(taui))
+whn_nest_sim = function(taui, eps_super, eps_sub) {
   n_pop = length(taui)
-  n_superpop = length(unique(superpop))
+  pop_per = sqrt(n_pop)
   
-  # renumber superpop ids to 1, ..., no. superpops
-  superpop = renumber(superpop)
-  stopifnot(max(superpop) == n_superpop)
+  if (pop_per != as.integer(pop_per)) {
+    stop('length of taui must be a perfect square')
+  }
   
-  superpop_size = 1 / n_superpop # assume equal pop sizes
-  pop_size = subpop_size_f(superpop)
+  superpop = rep(1:pop_per, each = pop_per)
+  stopifnot(length(superpop) == length(taui))
   
-  # make the (unscaled) superpop contact matrix
-  beta_super = matrix(epsilon / n_superpop, ncol = n_superpop, nrow = n_superpop)
-  diag(beta_super) <- 1 - epsilon * (1 - 1 / n_superpop)
-  
-  # make the population contact matrix
   contact = outer(1:n_pop, 1:n_pop, Vectorize(function(i, j) {
-    pop_size[j] * beta_super[superpop[i], superpop[j]]
+    if (i == j) {
+      (1 - eps_super * (1 - 1 / pop_per)) * (1 - eps_sub * (1 - 1 / pop_per))
+    } else if (superpop[i] == superpop[j]) {
+      (1 - eps_super * (1 - 1 / pop_per)) * eps_sub / pop_per
+    } else {
+      eps_super / pop_per * 1 / pop_per
+    }
   }))
 
-  stopifnot(all(rowSums(contact) == 1.0))
-  stopifnot(all(colSums(contact) == 1.0))
+  stopifnot(all.equal(rowSums(contact), rep(1.0, n_pop)))
+  stopifnot(all.equal(colSums(contact), rep(1.0, n_pop)))
 
   parms = with(whn_base_parms, {
     betaij = beta * contact
@@ -425,14 +419,26 @@ whn_nest_sim = function(taui, superpop, epsilon) {
            rho = R / (S + R + D))
 }
 
-x = whn_nest_sim(taui = rep(seq(0.05, 0.20, length.out = 4), each = 4) + 0.01 * rep(seq(-1, 1, length.out = 4), 4),
-                 superpop = rep(1:4, each = 4),
-                 epsilon = 0.0)
+taui = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
 
-ggplot(x, aes(tau, rho, color = factor(superpop))) +
+nest_results = crossing(
+  eps_super = c(0.0, 0.01, 0.1, 0.5),
+  eps_sub = c(0.0, 0.01, 0.1, 0.5)
+) %>%
+  filter(eps_super <= eps_sub) %>%
+  mutate(data = map2(eps_super, eps_sub, ~ whn_nest_sim(taui, .x, .y)))
+
+nest_results %>%
+  unnest() %>%
+  ggplot(aes(tau, rho, color = factor(superpop))) +
+  facet_grid(eps_super ~ eps_sub, labeller = labeller(.rows = label_both, .cols = label_both)) +
+  geom_hline(yintercept = 0.0) +
+  geom_hline(yintercept = 0.5, color = 'gray', linetype = 2) +
+  geom_smooth(aes(color = NULL), method = 'lm', se = FALSE, color = 'black', size = 0.5) +
   geom_point() +
   geom_line() +
-  ylim(0, 1)
+  ylim(0 - 0.01, 1.01) +
+  theme_classic()
 ```
 
 ### Going upwards
