@@ -699,20 +699,35 @@ ggplot(data = NULL, aes(tau, rho)) +
 
 ## Cross-island, D-types model
 
-```{r dtype_cross}
-# pack the array into a vector
-dtypes_pack = as.vector
-
-# unpack the vector into an array
-dtypes_unpack = function(x, n_d, n_pop) {
-  array(x, dim = c(n_d, 3, n_pop),
-        dimnames = c(dtype = NULL, phenotype = c('X', 'R', 'S'), population = NULL))
+```{r dtype_sim}
+# pack the list into a vector
+dtypes_pack = function(lst) {
+  stopifnot(setequal(names(lst), c('X_i', 'S_id', 'R_id')))
+  stopifnot(all(dim(lst$S_id) == dim(lst$R_id)))
+  stopifnot(dim(lst$S_id)[1] == length(lst$X_i))
+  c(lst$X_i, as.vector(lst$S_id), as.vector(lst$R_id))
 }
 
-# for initially packing the easy-to-understand data frame into an array
-dtypes_df_to_array = function(df) {
+# unpack the vector into a list
+dtypes_unpack = function(x, n_pop, n_d) {
+  stopifnot(length(x) == n_pop + 2 * (n_d * n_pop))
+
+  x_end = n_pop
+  s_start = x_end + 1
+  s_end = x_end + n_d * n_pop
+  r_start = s_end + 1
+  r_end = s_end + n_d * n_pop
+  stopifnot(r_end == length(x))
+
+  list(X_i = x[1:x_end],
+       S_id = matrix(x[s_start:s_end], nrow = n_pop, ncol = n_d),
+       R_id = matrix(x[r_start:r_end], nrow = n_pop, ncol = n_d))
+}
+
+# for initially packing the data frame into the list
+dtypes_df_to_list = function(df) {
   # check we have the right column names
-  stopifnot(setequal(names(df), c('population', 'dtype', 'phenotype', 'value')))
+  stopifnot(setequal(names(df), c('population', 'phenotype', 'dtype', 'value')))
   # check we have the right phenotypes
   stopifnot(setequal(df$phenotype, c('S', 'R', 'X')))
 
@@ -726,98 +741,125 @@ dtypes_df_to_array = function(df) {
   # but X for only each pop
   stopifnot(nrow(filter(df, phenotype == 'X')) == n_pop)
 
-  # make sure all the rows are in order
-  # note that R uses column-major ordering for arrays (leftmost index varies most quickly),
-  # so to get the array to be [pop, pheno, dtype], need to order the data frame this way
-  df %<>% arrange(dtype, phenotype, population)
-  # ensure the ordering of the phenotypes
-  df %<>% mutate(phenotype = factor(phenotype, levels = c('X', 'S', 'R')))
-
-  # initialize the array
-  output = dtypes_unpack(NA, n_d, n_pop)
-
-  # assign the X values just to the first "D-type"
-  output[, 'X', 1] <- df %>% filter(phenotype == 'X') %$% value
-  # assign the S and R values
-  output[, c('S', 'R'), ] <- df %>% filter(phenotype %in% c('S', 'R')) %$% value
-
-  output
+  list(X_i = df %>% filter(phenotype == 'X') %$% values,
+       S_id = df %>% filter(phenotype == 'S') %$% value %>% matrix(nrow = n_pop, ncol = n_d),
+       R_id = df %>% filter(phenotype == 'R') %$% value %>% matrix(nrow = n_pop, ncol = n_d))
 }
 
-# for finally unpacking the array into a data frame
-dtypes_array_to_df = function(arr) {
-  arr %>%
-    as_tibble() %>%
-    mutate(population = 1:n()) %>%
-    gather('key', 'value', -population) %>%
-    separate(key, c('phenotype', 'dtype'))
+# for finally unpacking the list into a data frame
+dtypes_list_to_df = function(lst) {
+  # check for names
+  stopifnot(setequal(names(lst), c('X_i', 'S_id', 'R_id')))
+
+  # get dimensions
+  n_pop = length(lst$X_i)
+  n_d = dim(lst$S_id)[2]
+
+  # check shapes
+  stopifnot(all(dim(lst$S_id) == c(n_pop, n_d)))
+  stopifnot(all(dim(lst$R_id) == c(n_pop, n_d)))
+
+  X_rows = data_frame(pop = 1:n_pop, phenotype = 'X', dtype = NA, value = lst$X_i) 
+  S_rows = crossing(dtype = 1:n_d, pop = 1:n_pop) %>%
+    mutate(phenotype = 'S', value = as.vector(lst$S_id))
+  R_rows = crossing(dtype = 1:n_d, pop = 1:n_pop) %>%
+    mutate(phenotype = 'R', value = as.vector(lst$R_id))
+
+  bind_rows(X_rows, S_rows, R_rows) %>%
+    arrange(pop, phenotype, dtype)
 }
 
 dtypes_ode_func = function(t, state_vector, parms) {
-  state_array = dtypes_unpack(state_vector)
+  state = dtypes_unpack(state_vector, n_pop = parms$n_pop, n_d = parms$n_d)
 
-  # X is a vector of length n_pop
-  X_i = state_array[, 'X', 1]
-  # S and R are (n_pop x n_d)
-  S_id = state_array[, 'S', ]
-  R_id = state_array[, 'R', ]
+  with(c(state, parms), {
+    stopifnot(length(X_i) == n_pop)
+    stopifnot(dim(S_id) == c(n_pop, n_d))
+    stopifnot(dim(R_id) == c(n_pop, n_d))
 
-  stopifnot(dim(S_id) == c(n_pop, n_d))
+    # rowSums are over D-types (second index)
+    v_id = (1.0 - ((S_id + R_id) / rowSums(S_id + R_id) - 1.0 / n_d)) ** k
+    stopifnot(dim(v_id) == c(n_pop, n_d))
 
-  # rowSums are over D-types (second index)
-  v_id = (1.0 - ((S_id + R_id) / rowSums(S_id + R_id) - 1.0 / n_d)) ** k
-  stopifnot(dim(v_id) == c(n_pop, n_d))
+    N_i = X_i + rowSums(S_id + R_id)
+    stopifnot(length(N_i) == n_pop)
 
-  N_i = X_i + rowSums(S_id + R_id)
-  stopifnot(length(N_i) == n_pop)
-
-  with(parms, {
-    dS_id = v_id * (beta_ij %*% (S_id / N_i)) * X_i - (tau_i + mu_d) * S_id
-    dR_id = v_id * (beta_ij %*% (R_id / N_i)) * X_i - c_mu * mu_d * R_id
+    # "tau_i * S_id" does sum_i { tau_i S_id }, which is length P vector
+    # to multiply by rows, need to do some fancy footwork: "mat %*% diag(row)"
+    dS_id = v_id * (beta_ij %*% (S_id / N_i)) * X_i - tau_i * S_id - S_id %*% diag(mu_d)
+    dR_id = v_id * (beta_ij %*% (R_id / N_i)) * X_i - c_mu * R_id %*% diag(mu_d)
     dX_i = -rowSums(dS_id + dR_id)
 
-    out_array = dtypes_unpack(NA, n_d, n_pop)
-    out_array[, 'X', 1] <- dX_i
-    out_array[, 'X', -1] <- 0
-    out_array[, 'S', ] <- dS_id
-    out_array[, 'R', ] <- dR_id
-
-    dtypes_pack(out_array)
-  })
-
-
-  with(parms, {
-    Ixs = Ixp[c(TRUE, FALSE)]
-    Ixr = Ixp[c(FALSE, TRUE)]
-    Ix = Ixs + Ixr
-    U = 1.0 - sum(Ix)
-    
-    vx = (1.0 - (Ix / sum(Ix) - 1.0 / n)) ** k
-    dIxs = beta * Ixs * vx * U - (tau + mux) * Ixs
-    dIxr = beta / cbeta * Ixr * vx * U - cmu * mux * Ixr
-    
-    list(c(rbind(dIxs, dIxr)))
+    list(dtypes_pack(list(X_i = dX_i, S_id = dS_id, R_id = dR_id)))
   })
 }
 
-dtypes_cross_sim = function(tau) {
-  parms = c(dtypes_base_parms, tau=tau)
-  y = rep(0.1 / 2 * parms$n, 2 * parms$n)
-  result = rootSolve::runsteady(y, func=dtypes_ode_func, parms=parms)
+dtypes_sim = function(tau_i, epsilon = 0) {
+  n_pop = length(tau_i)
+
+  parms = with(dtypes_base_parms, {
+    beta_ij = matrix(beta * epsilon / n_pop, ncol = n_pop, nrow = n_pop)
+    diag(beta_ij) <- beta * (1 - epsilon * (1 - 1 / n_pop))
+
+    stopifnot(all(rowSums(beta_ij) == beta))
+    stopifnot(all(colSums(beta_ij) == beta))
+
+    c(dtypes_base_parms, list(
+      n_pop = n_pop, tau_i = tau_i, epsilon = epsilon, beta_ij = beta_ij
+    ))
+  })
   
-  data_frame(dtype=rep(1:parms$n, rep(2, parms$n)),
-             phenotype=rep(c('S', 'R'), parms$n),
-             y=result$y)
+  n_d = parms$n_d
+  
+  state = list(X_i = rep(0.9 / n_pop, n_pop),
+               S_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d),
+               R_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d))
+
+  state_vector = dtypes_pack(state)
+  stopifnot(all.equal(sum(state_vector), 1))
+
+  result = rootSolve::runsteady(state_vector, func = dtypes_ode_func, parms = parms,
+                                stol = 1e-8 / n_pop, rtol = 1e-6 / n_pop, atol = 1e-6 / n_pop)
+
+  result$y %>%
+    dtypes_unpack(n_pop = n_pop, n_d = n_d) %>%
+    dtypes_list_to_df() %>%
+    left_join(data_frame(pop = 1:n_pop, tau = tau_i), by = 'pop')
+}
+```
+
+```{r}
+dtype1 = crossing(
+  n_pop = c(4, 8, 16),
+  epsilon = c(0, 0.01, 0.1, 0.2, 1.0)
+) %>%
+  mutate(tau_i = map(n_pop, ~ seq(0.05, 0.2, length.out = .)),
+         results = map2(tau_i, epsilon, dtypes_sim))
+
+dtype_summarize = function(df) {
+  df %>%
+    group_by(pop, phenotype) %>%
+    summarize_at('value', sum) %>%
+    ungroup() %>%
+    spread(phenotype, value) %>%
+    mutate(rho = R / (S + R))
 }
 
-dtypes_cross = data_frame(tau = seq(0.04, 0.20, length.out = 200)) %>%
-  mutate(model = map(tau, dtypes_cross_sim)) %>%
+dtype1 %>%
+  mutate(results = map(results, dtype_summarize)) %>%
   unnest() %>%
-  group_by(tau, phenotype) %>%
-  summarize(y = sum(y)) %>%
-  ungroup() %>%
-  spread(phenotype, y) %>%
-  mutate(rho = R / (S + R))
+  ggplot(aes(tau_i, rho, color = factor(epsilon))) +
+  facet_wrap(~ n_pop) +
+  geom_point() +
+  geom_line()
+```
+
+```{r}
+# reproduce the paper figure
+dtypes_sim(tau_i = c(0.075)) %>%
+  filter(phenotype != 'X') %>%
+  ggplot(aes(factor(dtype), value, fill = phenotype)) +
+  geom_col()
 ```
 
 I reproduce Figure 3 from Lehtinen *et al*.:
