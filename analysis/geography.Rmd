@@ -700,7 +700,68 @@ ggplot(data = NULL, aes(tau, rho)) +
 ## Cross-island, D-types model
 
 ```{r dtype_cross}
-dtypes_ode_func = function(t, Ixp, parms) {
+# pack the array into a vector
+dtypes_pack = as.vector
+
+# unpack the vector into an array
+dtypes_unpack = function(x, n_d, n_pop) {
+  array(x, dim = c(n_d, 3, n_pop),
+        dimnames = c(dtype = NULL, phenotype = c('X', 'R', 'S'), population = NULL))
+}
+
+# for initially packing the easy-to-understand data frame into an array
+dtypes_df_to_array = function(df) {
+  # check we have the right column names
+  stopifnot(setequal(names(df), c('population', 'dtype', 'phenotype', 'value')))
+  # check we have the right phenotypes
+  stopifnot(setequal(df$phenotype, c('S', 'R', 'X')))
+
+  # extract the no. populations and D-types
+  n_pop = length(unique(df$population))
+  n_d = length(unique(df$dtype))
+
+  # there should be S and R for each pop/D-type combo
+  stopifnot(nrow(filter(df, phenotype == 'S')) == n_pop * n_d)
+  stopifnot(nrow(filter(df, phenotype == 'R')) == n_pop * n_d)
+  # but X for only each pop
+  stopifnot(nrow(filter(df, phenotype == 'X')) == n_pop)
+
+  # make sure all the rows are in order
+  df %<>% arrange(population, phenotype, dtype)
+
+  # initialize the array
+  # note that R uses column-major ordering for arrays (leftmost index varies most quickly),
+  # so if the data frame is ordered by pop, pheno, D, then array must have indices in the
+  # order D, pheno, pop. Phenotypes R and S are in alphabetical order.
+  output = dtypes_unpack(NA, n_d, n_pop)
+
+  # assign the X values just to the first "D-type"
+  output[1, 'X', ] <- df %>% filter(phenotype == 'X') %$% value
+
+  # assign the S and R values
+  output[, c('R', 'S'), ] <- df %>% filter(phenotype %in% c('R', 'S')) %$% value
+
+  output
+}
+
+# for finally unpacking the array into a data frame
+dtypes_array_to_df = function(arr) {
+  arr %>%
+    as_tibble() %>%
+    mutate(population = 1:n()) %>%
+    gather('key', 'value', -population) %>%
+    separate(key, c('phenotype', 'dtype'))
+}
+
+dtypes_ode_func = function(t, state_vector, parms) {
+  state_array = dtypes_unpack(state_vector)
+
+  # X is a vector of length n_pop
+  X = state_array[1, 'X', ]
+  # S and R are (n_d x n_pop) matrices
+  S = state_array[, 'S', ]
+  R = state_array[, 'R', ]
+
   with(parms, {
     Ixs = Ixp[c(TRUE, FALSE)]
     Ixr = Ixp[c(FALSE, TRUE)]
