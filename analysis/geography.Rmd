@@ -468,7 +468,7 @@ whn_nest_sim = function(taui, eps_super, eps_sub) {
     betaij = beta * contact
     
     c(whn_base_parms, list(
-      taui = taui, epsilon = epsilon,
+      taui = taui, eps_super = eps_super, eps_sub = eps_sub,
       betaij = betaij
     ))
   })
@@ -517,42 +517,6 @@ nest_results %>%
 The case where $\epsilon_\downarrow \gg 0$ means that there are effectively no subpopulations; each superpopulation is just one thing. In this sense, our analytical units are smaller than the relevant biology. The badness here is that we inflate the number of assertedly-independent observations, which means we have a greater chance of a Type I error. This seems like a small cost.
 
 Going to larger scales, meaning aggregating, has the effect of shrinking the $x$ and $y$ axes, which has the cost of increasing the variance in the measurement. This is also a statistically bad thing.
-
-### Going upwards
-
-If we group *upwards*, treating many patches as if they were one, do we do any better? Not really: same slopes!
-
-```{r}
-kcluster = function(x, k) {
-  if (length(x) < k) {
-    stop('length(x) < k')
-  } else if (k == length(x)) {
-    1:k
-  } else {
-    kmeans(x, k)$cluster
-  }
-}
-
-aggregate = function(df, groups) {
-  df %>%
-    mutate(group = groups) %>%
-    group_by(group) %>%
-    summarize_all(mean)
-}
-
-patches %>%
-  mutate(
-    model = map(results, ~ lm(rho ~ tau, data = .)),
-    slope = map_dbl(model, ~ coef(.)['tau']),
-    group = map(taui, ~ kcluster(., 4)),
-    group_data = map2(results, group, aggregate),
-    group_model = map(group_data, ~ lm(rho ~ tau, data = .)),
-    group_slope = map_dbl(group_model, ~ coef(.)['tau'])
-  ) %>%
-  ggplot(aes(slope, group_slope)) +
-  geom_abline() +
-  geom_point(aes(color = factor(epsilon), shape = factor(n_patch)), size = 3)
-```
 
 ## D-types
 
@@ -627,7 +591,7 @@ dtypes_list_to_df = function(lst) {
 }
 ```
 
-```{dtypes_sim}
+```{r dtypes_sim}
 dtypes_ode_func = function(t, state_vector, parms) {
   state = dtypes_unpack(state_vector, n_pop = parms$n_pop, n_d = parms$n_d)
 
