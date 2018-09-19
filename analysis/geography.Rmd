@@ -695,9 +695,9 @@ dtype1 = crossing(
   mutate(tau_i = map(n_pop, ~ seq(0.05, 0.2, length.out = .)),
          results = map2(tau_i, epsilon, dtypes_sim))
 
-dtype_summarize = function(df) {
+dtypes_summarize = function(df) {
   df %>%
-    group_by(pop, phenotype) %>%
+    group_by(pop, tau, phenotype) %>%
     summarize_at('value', sum) %>%
     ungroup() %>%
     spread(phenotype, value) %>%
@@ -705,7 +705,7 @@ dtype_summarize = function(df) {
 }
 
 dtype1 %>%
-  mutate(results = map(results, dtype_summarize)) %>%
+  mutate(results = map(results, dtypes_summarize)) %>%
   unnest() %>%
   ggplot(aes(tau_i, rho, color = factor(epsilon))) +
   facet_wrap(~ n_pop) +
@@ -713,21 +713,39 @@ dtype1 %>%
   geom_line()
 ```
 
-## WHN nested
+## D-types nested
 
 ```{r dtypes_nest_sim}
-dtypes_sim = function(tau_i, epsilon = 0) {
+dtypes_nest_sim = function(tau_i, eps_super, eps_sub) {
   n_pop = length(tau_i)
+  pop_per = sqrt(n_pop)
+
+  # swo: a lot of this code is reproduced, find a way to refactor
+  if (pop_per != as.integer(pop_per)) {
+    stop('length of taui must be a perfect square')
+  }
+  
+  superpop = rep(1:pop_per, each = pop_per)
+  stopifnot(length(superpop) == length(tau_i))
+  
+  contact = outer(1:n_pop, 1:n_pop, Vectorize(function(i, j) {
+    if (i == j) {
+      (1 - eps_super * (1 - 1 / pop_per)) * (1 - eps_sub * (1 - 1 / pop_per))
+    } else if (superpop[i] == superpop[j]) {
+      (1 - eps_super * (1 - 1 / pop_per)) * eps_sub / pop_per
+    } else {
+      eps_super / pop_per * 1 / pop_per
+    }
+  }))
+
+  stopifnot(all.equal(rowSums(contact), rep(1.0, n_pop)))
+  stopifnot(all.equal(colSums(contact), rep(1.0, n_pop)))
 
   parms = with(dtypes_base_parms, {
-    beta_ij = matrix(beta * epsilon / n_pop, ncol = n_pop, nrow = n_pop)
-    diag(beta_ij) <- beta * (1 - epsilon * (1 - 1 / n_pop))
-
-    stopifnot(all(rowSums(beta_ij) == beta))
-    stopifnot(all(colSums(beta_ij) == beta))
-
     c(dtypes_base_parms, list(
-      n_pop = n_pop, tau_i = tau_i, epsilon = epsilon, beta_ij = beta_ij
+      beta_ij = beta * contact,
+      n_pop = n_pop, tau_i = tau_i,
+      eps_super = eps_super, eps_sub = eps_sub
     ))
   })
   
@@ -746,12 +764,40 @@ dtypes_sim = function(tau_i, epsilon = 0) {
   result$y %>%
     dtypes_unpack(n_pop = n_pop, n_d = n_d) %>%
     dtypes_list_to_df() %>%
-    left_join(data_frame(pop = 1:n_pop, tau = tau_i), by = 'pop')
+    left_join(data_frame(pop = 1:n_pop, superpop = superpop[pop], tau = tau_i), by = 'pop')
 }
 ```
 
 ```{r dtypes_nest_results}
+tau_i = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
 
+dtypes_nest_results = crossing(
+  eps_super = c(0.0, 0.01, 0.1, 0.5),
+  eps_sub = c(0.0, 0.01, 0.1, 0.5)
+) %>%
+  filter(eps_super <= eps_sub) %>%
+  mutate(data = map2(eps_super, eps_sub, ~ dtypes_nest_sim(tau_i, .x, .y)))
+
+janky_superpop_f = function(pop) {
+  n_superpop = sqrt(length(pop))
+  rep(1:n_superpop, each = n_superpop)
+}
+
+dtypes_nest_results %>%
+  mutate(data = map(data, dtypes_summarize)) %>%
+  unnest() %>%
+  group_by(eps_super, eps_sub) %>%
+  mutate(superpop = janky_superpop_f(pop)) %>%
+  ungroup() %>%
+  ggplot(aes(tau, rho, color = factor(superpop))) +
+  facet_grid(eps_super ~ eps_sub, labeller = labeller(.rows = label_both, .cols = label_both)) +
+  geom_hline(yintercept = 0.0) +
+  geom_hline(yintercept = 0.5, color = 'gray', linetype = 2) +
+  geom_smooth(aes(color = NULL), method = 'lm', se = FALSE, color = 'black', size = 0.5) +
+  geom_point() +
+  geom_line() +
+  ylim(0 - 0.01, 1.01) +
+  theme_classic()
 ```
 
 ## Empirical
