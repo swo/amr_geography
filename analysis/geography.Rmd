@@ -290,31 +290,31 @@ $$
 
 As a sensitivity analysis, I will repeat the analyses using the model presented by Lehtinen *et al*. (hereafter "D-types" model).
 
-In the D-types model, there are $n_D$ "duration"-types, each with clearance rate $\mu^{(d)}$. Each type $d$ has sensitive and resistant strains, so the compartments are uncolonized $X$, sensitive-colonized $S^{(d)}$, and $R^{(d)}$. The D-types are subject to balancing selection, encoded by
+In the D-types model, there are $n_D$ "duration"-types, each with clearance rate $\mu_d$. Each type $d$ has sensitive and resistant strains, so the compartments are uncolonized $X$, sensitive-colonized $S_d$, and $R_d$. The D-types are subject to balancing selection, encoded by
 $$
-v^{(d)} = \left( 1 - \left[ \frac{S^{(d)} + R^{(d)}}{\sum_{d=1}^{n_D} (S^{(d)} + R^{(d)})} - \frac{1}{n_D} \right]\right)^k,
+v_d = \left( 1 - \left[ \frac{S_d + R_d}{\sum_{d=1}^{n_D} (S_d + R_d)} - \frac{1}{n_D} \right]\right)^k,
 $$
 where $k \geq 1$ is the force of that selection. Thus:
 $$
 \begin{aligned}
-\dot{S}^{(d)} &= v^{(d)} \beta S^{(d)} X - (\tau + \mu^{(d)}) S^{(d)} \\
-\dot{R}^{(d)} &= v^{(d)} \frac{\beta}{c_\beta} R^{(d)} X - c_\mu \mu^{(d)} R^{(d)} \\
+\dot{S}_d &= v_d \beta S_d X - (\tau + \mu_d) S_d \\
+\dot{R}_d &= v_d \frac{\beta}{c_\beta} R_d X - c_\mu \mu_d R_d \\
 \end{aligned}
 $$
 where $\beta$ is the transmission coefficient, $\tau$ is the antibiotic treatment rate, $c_\beta \geq 1$ and $c_\mu \geq 1$ are the fitness costs of resistance.
 
 The proportion resistant is
 $$
-\rho = \frac{\sum_d R^{(d)}}{\sum_d \left( S^{(d)} + R^{(d)} \right)}.
+\rho = \frac{\sum_d R_d}{\sum_d \left( S_d + R_d \right)}.
 $$
 
 #### Populations model
 
-To extend this to multiple populations, we give each compartment a subscript $i$ and then need to be careful about the tranmission terms:
+To extend this to multiple populations, we give each compartment an extra subscript $i$ and then need to be careful about the tranmission terms:
 $$
 \begin{aligned}
-\dot{S}_i^{(d)} &= v_i^{(d)} \sum_j \beta_{i \leftarrow j} \frac{S_j^{(d)}}{N_j} X_i - \left( \tau_i + \mu^{(d)} \right) S_i^{(d)} \\
-\dot{R}_i^{(d)} &= v_i^{(d)} \frac{1}{c_\beta} \sum_j \beta_{i \leftarrow j} \frac{R_j^{(d)}}{N_j} X_i - c_\mu \mu^{(d)} R_i^{(d)} \\
+\dot{S}_{i,d} &= v_{i,d} \sum_j \beta_{i \leftarrow j} \frac{S_{j, d}}{N_j} X_i - \left( \tau_i + \mu_d \right) S_{i,d} \\
+\dot{R}_{i,d} &= v_{i,d} \frac{1}{c_\beta} \sum_j \beta_{i \leftarrow j} \frac{R_{j, d}}{N_j} X_i - c_\mu \mu_d R_{i,d} \\
 \end{aligned}
 $$
 where the $\beta_{i \leftarrow j}$ follow the same rules as for the WHN model.
@@ -330,12 +330,12 @@ dtypes_base_parms = list(
   min_mu = 0.5,
   max_mu = 2.0,
   beta = 2.0,
-  cbeta = 1.0,
-  cmu = 1.1,
+  c_beta = 1.0,
+  c_mu = 1.1,
   k = 15.0
 )
 
-dtypes_base_parms$mud = with(dtypes_base_parms,
+dtypes_base_parms$mu_d = with(dtypes_base_parms,
                              seq(min_mu, max_mu, length = n_d))
 ```
 
@@ -727,19 +727,19 @@ dtypes_df_to_array = function(df) {
   stopifnot(nrow(filter(df, phenotype == 'X')) == n_pop)
 
   # make sure all the rows are in order
-  df %<>% arrange(population, phenotype, dtype)
+  # note that R uses column-major ordering for arrays (leftmost index varies most quickly),
+  # so to get the array to be [pop, pheno, dtype], need to order the data frame this way
+  df %<>% arrange(dtype, phenotype, population)
+  # ensure the ordering of the phenotypes
+  df %<>% mutate(phenotype = factor(phenotype, levels = c('X', 'S', 'R')))
 
   # initialize the array
-  # note that R uses column-major ordering for arrays (leftmost index varies most quickly),
-  # so if the data frame is ordered by pop, pheno, D, then array must have indices in the
-  # order D, pheno, pop. Phenotypes R and S are in alphabetical order.
   output = dtypes_unpack(NA, n_d, n_pop)
 
   # assign the X values just to the first "D-type"
-  output[1, 'X', ] <- df %>% filter(phenotype == 'X') %$% value
-
+  output[, 'X', 1] <- df %>% filter(phenotype == 'X') %$% value
   # assign the S and R values
-  output[, c('R', 'S'), ] <- df %>% filter(phenotype %in% c('R', 'S')) %$% value
+  output[, c('S', 'R'), ] <- df %>% filter(phenotype %in% c('S', 'R')) %$% value
 
   output
 }
@@ -757,10 +757,34 @@ dtypes_ode_func = function(t, state_vector, parms) {
   state_array = dtypes_unpack(state_vector)
 
   # X is a vector of length n_pop
-  X = state_array[1, 'X', ]
-  # S and R are (n_d x n_pop) matrices
-  S = state_array[, 'S', ]
-  R = state_array[, 'R', ]
+  X_i = state_array[, 'X', 1]
+  # S and R are (n_pop x n_d)
+  S_id = state_array[, 'S', ]
+  R_id = state_array[, 'R', ]
+
+  stopifnot(dim(S_id) == c(n_pop, n_d))
+
+  # rowSums are over D-types (second index)
+  v_id = (1.0 - ((S_id + R_id) / rowSums(S_id + R_id) - 1.0 / n_d)) ** k
+  stopifnot(dim(v_id) == c(n_pop, n_d))
+
+  N_i = X_i + rowSums(S_id + R_id)
+  stopifnot(length(N_i) == n_pop)
+
+  with(parms, {
+    dS_id = v_id * (beta_ij %*% (S_id / N_i)) * X_i - (tau_i + mu_d) * S_id
+    dR_id = v_id * (beta_ij %*% (R_id / N_i)) * X_i - c_mu * mu_d * R_id
+    dX_i = -rowSums(dS_id + dR_id)
+
+    out_array = dtypes_unpack(NA, n_d, n_pop)
+    out_array[, 'X', 1] <- dX_i
+    out_array[, 'X', -1] <- 0
+    out_array[, 'S', ] <- dS_id
+    out_array[, 'R', ] <- dR_id
+
+    dtypes_pack(out_array)
+  })
+
 
   with(parms, {
     Ixs = Ixp[c(TRUE, FALSE)]
