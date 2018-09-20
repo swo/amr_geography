@@ -321,7 +321,7 @@ where the $\beta_{i \leftarrow j}$ follow the same rules as for the WHN model.
 
 #### Parameters
 
-The parameter values are drawn from the paper: $n = 16$, $\beta = 2$, $c_\beta = 1$, $c_\mu = 1.1$, $k = 15$, $\tau \in [0.04, 0.20]$, $\mu_x$ evenly spaced in $[0.5, 2]$.
+The parameter values are drawn from the paper: $n = 16$, $\beta = 2$, $c_\beta = 1$, $c_\mu = 1.1$, $k = 15$, $\tau \in [0.04, 0.20]$, $\mu_x$ evenly spaced in $[0.5, 2]$. The original figure uses $\tau = 0.075$.
 
 ```{r dtypes_parameters}
 # swo: some parms are lists, some are vectors. pick one?
@@ -901,20 +901,4 @@ ggplot(data = NULL, aes(tau, rho)) +
   geom_line(data = davies_small, aes(color = factor(big_tau))) +
   geom_point(data = davies_time_comp, aes(color = factor(big_tau)), shape = 2) +
   geom_line(data = davies_time_comp, aes(color = factor(big_tau)), linetype = 2)
-```
-
----
-
-# Old
-
-## D-types original figure
-
-I reproduce Figure 3 from Lehtinen *et al*.:
-
-```{r}
-# reproduce the paper figure
-dtypes_sim(tau_i = c(0.075)) %>%
-  filter(phenotype != 'X') %>%
-  ggplot(aes(factor(dtype), value, fill = phenotype)) +
-  geom_col()
 ```

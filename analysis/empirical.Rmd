@@ -292,6 +292,13 @@ aggregate = function(df, group) {
            pct_res = n_resistant / n_isolates * 100)
 }
 
+group_models = function(df, group) {
+  df %>%
+    mutate(pct_res = n_resistant / n_isolates * 100) %>%
+    split(group) %>%
+    map(~ lm(pct_res ~ did, data = .))
+}
+
 try_load = function(fn, expr, force_run = FALSE) {
   if (!force_run && file.exists(fn)) {
     read_rds(fn)
@@ -327,7 +334,7 @@ maup_group = function(maup_data, k, group_type) {
   )
 }
 
-n_iterations = 100
+n_iterations = 10
 
 marketscan_canonical = crossing(
   bugdrug = marketscan$bugdrug,
@@ -358,9 +365,21 @@ marketscan_maup = try_load('results/marketscan_maup.rds', {
       log_odds_ratio = map_dbl(logistic_model, ~ coef(.)['did']),
       # Spearman correlation
       cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
-      cor = map_dbl(cor_model, ~ .$estimate)
+      cor = map_dbl(cor_model, ~ .$estimate),
+      within_models = map2(bugdrug, group, ~ group_models(marketscan_maup_data[[.x]]$data, .y))
     )
 }, force_run = TRUE)
+```
+
+```{r}
+marketscan_maup %>%
+  mutate(within_slopes = map(within_models, function(ms) { map_dbl(ms, function(m) coef(m)['did']) }),
+         slope_q = map2(within_slopes, slope, qf)) %>%
+  filter(map_lgl(slope_q, ~ is.null(.$error))) %>%
+  mutate(slope_q2 = map_dbl(slope_q, ~ .$result)) %>%
+  ggplot(aes(factor(k), slope_q2, color = group_type)) +
+  facet_wrap(~ bugdrug) +
+  geom_boxplot()
 ```
 
 There are multiple metrics I could use, but they all seem to tell the same story. Here I'm showing:
