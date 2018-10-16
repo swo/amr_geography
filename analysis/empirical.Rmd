@@ -340,122 +340,75 @@ marketscan_canonical = crossing(
   group_type = c('region', 'division', 'state')
 )
 
-marketscan_maup = try_load('results/marketscan_maup.rds', {
-  crossing(
-    bugdrug = marketscan$bugdrug,
-    k1 = c(4, 9), # 15, 30
-    group_type = c('sample', 'zone'),
-    iteration = 1:n_iterations
-  ) %>%
-    bind_rows(marketscan_canonical) %>%
-    mutate(
-      group = pmap(list(bugdrug, k1, group_type), ~ maup_group(marketscan_maup_data[[..1]], ..2, ..3)),
-      k = map_int(group, ~ length(unique(.))),
-      group_data = map2(bugdrug, group, ~ aggregate(marketscan_maup_data[[.x]]$data, .y)),
-      group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
-      # regular linear models
-      linear_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
-      slope = map_dbl(linear_model, ~ coef(.)['did']),
-      # weighted linear models
-      weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
-      weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)['did']),
-      # Spearman correlation
-      cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
-      cor = map_dbl(cor_model, ~ .$estimate),
-      within_models = map2(bugdrug, group, ~ group_models(marketscan_maup_data[[.x]]$data, .y))
-    )
-}, force_run = TRUE)
+maup_sim = function(bugdrug, k, n_iterations, canonical_rows, maup_data, fn, force_run = FALSE) {
+  try_load(fn, {
+    crossing(
+      bugdrug = bugdrug,
+      k = k,
+      group_type = c('sample', 'zone'),
+      iteration = 1:n_iterations
+    ) %>%
+      bind_rows(canonical_rows) %>%
+      mutate(
+        group = pmap(list(bugdrug, k, group_type), ~ maup_group(maup_data[[..1]], ..2, ..3)),
+        group_data = map2(bugdrug, group, ~ aggregate(maup_data[[.x]]$data, .y)),
+        # swo don't like overwriting like this
+        group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
+        super_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+        super_slope = map_dbl(super_model, ~ coef(.)['did']),
+        sub_models = map2(bugdrug, group, ~ group_models(maup_data[[.x]]$data, .y)),
+        sub_slopes = map(sub_models, function(ms) map_dbl(ms, ~ coef(.)['did'])),
+        mean_sub_slope = map_dbl(sub_slopes, mean),
+        slope_ratio = super_slope / mean_sub_slope
+      )
+  }, force_run = force_run)
+}
+
+      # # weighted linear models
+      # weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
+      # weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)['did']),
+      # # Spearman correlation
+      # cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
+      # cor = map_dbl(cor_model, ~ .$estimate)
+
+marketscan_maup = maup_sim(
+  bugdrug = marketscan$bugdrug,
+  k = c(4, 9),
+  n_iterations = 100,
+  canonical_rows = marketscan_canonical,
+  maup_data = marketscan_maup_data,
+  fn = 'results/marketscan_maup.rds',
+  force_run = TRUE
+)
 ```
 
 ```{r}
-qf = function(xs, y) ecdf(c(xs, y))(y)
-
 marketscan_maup %>%
-  group_by(bugdrug) %>%
-  filter(k != max(k)) %>%
-  ungroup() %>%
-  mutate(within_slopes = map(within_models, function(ms) { map_dbl(ms, function(m) coef(m)['did']) }),
-         slope_q = map2_dbl(within_slopes, slope, qf),
-         slope_n = map2_int(within_slopes, slope, function(xs, y) sum(xs < y, na.rm = TRUE))) %>%
-  count(bugdrug, k, group_type, slope_n) %>%
-  ggplot(aes(factor(slope_n), n, fill = group_type)) +
-  facet_grid(bugdrug ~ k, scales = 'free_x') +
-  geom_col(position = 'dodge') +
-  xlab('cross slope greater than X within slopes') +
-  ylab('no. iterations')
-
-marketscan_maup %>%
-  mutate(within_slopes = map(within_models, function(ms) { map_dbl(ms, function(m) coef(m)['did']) }),
-         slope_diff = map2(within_slopes, slope, ~ .y - .x)) %>%
-  select(bugdrug, k, group_type, slope_diff) %>%
-  unnest() %>%
-  ggplot(aes(factor(k), slope_diff, color = group_type)) +
-  facet_wrap(~ bugdrug) +
-  geom_boxplot() +
-  ylim(-10, 10)        
-  # ggplot(aes(factor(k), slope_q, color = group_type)) +
-  # facet_wrap(~ bugdrug) +
-  # geom_boxplot()
-```
-
-There are multiple metrics I could use, but they all seem to tell the same story. Here I'm showing:
-
-- linear regression slope
-- log odds ratio from a logistic regression
-- Spearman correlation
-
-```{r}
-marketscan_maup %>%
-  group_by(bugdrug, k, group_type) %>%
-  summarize(med_slope = median(slope),
-            cil = quantile(slope, 0.25),
-            ciu = quantile(slope, 0.75)) %>%
-  ungroup() %>%
-  ggplot(aes(factor(k), med_slope, color = group_type)) +
+  filter(is.finite(slope_ratio)) %>%
+  ggplot(aes(factor(k), slope_ratio, color = group_type)) +
   facet_wrap(~ bugdrug, scales = 'free_x') +
-  geom_point() +
-  geom_errorbar(aes(ymin = cil, ymax = ciu)) +
-  xlab('no. aggregates') +
-  ylab('use-resistance slope')
+  geom_hline(yintercept = 1) +
+  geom_boxplot() +
+  ylim(-10, 10)
 ```
 
-I think the Spearman correlation is easiest to visualize because it has the limited range.
-
-```{r}
-marketscan_maup %>%
-  select(bugdrug, k, group_type, cor, slope, log_odds_ratio) %>%
-  gather('metric', 'value', cor, slope, log_odds_ratio) %>%
-  ggplot(aes(factor(k), value, color = group_type)) +
-  facet_wrap(~ bugdrug + metric, scales = 'free') +
-  geom_violin()
-```
-
-```{r marketscan_maup_plot}
-marketscan_maup %>%
-  ggplot(aes(factor(k), cor, color = group_type)) +
-  facet_wrap(~ bugdrug, scales = 'free') +
-  geom_violin() +
-  ggtitle('Correlations, violin')
-
-marketscan_maup %>%
-  group_by(k, group_type, bugdrug) %>%
-  summarize(mean = mean(cor),
-            cil = quantile(cor, 0.25),
-            ciu = quantile(cor, 0.75)) %>%
-  ggplot(aes(factor(k), mean, color = group_type)) +
-  facet_wrap(~ bugdrug, scales = 'free') +
-  geom_point(position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = cil, ymax = ciu), position = position_dodge(width = 0.5), width = 0.5) +
-  ggtitle('Correlations, IQR')
-```
+So *maybe* the across slopes are ~2x greater than the within slopes, but only for certain cases.
 
 What are the configurations that lead to the extremal slopes?
 
 ```{r extremal_slopes}
+extremum = function(x) {
+  case_when(
+    x == max(x) ~ 'max',
+    x == min(x) ~ 'min',
+    TRUE ~ NA_character_
+  )
+}
+
 marketscan_maup_ext = marketscan_maup %>%
   group_by(bugdrug, k, group_type) %>%
-  filter(slope %in% c(min(slope), max(slope))) %>%
-  mutate(extremum = if_else(slope == max(slope), 'max', 'min')) %>%
+  mutate(extremum = extremum(super_slope)) %>%
+  filter(!is.na(extremum)) %>%
   ungroup() %>%
   mutate(unit = map(bugdrug, ~ marketscan_maup_data[[.]]$data$unit))
 
@@ -537,51 +490,25 @@ nhsn_canonical = crossing(
   group_type = c('region', 'division', 'state')
 )
 
-ks = c(4, 9, 20, 30)
-
-nhsn_maup = try_load('results/nhsn_maup.rds', {
-  crossing(
-    bugdrug = 'Ec/q',
-    k1 = ks,
-    group_type = c('sample', 'zone'),
-    iteration = 1:n_iterations
-  ) %>%
-    bind_rows(nhsn_canonical) %>%
-    mutate(
-      group = pmap(list(bugdrug, k1, group_type), ~ maup_group(nhsn_maup_data[[..1]], ..2, ..3)),
-      k = map_int(group, ~ length(unique(.))),
-      group_data = map2(bugdrug, group, ~ aggregate(nhsn_maup_data[[.x]]$data, .y)),
-      group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
-      # regular linear models
-      linear_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
-      slope = map_dbl(linear_model, ~ coef(.)['did']),
-      # weighted linear models
-      weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
-      weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)['did']),
-      # logistic regression
-      logistic_model = map(group_data, ~ glm(cbind(n_resistant, n_susceptible) ~ did, data = ., family = 'binomial')),
-      log_odds_ratio = map_dbl(logistic_model, ~ coef(.)['did']),
-      # Spearman correlation
-      cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
-      cor = map_dbl(cor_model, ~ .$estimate)
-    )
-}, force_run = FALSE)
+nhsn_maup = maup_sim(
+  bugdrug = 'Ec/q',
+  k = c(4, 9),
+  n_iterations = 100,
+  canonical_rows = nhsn_canonical,
+  maup_data = nhsn_maup_data,
+  fn = 'results/nhsn_maup.rds',
+  force_run = TRUE
+)
 ```
 
-```{r nhsn_maup_plot}
+```{r}
 nhsn_maup %>%
-  group_by(k, group_type) %>%
-  summarize(mean = mean(cor),
-            q25 = quantile(cor, 0.25),
-            q75 = quantile(cor, 0.75)) %>%
-  ggplot(aes(factor(k), mean, color = group_type)) +
-  geom_point(position = position_dodge(width = 0.5)) +
-  geom_errorbar(aes(ymin = q25, ymax = q75),
-                position = position_dodge(width = 0.5), width = 0.5)
-
-nhsn_maup %>%
-  ggplot(aes(factor(k), cor, color = group_type)) +
-  geom_boxplot()
+  select(bugdrug, k, group_type, slope_ratio) %>%
+  filter(is.finite(slope_ratio)) %>%
+  ggplot(aes(factor(k), slope_ratio, color = group_type)) +
+  geom_hline(yintercept = 1) +
+  geom_boxplot() +
+  ylim(-10, 10)
 ```
 
 ### Europe
@@ -624,50 +551,22 @@ europe_canonical = crossing(
   group_type = 'state'
 )
 
-# swo: improve this, so we have one function for all
-europe_maup = try_load('results/europe_maup.rds', {
-  crossing(
-    bugdrug = unique(europe$bugdrug),
-    k1 = c(4, 9, 20),
-    group_type = c('sample', 'zone'),
-    iteration = 1:n_iterations
-  ) %>%
-    bind_rows(europe_canonical) %>%
-    mutate(
-      group = pmap(list(bugdrug, k1, group_type), ~ maup_group(europe_maup_data[[..1]], ..2, ..3)),
-      k = map_int(group, ~ length(unique(.))),
-      group_data = map2(bugdrug, group, ~ aggregate(europe_maup_data[[.x]]$data, .y)),
-      group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
-      # regular linear models
-      linear_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
-      slope = map_dbl(linear_model, ~ coef(.)['did']),
-      # weighted linear models
-      weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
-      weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)['did']),
-      # logistic regression
-      logistic_model = map(group_data, ~ glm(cbind(n_resistant, n_susceptible) ~ did, data = ., family = 'binomial')),
-      log_odds_ratio = map_dbl(logistic_model, ~ coef(.)['did']),
-      # Spearman correlation
-      cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
-      cor = map_dbl(cor_model, ~ .$estimate)
-    )
-}, force_run = FALSE)
+europe_maup = maup_sim(
+  bugdrug = unique(europe$bugdrug),
+  k = c(4),
+  n_iterations = 100,
+  canonical_rows = NULL,
+  maup_data = europe_maup_data,
+  fn = 'results/europe_maup.rds',
+  force_run = TRUE
+)
 ```
 
 ```{r europe_maup_plot}
 europe_maup %>%
-  group_by(k, group_type, bugdrug) %>%
-  summarize(mean = mean(cor),
-            q25 = quantile(cor, 0.25),
-            q75 = quantile(cor, 0.75)) %>%
-  ggplot(aes(factor(k), mean, color = group_type)) +
-  geom_point(position = position_dodge(width = 0.5)) +
-  facet_wrap(~ bugdrug, scales = 'free') +
-  geom_errorbar(aes(ymin = q25, ymax = q75),
-                position = position_dodge(width = 0.5), width = 0.5)
-
-europe_maup %>%
-  ggplot(aes(factor(k), cor, color = group_type)) +
-  facet_wrap(~ bugdrug, scales = 'free') +
+  select(bugdrug, k, group_type, slope_ratio) %>%
+  filter(is.finite(slope_ratio)) %>%
+  ggplot(aes(factor(k), slope_ratio, color = group_type)) +
+  geom_hline(yintercept = 1) +
   geom_boxplot()
 ```

@@ -532,7 +532,7 @@ nest_results %>%
   mutate(super_model = map(data, ~ lm(super_rho ~ super_tau, data = .)),
          super_slope = map_dbl(super_model, ~ coef(.)['super_tau']),
          mean_sub_slope = map_dbl(data, ~ mean(.$sub_slope)),
-         slope_ratio = mean_sub_slope / super_slope) %>%
+         slope_ratio = super_slope / mean_sub_slope) %>%
   select(eps_super, eps_sub, super_slope, mean_sub_slope, slope_ratio) %>%
   mutate_if(is.numeric, ~ round(., 2)) %>%
   kable()
