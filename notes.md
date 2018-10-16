@@ -1,3 +1,7 @@
+# Important literature
+
+- Pull out notes on Schechner *et al* "Epidemiological interpretation", which will give some nice references for individual vs. other levels
+
 # To do
 
 - Call them "patches" rather than islands. Then it's all about how patches are connected. This is easier than islands and islets, etc.

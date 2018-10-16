@@ -221,10 +221,10 @@ How do the use/resistance relationships change depending on geographical groupin
 ### MarketScan
 
 ```{r marketscan_maup_setup}
-# group n items into k groups, with at least 1 item in each group
-sample1 = function(n, k) {
-  stopifnot(n >= k)
-  sample(c(1:k, sample(k, n - k, replace = TRUE)))
+# group n items into k groups, with at least n_min items in each group
+sample_nmin = function(n, k, n_min = 2) {
+  stopifnot(n_min * k <= n)
+  sample(c(rep(1:k, each = n_min), sample(1:k, n - (n_min * k), replace = TRUE)))
 }
 
 renumber = function(x) match(x, unique(x))
@@ -241,9 +241,16 @@ random_zones = function(distances, k) {
   renumber(zones)
 }
 
-verify_unit_data = function(unit_data) {
-  stopifnot(all(c('unit', 'long', 'lat') %in% names(unit_data)))
-  if (any(duplicated(unit_data$unit))) stop('duplicated units')
+# wrapper around random zones, to ensure group size
+random_zones_nmin = function(distances, k, n_min = 2, max_tries = 1e2) {
+  try = 1
+  while (try < max_tries) {
+    z = random_zones(distances, k)
+    if (min(table(z)) >= n_min) return(z)
+    try = try + 1
+  }
+  
+  NULL
 }
 
 deg2rad = function(deg) deg * pi / 180
@@ -257,7 +264,9 @@ haversine = function(long1, lat1, long2, lat2, R = 1.0) {
 }
 
 unit_distances = function(unit_data) {
-  verify_unit_data(unit_data)
+  stopifnot(all(c('unit', 'long', 'lat') %in% names(unit_data)))
+  if (any(duplicated(unit_data$unit))) stop('duplicated units')
+
   units = unit_data$unit
   n_units = length(units)
   
@@ -272,16 +281,6 @@ unit_distances = function(unit_data) {
 ```
 
 ```{r maup_helper_functions}
-random_group = function(group_type, unit_distances, k) {
-  if (group_type == 'sample') {
-    sample1(nrow(unit_distances), k)
-  } else if (group_type == 'zone') {
-    random_zones(unit_distances, k)
-  } else {
-    stop('control flow error')
-  }
-}
-
 aggregate = function(df, group) {
   mutate(df, group = group) %>%
     group_by(group) %>%
@@ -326,15 +325,15 @@ marketscan_maup_data = marketscan %>%
 
 maup_group = function(maup_data, k, group_type) {
   switch(group_type,
-         'sample' = sample1(maup_data$n_units, k),
-         'zone' = random_zones(maup_data$unit_distances, k),
+         'sample' = sample_nmin(maup_data$n_units, k),
+         'zone' = random_zones_nmin(maup_data$unit_distances, k),
          'region' = renumber(state.region[maup_data$state_id]),
          'division' = renumber(state.division[maup_data$state_id]),
          'state' = maup_data$state_id
   )
 }
 
-n_iterations = 10
+n_iterations = 100
 
 marketscan_canonical = crossing(
   bugdrug = marketscan$bugdrug,
@@ -344,7 +343,7 @@ marketscan_canonical = crossing(
 marketscan_maup = try_load('results/marketscan_maup.rds', {
   crossing(
     bugdrug = marketscan$bugdrug,
-    k1 = c(4, 9, 20, 30),
+    k1 = c(4, 9), # 15, 30
     group_type = c('sample', 'zone'),
     iteration = 1:n_iterations
   ) %>%
@@ -360,9 +359,6 @@ marketscan_maup = try_load('results/marketscan_maup.rds', {
       # weighted linear models
       weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
       weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)['did']),
-      # logistic regression
-      logistic_model = map(group_data, ~ glm(cbind(n_resistant, n_susceptible) ~ did, data = ., family = 'binomial')),
-      log_odds_ratio = map_dbl(logistic_model, ~ coef(.)['did']),
       # Spearman correlation
       cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
       cor = map_dbl(cor_model, ~ .$estimate),
@@ -372,14 +368,34 @@ marketscan_maup = try_load('results/marketscan_maup.rds', {
 ```
 
 ```{r}
+qf = function(xs, y) ecdf(c(xs, y))(y)
+
+marketscan_maup %>%
+  group_by(bugdrug) %>%
+  filter(k != max(k)) %>%
+  ungroup() %>%
+  mutate(within_slopes = map(within_models, function(ms) { map_dbl(ms, function(m) coef(m)['did']) }),
+         slope_q = map2_dbl(within_slopes, slope, qf),
+         slope_n = map2_int(within_slopes, slope, function(xs, y) sum(xs < y, na.rm = TRUE))) %>%
+  count(bugdrug, k, group_type, slope_n) %>%
+  ggplot(aes(factor(slope_n), n, fill = group_type)) +
+  facet_grid(bugdrug ~ k, scales = 'free_x') +
+  geom_col(position = 'dodge') +
+  xlab('cross slope greater than X within slopes') +
+  ylab('no. iterations')
+
 marketscan_maup %>%
   mutate(within_slopes = map(within_models, function(ms) { map_dbl(ms, function(m) coef(m)['did']) }),
-         slope_q = map2(within_slopes, slope, qf)) %>%
-  filter(map_lgl(slope_q, ~ is.null(.$error))) %>%
-  mutate(slope_q2 = map_dbl(slope_q, ~ .$result)) %>%
-  ggplot(aes(factor(k), slope_q2, color = group_type)) +
+         slope_diff = map2(within_slopes, slope, ~ .y - .x)) %>%
+  select(bugdrug, k, group_type, slope_diff) %>%
+  unnest() %>%
+  ggplot(aes(factor(k), slope_diff, color = group_type)) +
   facet_wrap(~ bugdrug) +
-  geom_boxplot()
+  geom_boxplot() +
+  ylim(-10, 10)        
+  # ggplot(aes(factor(k), slope_q, color = group_type)) +
+  # facet_wrap(~ bugdrug) +
+  # geom_boxplot()
 ```
 
 There are multiple metrics I could use, but they all seem to tell the same story. Here I'm showing:
@@ -387,6 +403,21 @@ There are multiple metrics I could use, but they all seem to tell the same story
 - linear regression slope
 - log odds ratio from a logistic regression
 - Spearman correlation
+
+```{r}
+marketscan_maup %>%
+  group_by(bugdrug, k, group_type) %>%
+  summarize(med_slope = median(slope),
+            cil = quantile(slope, 0.25),
+            ciu = quantile(slope, 0.75)) %>%
+  ungroup() %>%
+  ggplot(aes(factor(k), med_slope, color = group_type)) +
+  facet_wrap(~ bugdrug, scales = 'free_x') +
+  geom_point() +
+  geom_errorbar(aes(ymin = cil, ymax = ciu)) +
+  xlab('no. aggregates') +
+  ylab('use-resistance slope')
+```
 
 I think the Spearman correlation is easiest to visualize because it has the limited range.
 
@@ -441,17 +472,18 @@ marketscan_maup_ext %>%
 ```
 
 ```{r extremal_maps}
-hex_map = read_tsv('~/grad/db/us_hex.tsv')
+hex_map = read_tsv('~/grad/db/us_hex.tsv') %>%
+  rename(unit = state)
 
 marketscan_maup_ext %>%
   filter(k == 4) %>%
   select(bugdrug, unit, group, group_type, extremum) %>%
   unnest() %>%
-  left_join(hex_map, by = c('unit' = 'state')) %>%
+  left_join(hex_map, by = 'unit') %>%
   ggplot(aes(x, y)) +
   facet_grid(bugdrug ~ group_type + extremum) +
   geom_polygon(aes(group = unit, fill = factor(group))) +
-  geom_polygon(data = hex_map, aes(group = state), color = 'black', fill = NA) +
+  geom_polygon(data = hex_map, aes(group = unit), color = 'black', fill = NA) +
   scale_fill_brewer(palette = 'Accent') +
   theme_void() +
   theme(legend.position = 'none') +
@@ -461,27 +493,14 @@ marketscan_maup_ext %>%
   filter(k == 9) %>%
   select(bugdrug, unit, group, group_type, extremum) %>%
   unnest() %>%
-  left_join(hex_map, by = c('unit' = 'state')) %>%
+  left_join(hex_map, by = 'unit') %>%
   ggplot(aes(x, y)) +
   facet_grid(bugdrug ~ group_type + extremum) +
   geom_polygon(aes(group = unit, fill = factor(group))) +
-  geom_polygon(data = hex_map, aes(group = state), color = 'black', fill = NA) +
+  geom_polygon(data = hex_map, aes(group = unit), color = 'black', fill = NA) +
   theme_void() +
   theme(legend.position = 'none') +
   ggtitle('k = 9')
-
-marketscan_maup_ext %>%
-  filter(k == 20) %>%
-  select(bugdrug, unit, group, group_type, extremum) %>%
-  unnest() %>%
-  left_join(hex_map, by = c('unit' = 'state')) %>%
-  ggplot(aes(x, y)) +
-  facet_grid(bugdrug ~ group_type + extremum) +
-  geom_polygon(aes(group = unit, fill = factor(group))) +
-  geom_polygon(data = hex_map, aes(group = state), color = 'black', fill = NA) +
-  theme_void() +
-  theme(legend.position = 'none') +
-  ggtitle('k = 20')
 ```
 
 ### IMS/NHSN CAUTIs
@@ -546,7 +565,7 @@ nhsn_maup = try_load('results/nhsn_maup.rds', {
       cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
       cor = map_dbl(cor_model, ~ .$estimate)
     )
-}, force_run = TRUE)
+}, force_run = FALSE)
 ```
 
 ```{r nhsn_maup_plot}
@@ -632,7 +651,7 @@ europe_maup = try_load('results/europe_maup.rds', {
       cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
       cor = map_dbl(cor_model, ~ .$estimate)
     )
-}, force_run = TRUE)
+}, force_run = FALSE)
 ```
 
 ```{r europe_maup_plot}

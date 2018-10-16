@@ -25,21 +25,23 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 - Prediction is that, when there is just nearly as much transmission within population as across, then you'll get a breakdown in the use-resistance relationship. In other words, in these cases, the thing that controls resistance is population, rather than use. That's because population-level resistance is determined by population-level use and only weakly modulated by sub-population use.
 - Maybe "tranmission population" means that transmission is greater within the group than across groups. "Analytical population" is how we do the analysis. When we pick multiple analytical populations within one transmission population, then we get weak within-tranmission-population relationships.
 - Find a way to talk about the geographic construction: if you have a ring, then mixing doesn't hurt as much as if you are a well-connected graph
-
-## Outline
-
-- Theory
-  - Interactions between populations dilute $r ~ u$. Too small a scale gives low slopes.
-  - Slopes, correlations, and $\sigma_x^2$. We expect slopes to be similar, so $r^2 : \sigma_x \to [-1, 1]$.
-- MAUP
-  - ECDC, IMS/NHSN, MarketScan/RO
-  - Is there some level of aggregation that tends to deliver stronger slopes?
-- Smaller scale
-  - Medicare/RO: going down to HRRs isn't bad. I'm not sure this is very convincing.
-- Figures
-  - Model explanation, islands & ring illustration
-  - Tuning parameters and connectivity; how connectivity affects the slope
-  - Zonal & random samples, maybe in 3 separate plots? Or in one huge plot with lots of insets
+- Introduce chain link idea. We expect that chain link fences would increase the measured slopes. by how much? how much do we worry about the fact that we don't? Introduce the existing use/res models in terms of that.
+- Most groups are untreated in Ethiopia, so you expect that resistance in treated groups is below what it would be otherwise
+- Azithro resistance is all bystander in Ethiopia
+- Need a better transition into the nested model. People can get the mixing thing, but the question about the nested is more difficult.
+- Did you do a good grouping?
+    - eg what if nearby places have really different antibiotic use? this is why we think that it doesn't matter a lot if you live in this house or the one next door
+    - but it does make a difference at a population level about France vs. Netherlands
+    - but only talk about states because people are used to those aggregations
+- What if relationships isn't linear?
+- Introduce noise into x and y measurements. Maybe only measure correlation? (That's confusing when you have no noise.)
+- Need a visualization for what happens to confidence intervals on slope if you do the aggregation
+- What if you use a more correct modeling of use and resistance?
+- Geography is only one way of doing the population. Sex as a bad grouper b/c men and women interact a lot, but MSM/MSW as a good grouper. Race as an example of one that might make more sense.
+- Put stats on claims that mean slope goes up or down with scale. Use that chi-square-like test?
+- Cite Lipsitch & Samore for the thing about population-level being different from individual-level
+- Cite Mossong for contact stratification
+- "equilibration" means that every place has the access to the same pathogen phenotypes. this does not account for temporal possibilities. just address up front that temporal perturbations are one way of looking at this problem.
 
 # Introduction
 
@@ -70,14 +72,6 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
     - We then use empirical use/resistance data from the US and Europe to check if we are near this scale
 
 # Methods
-
-## Summary of approaches
-
-We use *theoretical* and *empirical* approaches.
-
-First, we run simulations where the length scale of transmission is known, and the analysis is varied between units shorter and longer than that scale.
-
-Second, we re-analyze empirical, ecological-level data about use and resistance and determine which length scales of transmission are compatible with those data.
 
 ## Intuition behind the simulation approach
 
@@ -143,9 +137,9 @@ whn_base_parms
 
 #### Population model
 
-There are $n$ populations, indexed $i \in [0; n - 1]$, each of size $N_i$. Changes in population membership are slow compared to the transmission dynamics, so each $N_i$ remains fixed.
+There are $n$ populations each of size $N_i$. Changes in population membership are slow compared to the transmission dynamics, so each $N_i$ remains fixed.
 
-In a first simulation, the populations are all transmission populations. A parameter $\epsilon \in [0, 1]$ controls the relative amount of interactions within versus between the transmission populations. Let $\beta'_{i \leftarrow j}$ be the the contacts for individuals in $i$ that are in $j$ so that $\beta_{i \leftarrow j} = \beta \beta'_{i \leftarrow j}$, where $\beta$ is a constant. We require that $\sum_j \beta'_{i \leftarrow j} = 1$. When tuning $\epsilon$:
+In a first simulation, the populations are all transmission populations. A parameter $\epsilon \in [0, 1]$ controls the relative proportion of contacts within versus between the transmission populations. $\epsilon = 0$ means that all contacts are within a population; $\epsilon = 1$ means that contacts are equally likely within and across populations. Let $\beta'_{i \leftarrow j}$ be the the proportion of contacts for individuals in $i$ that are in $j$ so that $\beta_{i \leftarrow j} = \beta \beta'_{i \leftarrow j}$, where $\beta$ is a constant. We require that $\sum_j \beta'_{i \leftarrow j} = 1$.
 $$
 \begin{aligned}
 \beta'_{i \leftarrow i} &= 1 - \epsilon (1 - 1 / n) \\
@@ -259,7 +253,15 @@ ring_viz = function(n_wedge, r, R = 1.0) {
     mutate(group = interaction(center, wedge)) %>%
     mutate(fill = 1 * ring_scale(center, n_circle) + 1 * ring_scale(wedge, n_wedge))
   
+  edges = crossing(
+    center_i = 1:n_circle, center_j = 1:n_circle
+  ) %>%
+    filter(center_i < center_j) %>%
+    left_join(select(centers, center_i = center, x = center_x, y = center_y), by = 'center_i') %>%
+    left_join(select(centers, center_j = center, xend = center_x, yend = center_y), by = 'center_j')
+  
   ggplot(NULL, aes(x, y)) +
+    geom_segment(data = edges, aes(xend = xend, yend = yend), size = 1, color = 'black') +
     geom_path(data = circles, aes(group = center), color = 'black', size = 2) +
     geom_polygon(data = wedges, aes(group = group, fill = fill), color = 'black') +
     coord_fixed() +
@@ -343,7 +345,7 @@ dtypes_base_parms$mu_d = with(dtypes_base_parms,
 
 ## WHN transmission populations
 
-```{r whn}
+```{r whn_sim}
 # vector to data frame
 whn_unpack = function(x) {
   matrix(x, ncol = 4) %>%
@@ -408,7 +410,9 @@ whn_sim = function(taui, epsilon) {
            pop = seq_along(taui),
            rho = R / (S + R + D))
 }
+```
 
+```{r whn_results}
 whn1 = crossing(
   n_pop = c(4, 8, 16),
   epsilon = c(0, 0.01, 0.1, 0.2, 1.0)
@@ -419,7 +423,7 @@ whn1 = crossing(
 
 We are in one of the universes defined by $\epsilon$ and $n$. We don't know which one we're in.
 
-```{r}
+```{r whn_slopes}
 whn1 %>%
   unnest() %>%
   ggplot(aes(taui, rho, color = factor(epsilon))) +
@@ -439,7 +443,7 @@ whn1 %>%
 
 ## WHN nested populations
 
-```{r}
+```{r whn_nest_results}
 whn_nest_sim = function(taui, eps_super, eps_sub) {
   n_pop = length(taui)
   pop_per = sqrt(n_pop)
@@ -514,9 +518,73 @@ nest_results %>%
   theme_classic()
 ```
 
+How do the within-population slopes compare to the cross-population slopes?
+
+```{r}
+nest_results %>%
+  unnest() %>%
+  nest(-eps_super, -eps_sub, -superpop) %>%
+  mutate(sub_model = map(data, ~ lm(rho ~ tau, data = .)),
+         sub_slope = map_dbl(sub_model, ~ coef(.)['tau']),
+         super_tau = map_dbl(data, ~ mean(.$tau)),
+         super_rho = map_dbl(data, ~ mean(.$rho))) %>%
+  nest(-eps_super, -eps_sub) %>%
+  mutate(super_model = map(data, ~ lm(super_rho ~ super_tau, data = .)),
+         super_slope = map_dbl(super_model, ~ coef(.)['super_tau']),
+         mean_sub_slope = map_dbl(data, ~ mean(.$sub_slope)),
+         slope_ratio = mean_sub_slope / super_slope) %>%
+  select(eps_super, eps_sub, super_slope, mean_sub_slope, slope_ratio) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %>%
+  kable()
+```
+
 The case where $\epsilon_\downarrow \gg 0$ means that there are effectively no subpopulations; each superpopulation is just one thing. In this sense, our analytical units are smaller than the relevant biology. The badness here is that we inflate the number of assertedly-independent observations, which means we have a greater chance of a Type I error. This seems like a small cost.
 
+It also seems like aggregating slightly increases the point estimate.
+
+```{r steps}
+steps = nest_results %>%
+  unnest() %>%
+  filter(eps_super == 0.0, eps_sub == 0.5)
+
+steps_aggregated = steps %>%
+  group_by(superpop) %>%
+  summarize_at(vars(tau, rho), mean)
+
+geom_lm = partial(geom_smooth, method = 'lm', se = FALSE)
+
+ggplot(NULL, aes(tau, rho)) +
+  geom_lm(data = steps, color = 'red') +
+  geom_point(data = steps, aes(color = factor(superpop))) +
+  geom_lm(data = steps_aggregated, color = 'black') +
+  geom_point(data = steps_aggregated, size = 3) +
+  guides(color = FALSE) +
+  theme_classic() +
+  xlab('courses per month') +
+  ylab('proportion resistant') +
+  ylim(0, 1)
+
+nest_results %>%
+  mutate(model = map(data, ~ lm(rho ~ tau, data = .)),
+         slope = map_dbl(model, ~ coef(.)['tau']),
+         slope_ciu = map_dbl(model, ~ confint(.)['tau', 1]),
+         slope_cil = map_dbl(model, ~ confint(.)['tau', 2])) %>%
+  ggplot(aes(factor(eps_super), slope, color = factor(eps_sub))) +
+  geom_point() +
+  geom_errorbar(aes(ymin = slope_cil, ymax = slope_ciu))
+```
+
 Going to larger scales, meaning aggregating, has the effect of shrinking the $x$ and $y$ axes, which has the cost of increasing the variance in the measurement. This is also a statistically bad thing.
+
+Say that there are $n_0$ points, and we think we aggregate them into $n$ points (i.e., $n_0 / n$ subpops per superpop). This decreases the variance in the residuals (from $\sigma_{\epsilon,0}^2$ to $\sigma_{\epsilon,0}^2 / (n_0 / n)$) but decreases the number of points and the variance in $x$:
+$$
+\begin{aligned}
+\mathrm{Var}[\hat{\beta}_1] &= \frac{\sigma_\epsilon^2}{n \sigma_x^2} \\
+  &= \frac{\sigma_{\epsilon,0}^2 / (n_0 / n)}{n \sigma_x^2} \\
+  &= \frac{\sigma_{\epsilon,0}^2}{n_0 \sigma_x^2}.
+\end{aligned}
+$$
+This is just like the estimator for the non-aggregated estimator except that it has the aggregate variance $\sigma_x^2$ rather than the original $\sigma_{x,0}^2$. So the variance in $\beta_1$ will grow like $\sigma_{x,0}^2 / \sigma_x^2$.
 
 ## D-types
 
