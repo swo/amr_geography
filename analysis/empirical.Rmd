@@ -340,6 +340,16 @@ marketscan_canonical = crossing(
   group_type = c('region', 'division', 'state')
 )
 
+add_canonical_data = function(df, maup_data) {
+  df %>%
+    mutate(group = map2(group_type, bugdrug,
+                        ~ switch(.x,
+                                 'region' = renumber(state.region[maup_data[[.y]]$state_id]),
+                                 'division' = renumber(state.division[maup_data[[.y]]$state_id]),
+                                 'state' = maup_data[[.y]]$state_id)),
+           k = map_int(group, ~ length(unique(.))))
+}
+
 maup_sim = function(bugdrug, k, n_iterations, canonical_rows, maup_data, fn, force_run = FALSE) {
   try_load(fn, {
     crossing(
@@ -348,9 +358,9 @@ maup_sim = function(bugdrug, k, n_iterations, canonical_rows, maup_data, fn, for
       group_type = c('sample', 'zone'),
       iteration = 1:n_iterations
     ) %>%
-      bind_rows(canonical_rows) %>%
+      mutate(group = pmap(list(bugdrug, k, group_type), ~ maup_group(maup_data[[..1]], ..2, ..3))) %>%
+      bind_rows(add_canonical_data(canonical_rows, maup_data)) %>%
       mutate(
-        group = pmap(list(bugdrug, k, group_type), ~ maup_group(maup_data[[..1]], ..2, ..3)),
         group_data = map2(bugdrug, group, ~ aggregate(maup_data[[.x]]$data, .y)),
         # swo don't like overwriting like this
         group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
@@ -382,7 +392,12 @@ marketscan_maup = maup_sim(
 )
 ```
 
-```{r}
+```{r marketscan_maup_plot}
+marketscan_maup %>%
+  ggplot(aes(factor(k), super_slope, color = group_type)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_boxplot()
+
 marketscan_maup %>%
   filter(is.finite(slope_ratio)) %>%
   ggplot(aes(factor(k), slope_ratio, color = group_type)) +
@@ -390,6 +405,14 @@ marketscan_maup %>%
   geom_hline(yintercept = 1) +
   geom_boxplot() +
   ylim(-10, 10)
+
+marketscan_maup %>%
+  filter(group_type != 'canonical') %>%
+  mutate(y = slope_ratio - 1) %>%
+  nest(-bugdrug, -group_type, -k) %>%
+  mutate(greater_p = map_dbl(data, ~ wilcox.test(.$y, alternative = 'greater')$p.value)) %>%
+  select(-data) %>%
+  kable()
 ```
 
 So *maybe* the across slopes are ~2x greater than the within slopes, but only for certain cases.
@@ -501,7 +524,12 @@ nhsn_maup = maup_sim(
 )
 ```
 
-```{r}
+```{r nhsn_maup_plot}
+nhsn_maup %>%
+  ggplot(aes(factor(k), super_slope, color = group_type)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_boxplot()
+
 nhsn_maup %>%
   select(bugdrug, k, group_type, slope_ratio) %>%
   filter(is.finite(slope_ratio)) %>%
@@ -509,6 +537,14 @@ nhsn_maup %>%
   geom_hline(yintercept = 1) +
   geom_boxplot() +
   ylim(-10, 10)
+
+nhsn_maup %>%
+  filter(group_type != 'canonical') %>%
+  mutate(y = slope_ratio - 1) %>%
+  nest(-bugdrug, -group_type, -k) %>%
+  mutate(greater_p = map_dbl(data, ~ wilcox.test(.$y, alternative = 'greater')$p.value)) %>%
+  select(-data) %>%
+  kable()
 ```
 
 ### Europe
@@ -547,7 +583,7 @@ europe_maup_data = europe %>%
 
 # swo: come up with a better name than "state"
 europe_canonical = crossing(
-  bugdrug = unique(europe$bugdrug),
+  bugdrug = europe$bugdrug,
   group_type = 'state'
 )
 
@@ -555,7 +591,7 @@ europe_maup = maup_sim(
   bugdrug = unique(europe$bugdrug),
   k = c(4),
   n_iterations = 100,
-  canonical_rows = NULL,
+  canonical_rows = europe_canonical,
   maup_data = europe_maup_data,
   fn = 'results/europe_maup.rds',
   force_run = TRUE
@@ -564,9 +600,23 @@ europe_maup = maup_sim(
 
 ```{r europe_maup_plot}
 europe_maup %>%
+  ggplot(aes(factor(k), super_slope, color = group_type)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_boxplot()
+
+europe_maup %>%
   select(bugdrug, k, group_type, slope_ratio) %>%
   filter(is.finite(slope_ratio)) %>%
   ggplot(aes(factor(k), slope_ratio, color = group_type)) +
+  facet_wrap(~ bugdrug) +
   geom_hline(yintercept = 1) +
   geom_boxplot()
+
+europe_maup %>%
+  filter(group_type != 'canonical') %>%
+  mutate(y = slope_ratio - 1) %>%
+  nest(-bugdrug, -group_type, -k) %>%
+  mutate(greater_p = map_dbl(data, ~ wilcox.test(.$y, alternative = 'greater')$p.value)) %>%
+  select(-data) %>%
+  kable()
 ```
