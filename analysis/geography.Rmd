@@ -17,47 +17,7 @@ knitr::opts_chunk$set(
 pdf.options(useDingbats=FALSE, useKerning=FALSE)
 ```
 
-# To add
-
-- When does population, rather than use, control resistance?
-    - Hospital vs. community for some organisms
-    - Which school/day care or family?
-- Prediction is that, when there is just nearly as much transmission within population as across, then you'll get a breakdown in the use-resistance relationship. In other words, in these cases, the thing that controls resistance is population, rather than use. That's because population-level resistance is determined by population-level use and only weakly modulated by sub-population use.
-- Maybe "tranmission population" means that transmission is greater within the group than across groups. "Analytical population" is how we do the analysis. When we pick multiple analytical populations within one transmission population, then we get weak within-tranmission-population relationships.
-- Find a way to talk about the geographic construction: if you have a ring, then mixing doesn't hurt as much as if you are a well-connected graph
-- Introduce chain link idea. We expect that chain link fences would increase the measured slopes. by how much? how much do we worry about the fact that we don't? Introduce the existing use/res models in terms of that.
-- Most groups are untreated in Ethiopia, so you expect that resistance in treated groups is below what it would be otherwise
-- Azithro resistance is all bystander in Ethiopia
-- Need a better transition into the nested model. People can get the mixing thing, but the question about the nested is more difficult.
-- Did you do a good grouping?
-    - eg what if nearby places have really different antibiotic use? this is why we think that it doesn't matter a lot if you live in this house or the one next door
-    - but it does make a difference at a population level about France vs. Netherlands
-    - but only talk about states because people are used to those aggregations
-- What if relationships isn't linear?
-- Introduce noise into x and y measurements. Maybe only measure correlation? (That's confusing when you have no noise.)
-- Need a visualization for what happens to confidence intervals on slope if you do the aggregation
-- What if you use a more correct modeling of use and resistance?
-- Geography is only one way of doing the population. Sex as a bad grouper b/c men and women interact a lot, but MSM/MSW as a good grouper. Race as an example of one that might make more sense.
-- Put stats on claims that mean slope goes up or down with scale. Use that chi-square-like test?
-- Cite Lipsitch & Samore for the thing about population-level being different from individual-level
-- Cite Mossong for contact stratification
-- "equilibration" means that every place has the access to the same pathogen phenotypes. this does not account for temporal possibilities. just address up front that temporal perturbations are one way of looking at this problem.
-
 # Introduction
-
-## Background
-
-- At what length scale should analyses be conducted, or should interventions be implemented?
-- Experiments and cross-sectional studies suggest that the scale could be really small
-    - Lit re: azithro experiments suggest that scales can be really small
-    - UK UTI papers suggest that you can go from CCG to practice level and not see any real change
-    - Our work suggested that relationships are the same at the state and HRR levels
-    - Transmission is known to be strong at the level of families and schools/day cares
-- In other cases, the population or setting, rather than individual use, appears to control resistance
-    - E.g., our race thing, where non-whites get less drug and have more resistance
-    - Hospitals, where the difference between hospital or not is much greater than individual use
-    - Suggestions that doing an analysis might not be expected to work at all because the US is one big well-mixed pot
-- But questions remain, and there a rigorous answer to this question should be attempted
 
 ## Approach
 
@@ -68,22 +28,8 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
     - Can we discover what the TPs are?
 - We use theoretical models and empirical analyses to assess these questions
     - We use a dynamical model that exhibits S/R coexistence, modifying its geographical scales and units of analysis to determine the theoretical boundaries for analyses
-        - We assume "equilibrated resistance", meaning that antibiotic use is slowly changing in time, that each population has access to the same pool of pathogen strains, that strains are equally fit in different populations (excepting antibiotic use), and that resistance levels have equilibrated
-    - We then use empirical use/resistance data from the US and Europe to check if we are near this scale
 
 # Methods
-
-## Intuition behind the simulation approach
-
-Consider a set of islands. The inhabitants only have contact with other members of their island. The inhabitants of each island have some levels of average antibiotic use and antibiotic resistance. For simplicity, imagine that the use-resistance pairs $(\tau, \rho)$ fall on a line, subject to some noise.
-
-Clearly the correct scale of analysis is the island. Using a larger scale of analysis ---say, aggregating nearby islands and using their cross-island average use and resistance--- will decrease statistical power, as there are fewer independent units. On the other hand, too small a scale ---say, different populations on the same island--- means that the units are not independent, and the use-resistance relationship will be "washed out" by the population-average value.
-
-To see this, consider (*i*) a "lower-using-than-average" islander with use $\tau_\mathrm{lo}$ on an island with average use $\tau_\mathrm{hi} > \tau_\mathrm{lo}$ and (*ii*) a "low-and-average" islander with use $\tau_\mathrm{lo}$ on an island with average use $\tau_\mathrm{lo}$. The lower-than-average islander, being surrounded by individuals with a higher average probability of resistant carriage, is more likely to carry a resistant strain than the low-and-average islander. Conversely, a "higher-using-than-average" islander will benefit from the lower resistance probability of their neighbors.
-
-This logic helps explain why a hospitalized person, whether they are receiving antibiotics or not, is more likely to carry a resistant organism than a person with the same antibiotic use who is outside the hospital.
-
-We will use simulations to quantify the change in the measured use-resistance relationship when changing the length scale of the analysis.
 
 ## Theory
 
@@ -91,9 +37,6 @@ We will use simulations to quantify the change in the measured use-resistance re
 
 #### Base model
 
-I will use a dynamical modeling framework, the within-host neutrality (WHN) model presented by [Davies *et al.*](https://www.biorxiv.org/content/early/2018/01/03/217232) (doi:10.1101/217232), thats exhibit coexistence between susceptible and resistant organisms, with some relationship between antibiotic use $\tau$ and resistance prevalence $\rho = R / (1 - X)$.
-
-In this model, individuals may be uncolonized $X$, carry a susceptible $S$ or resistant $R$ organism, or be dual-carriers $D$. Carriers naturally clear at a rate $u$. Antibiotics are used at a rate $\tau$ that clears $S \to X$ and removes dual carriage $D \to R$. The fitness cost of resistance is encoded by $c$, which modulates the resistant strain's transmission.
 $$
 \begin{aligned}
 \dot{S} &= \beta \frac{S + D}{N} X - (u + \tau) S - \beta \underbrace{(1-c)} \frac{R}{N} S \\
@@ -103,7 +46,6 @@ $$
 N &= X + S + R + D
 \end{aligned}
 $$
-For simplicity, I set $k = 1$ in these equations and in all the simulations. The braced term was missing in the bioRxiv manuscript.
 
 #### Parameters
 
