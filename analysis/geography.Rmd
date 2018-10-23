@@ -211,8 +211,16 @@ ring_viz = function(n_wedge, r, R = 1.0) {
     theme_void()
 }
 
-ring_viz(rep(1, 4), 0.5)
-ring_viz(rep(6, 4), 0.5)
+multipop_diagram = ring_viz(rep(1, 4), 0.5)
+nested_diagram = ring_viz(rep(6, 4), 0.5)
+
+ggsave('fig/multipop_diagram.png', plot = multipop_diagram)
+ggsave('fig/nested_diagram.png', plot = nested_diagram)
+
+png('fig/combined_diagram.png')
+ggpubr::ggarrange(multipop_diagram, nested_diagram,
+  labels = c('a)', 'b)'))
+dev.off()
 ```
 
 ##### With different scales
@@ -366,12 +374,14 @@ whn1 = crossing(
 We are in one of the universes defined by $\epsilon$ and $n$. We don't know which one we're in.
 
 ```{r whn_slopes}
-whn1 %>%
+whn_multipop_plot = whn1 %>%
   unnest() %>%
   ggplot(aes(taui, rho, color = factor(epsilon))) +
   facet_grid(~ n_pop) +
   geom_point() +
   geom_line()
+
+ggsave('fig/whn_multipop.png', plot = whn_multipop_plot)
 
 whn1 %>%
   mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
@@ -447,7 +457,7 @@ nest_results = crossing(
   filter(eps_super <= eps_sub) %>%
   mutate(data = map2(eps_super, eps_sub, ~ whn_nest_sim(taui, .x, .y)))
 
-nest_results %>%
+whn_nest_plot = nest_results %>%
   unnest() %>%
   ggplot(aes(tau, rho, color = factor(superpop))) +
   facet_grid(eps_super ~ eps_sub, labeller = labeller(.rows = label_both, .cols = label_both)) +
@@ -458,6 +468,8 @@ nest_results %>%
   geom_line() +
   ylim(0 - 0.01, 1.01) +
   theme_classic()
+
+ggsave('fig/whn_nest.png', plot = whn_nest_plot)
 ```
 
 How do the within-population slopes compare to the cross-population slopes?
@@ -476,7 +488,8 @@ nest_results %>%
          mean_sub_slope = map_dbl(data, ~ mean(.$sub_slope)),
          slope_ratio = super_slope / mean_sub_slope) %>%
   select(eps_super, eps_sub, super_slope, mean_sub_slope, slope_ratio) %>%
-  mutate_if(is.numeric, ~ round(., 2)) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %T>%
+  write_csv('results/whn_nest_results.csv') %>%
   kable()
 ```
 

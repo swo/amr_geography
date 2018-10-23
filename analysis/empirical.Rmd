@@ -13,6 +13,8 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 
 state_map = map_data('state')
 map = purrr::map
+
+library(boot)
 ```
 
 # To do
@@ -103,7 +105,7 @@ medicare = bind_rows(
 ### MarketScan
 
 ```{r maup_db}
-state_census = read_tsv('../db/census/state_census.tsv') %>%
+state_census = read_tsv('../db/state_census.tsv') %>%
   filter(between(year, 2011, 2014)) %>%
   group_by(state_abbreviation) %>%
   summarize(population = mean(population))
@@ -158,7 +160,7 @@ ecdc = read_tsv('../data/ecdc/data.tsv') %>%
   mutate(bug = rename_bug(bug),
          pct_res = 100 * f_ns,
          dataset='ECDC') %>%
-  select(dataset, bug, drug, geo_unit=country, did, n_resistant=n_ns, n_isolates, pct_res)
+  select(dataset, bug, drug, geo_unit = country, did, n_resistant = n_ns, n_isolates, pct_res)
 ```
 
 ### NHSN/IMS
@@ -329,7 +331,8 @@ maup_group = function(maup_data, k, group_type) {
          'zone' = random_zones_nmin(maup_data$unit_distances, k),
          'region' = renumber(state.region[maup_data$state_id]),
          'division' = renumber(state.division[maup_data$state_id]),
-         'state' = maup_data$state_id
+         'state' = maup_data$state_id,
+         'europe_region' = renumber(europe_units$region_name[maup_data[[.y]]$stat_id])
   )
 }
 
@@ -340,13 +343,18 @@ marketscan_canonical = crossing(
   group_type = c('region', 'division', 'state')
 )
 
+europe_units = read_tsv('../db/europe_units.tsv') %>%
+  select(unit = country, long = longitude, lat = latitude, population, unit_id, region_name)
+
 add_canonical_data = function(df, maup_data) {
   df %>%
     mutate(group = map2(group_type, bugdrug,
                         ~ switch(.x,
                                  'region' = renumber(state.region[maup_data[[.y]]$state_id]),
                                  'division' = renumber(state.division[maup_data[[.y]]$state_id]),
-                                 'state' = maup_data[[.y]]$state_id)),
+                                 'state' = maup_data[[.y]]$state_id,
+                                 'europe_region' = renumber(europe_units$region_name[maup_data[[.y]]$state_id])
+                                 )),
            k = map_int(group, ~ length(unique(.))))
 }
 
@@ -362,24 +370,19 @@ maup_sim = function(bugdrug, k, n_iterations, canonical_rows, maup_data, fn, for
       bind_rows(add_canonical_data(canonical_rows, maup_data)) %>%
       mutate(
         group_data = map2(bugdrug, group, ~ aggregate(maup_data[[.x]]$data, .y)),
-        # swo don't like overwriting like this
-        group_type = if_else(group_type %in% c('state', 'region', 'division'), 'canonical', group_type),
+        group_type = if_else(group_type %in% c('state', 'region', 'division', 'europe_region'), 'canonical', group_type),
         super_model = map(group_data, ~ lm(pct_res ~ did, data = .)),
         super_slope = map_dbl(super_model, ~ coef(.)['did']),
         sub_models = map2(bugdrug, group, ~ group_models(maup_data[[.x]]$data, .y)),
         sub_slopes = map(sub_models, function(ms) map_dbl(ms, ~ coef(.)['did'])),
-        mean_sub_slope = map_dbl(sub_slopes, mean),
-        slope_ratio = super_slope / mean_sub_slope
+        median_sub_slope = map_dbl(sub_slopes, ~ median(., na.rm = TRUE)),
+        slope_ratio = super_slope / median_sub_slope,
+        # weighted linear models
+        w_super_model = map(group_data, ~ lm(pct_res ~ did, weights = n_isolates, data = .)),
+        w_super_slope = map_dbl(w_super_model, ~ coef(.)['did'])
       )
   }, force_run = force_run)
 }
-
-      # # weighted linear models
-      # weighted_linear_model = map(group_data, ~ lm(pct_res ~ did, data = ., weights = n_isolates)),
-      # weighted_slope = map_dbl(weighted_linear_model, ~ coef(.)['did']),
-      # # Spearman correlation
-      # cor_model = map(group_data, ~ cor.test(.$pct_res, .$did, method = 'spearman')),
-      # cor = map_dbl(cor_model, ~ .$estimate)
 
 marketscan_maup = maup_sim(
   bugdrug = marketscan$bugdrug,
@@ -412,6 +415,36 @@ marketscan_maup %>%
   nest(-bugdrug, -group_type, -k) %>%
   mutate(greater_p = map_dbl(data, ~ wilcox.test(.$y, alternative = 'greater')$p.value)) %>%
   select(-data) %>%
+  kable()
+```
+
+```{r marketscan_maup_vals}
+bootstrap_ci = function(x, f, R = 1000) {
+  if (length(x) == 1) return(c(NA, NA))
+  statistic = function(data, idx) f(data[idx])
+  boot(data = x, statistic = statistic, R = R) %>%
+    boot.ci(type = 'bca') %$%
+    bca[c(4, 5)]
+}
+
+marketscan_maup %>%
+  select(bugdrug, k, group_type, super_slope, median_sub_slope, slope_ratio) %>%
+  gather('metric', 'value', super_slope, median_sub_slope, slope_ratio) %>%
+  nest(value) %>%
+  mutate(values = map(data, ~ .$value),
+         median_ = map_dbl(values, median),
+         variance = map_dbl(values, var),
+         median_ci = map(values, ~ bootstrap_ci(., median)),
+         median_lci = map_dbl(median_ci, ~ .[1]),
+         median_uci = map_dbl(median_ci, ~ .[2]),
+         variance_ci = map(values, ~ bootstrap_ci(., var)),
+         variance_lci = map_dbl(variance_ci, ~ .[1]),
+         variance_uci = map_dbl(variance_ci, ~ .[2])
+  ) %>%
+  filter(!(group_type == 'canonical' & metric %in% c('median_sub_slope', 'slope_ratio'))) %>%
+  select(metric, bugdrug, group_type, k, median_, median_lci, median_uci, variance, variance_lci, variance_uci) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %>%
+  arrange(metric, bugdrug, group_type, k) %>%
   kable()
 ```
 
@@ -481,8 +514,6 @@ marketscan_maup_ext %>%
 
 ### IMS/NHSN CAUTIs
 
-**swo** refactor functions to match marketscan
-
 ```{r nhsn}
 nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
   rename(state_abbreviation = state) %>%
@@ -547,13 +578,31 @@ nhsn_maup %>%
   kable()
 ```
 
+```{r nhsn_numbers}
+nhsn_maup %>%
+  select(k, group_type, super_slope, median_sub_slope, slope_ratio) %>%
+  gather('metric', 'value', super_slope, median_sub_slope, slope_ratio) %>%
+  nest(value) %>%
+  mutate(values = map(data, ~ .$value),
+         median_ = map_dbl(values, median),
+         variance = map_dbl(values, var),
+         median_ci = map(values, ~ bootstrap_ci(., median)),
+         median_lci = map_dbl(median_ci, ~ .[1]),
+         median_uci = map_dbl(median_ci, ~ .[2]),
+         variance_ci = map(values, ~ bootstrap_ci(., var)),
+         variance_lci = map_dbl(variance_ci, ~ .[1]),
+         variance_uci = map_dbl(variance_ci, ~ .[2])
+  ) %>%
+  filter(!(group_type == 'canonical' & metric %in% c('median_sub_slope', 'slope_ratio'))) %>%
+  select(metric, group_type, k, median_, median_lci, median_uci, variance, variance_lci, variance_uci) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %>%
+  arrange(metric, group_type, k) %>%
+  kable()
+```
+
 ### Europe
 
 ```{r europe_data}
-europe_units = read_tsv('../db/europe_centers/europe_centers.tsv') %>%
-  mutate(unit_id = 1:n()) %>%
-  select(unit = country, long = longitude, lat = latitude, population, unit_id)
-
 europe = read_tsv('../data/ecdc/data.tsv') %>%
   mutate(bugdrug = case_when(
     .$bug == 'Escherichia coli' & .$drug == 'quinolone' ~ 'Ec/q',
@@ -561,7 +610,7 @@ europe = read_tsv('../data/ecdc/data.tsv') %>%
     .$bug == 'Streptococcus pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
   )) %>%
   rename(unit = country) %>%
-  left_join(select(europe_units, unit, population), by ='unit') %>%
+  left_join(select(europe_units, unit, population), by = 'unit') %>%
   select(unit, bugdrug, did, n_resistant = n_ns, n_isolates, population)
 ```
 
@@ -584,7 +633,7 @@ europe_maup_data = europe %>%
 # swo: come up with a better name than "state"
 europe_canonical = crossing(
   bugdrug = europe$bugdrug,
-  group_type = 'state'
+  group_type = c('state', 'europe_region')
 )
 
 europe_maup = maup_sim(
@@ -618,5 +667,27 @@ europe_maup %>%
   nest(-bugdrug, -group_type, -k) %>%
   mutate(greater_p = map_dbl(data, ~ wilcox.test(.$y, alternative = 'greater')$p.value)) %>%
   select(-data) %>%
+  kable()
+```
+
+```{r europe_numbers}
+europe_maup %>%
+  select(bugdrug, k, group_type, super_slope, median_sub_slope, slope_ratio) %>%
+  gather('metric', 'value', super_slope, median_sub_slope, slope_ratio) %>%
+  nest(value) %>%
+  mutate(values = map(data, ~ .$value),
+         median_ = map_dbl(values, median),
+         variance = map_dbl(values, var),
+         median_ci = map(values, ~ bootstrap_ci(., median)),
+         median_lci = map_dbl(median_ci, ~ .[1]),
+         median_uci = map_dbl(median_ci, ~ .[2]),
+         variance_ci = map(values, ~ bootstrap_ci(., var)),
+         variance_lci = map_dbl(variance_ci, ~ .[1]),
+         variance_uci = map_dbl(variance_ci, ~ .[2])
+  ) %>%
+  filter(!(group_type == 'canonical' & metric %in% c('median_sub_slope', 'slope_ratio'))) %>%
+  select(metric, bugdrug, group_type, k, median_, median_lci, median_uci, variance, variance_lci, variance_uci) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %>%
+  arrange(metric, bugdrug, group_type, k) %>%
   kable()
 ```
