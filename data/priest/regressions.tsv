@@ -1,4 +1,0 @@
-resistance_drug	use_drug	n_pcg	pcg_estimate	pcg_lci	pcg_uci	pcg_adjusted_r2	n_practice	practice_estimate	practice_lci	practice_uci	practice_adjusted_r2
-ampicillin or amoxicillin	all beta-lactams	20	0.012	0.0004	0.023	0.163	262	0.012	0.007	0.018	0.070
-ampicillin or amoxicillin	ampicillin and amoxicillin	20	0.013	-0.003	0.029	0.084	262	0.019	0.011	0.026	0.076
-trimethoprim	trimethoprim	32	0.119	-0.004	0.241	0.092	371	0.078	0.046	0.111	0.057

@@ -1,6 +1,0 @@
-resistance_drug	use_drug	low_n_res	low_n_isolates	med_n_res	med_n_isolates	high_n_res	high_n_isolates
-penicillin	penicillin V	2	169	9	369	6	213
-penicillin	all penicillins	6	186	8	390	3	202
-penicillin	all beta-lactams	6	178	9	397	2	203
-erythromycin	erythromycin	7	164	24	441	19	223
-erythromycin	all macrolides	7	152	27	466	16	210
