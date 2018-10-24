@@ -11,114 +11,17 @@ header-includes:
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(
   fig.width=7, fig.height=4, fig.path='fig/',
-  dev=c('pdf'),
+  dev=c('pdf', 'png'),
   echo=FALSE, warning=FALSE, message=FALSE,
   cache=TRUE, autodep=TRUE)
 pdf.options(useDingbats=FALSE, useKerning=FALSE)
+
+library(kableExtra)
 ```
 
-# Introduction
+# Nested model schematic
 
-## Approach
-
-- We distinguish between an "analytical population", the individuals whose pooled use and resistance are the units of analysis, and "transmission populations". Transmission populations have proportionally more contacts within their group than outside their group: $\beta_{i \leftarrow i} / N_i > \beta_{i \leftarrow j} / N_j$ for all $j \neq i$.
-- We assume there are some true transmission populations that we don't know *a priori*. The questions are:
-    - What are the risks of making our analytical populations much smaller than the transmission populations?
-    - Much larger?
-    - Can we discover what the TPs are?
-- We use theoretical models and empirical analyses to assess these questions
-    - We use a dynamical model that exhibits S/R coexistence, modifying its geographical scales and units of analysis to determine the theoretical boundaries for analyses
-
-# Methods
-
-## Theory
-
-### Within-host neutral (WHN) model
-
-#### Base model
-
-$$
-\begin{aligned}
-\dot{S} &= \beta \frac{S + D}{N} X - (u + \tau) S - \beta \underbrace{(1-c)} \frac{R}{N} S \\
-\dot{R} &= \beta (1-c) \frac{R}{N} X - u R + \tau D \\
-\dot{D} &= \beta (1-c) \frac{R}{N} S - (u + \tau) D \\
-\dot{X} &= -(\dot{S} + \dot{R} + \dot{D}) \\
-N &= X + S + R + D
-\end{aligned}
-$$
-
-#### Parameters
-
-```{r whn_parameters}
-whn_base_parms = list(
-  beta = 4.0,
-  u = 1.0,
-  tau50 = 1.5 / 12
-)
-
-# swo: always using davies base parms, so just bake those into the cost function?
-# tau50 is the tau at which resistance prevalence is 50%
-cost_function = function(beta, u, tau50) {
-  k = 1.0
-  
-  1/2*(3*beta*k*tau50 - (3*k - 2)*tau50^2 - (k - 2)*u^2 + (beta*k - 4*(k - 1)*tau50)*u - 
-    sqrt(beta^2*k^2*tau50^2 + (k^2 - 4*k + 4)*tau50^4 + (k^2 - 4*k + 4)*u^4 - 2*(beta*k^2 -
-    2*beta*k)*tau50^3 - 2*(beta*k^2 - 2*beta*k + 8*(k - 1)*tau50)*u^3 + (beta^2*k^2 -
-    2*(k^2 + 12*k - 12)*tau50^2 + 2*(beta*k^2 + 6*beta*k)*tau50)*u^2 - 2*(beta^2*k^2*tau50 +
-    8*(k - 1)*tau50^3 - (beta*k^2 + 6*beta*k)*tau50^2)*u))/(beta*k*tau50 - k*tau50^2 - k*u^2 +
-    (beta*k - 2*k*tau50)*u)
-}
-
-whn_base_parms$cost = with(
-  whn_base_parms,
-  cost_function(beta, u, tau50)
-)
-
-whn_base_parms
-```
-
-#### Population model
-
-There are $n$ populations each of size $N_i$. Changes in population membership are slow compared to the transmission dynamics, so each $N_i$ remains fixed.
-
-In a first simulation, the populations are all transmission populations. A parameter $\epsilon \in [0, 1]$ controls the relative proportion of contacts within versus between the transmission populations. $\epsilon = 0$ means that all contacts are within a population; $\epsilon = 1$ means that contacts are equally likely within and across populations. Let $\beta'_{i \leftarrow j}$ be the the proportion of contacts for individuals in $i$ that are in $j$ so that $\beta_{i \leftarrow j} = \beta \beta'_{i \leftarrow j}$, where $\beta$ is a constant. We require that $\sum_j \beta'_{i \leftarrow j} = 1$.
-$$
-\begin{aligned}
-\beta'_{i \leftarrow i} &= 1 - \epsilon (1 - 1 / n) \\
-\beta'_{i \leftarrow j} &= \epsilon / n \qquad (i \neq j)
-\end{aligned}
-$$
-
-The model is now
-$$
-\begin{aligned}
-\dot{S}_i &= \sum_j \beta_{i \leftarrow j} \frac{S_j + D_j}{N_j} X_i - (u + \tau_i) S_i - (1-c) \sum_j \beta_{i \leftarrow j} \frac{R_j}{N_j} S_i \\
-\dot{R}_i &= (1-c) \sum_j \beta_{i \leftarrow j} \frac{R_j}{N_j} X_i - u R_i + \tau_i D_i \\
-\dot{D}_i &= (1-c) \sum_j \beta_{i \leftarrow j} \frac{R_j}{N_j} S_i - (u + \tau_i) D_i \\
-\dot{X}_i &= -(\dot{S}_i + \dot{R}_i + \dot{D}_i) \\
-N_i &= X_i + S_i + R_i + D_i
-\end{aligned}
-$$
-
-#### Nested model
-
-To simulated the effect of going to too small populations, we consider the situation where the analytical populations are nested within transmission populations.
-
-To make the nested analytical populations behave like a single transmission population, we have three rules:
-
-- Nested APs interact with one another according to their relative sizes.
-- Other TPs interact with APs according to their relative sizes.
-- Each AP interacts with other TPs the same way.
-
-In equations, this is:
-$$
-\beta_{i_\mu \leftarrow j_\nu} = \frac{N_{j_\nu}}{N_j} \beta_{i \leftarrow j}
-$$
-If one of the two populations has no subpopulation, then the fraction $N / N$ is just unity.
-
-This equations ensure that, as far as the transmission and clearance terms are concerned, the APs $i_\mu$ act like a single TP $i$. The one difference is that the treatment terms cannot be written with a "combined" use $\tau_i$ (except in the trivial case where $\tau_{i_\mu} = \tau_{i_\nu}$). So different compositions of S/R/D might result from separating the groups in this way.
-
-```{r}
+```{r patch_viz_helpers}
 #swo: these are actually useful functions
 ring_dist = function(i, j, n) pmin(abs(i - j), n - abs(i - j))
 
@@ -223,77 +126,43 @@ ggpubr::ggarrange(multipop_diagram, nested_diagram,
 dev.off()
 ```
 
-##### With different scales
+# Within-host neutral (WHN) model
 
-Say we have $n_\uparrow$ superpopulations with $n_\downarrow$ populations each. The superpopulations mix with constant $\epsilon_\uparrow$ and the populations mix with constant $\epsilon_\downarrow$ within each superpopulation:
-$$
-\beta_{{i_\mu} \leftarrow {j_\nu}} = \begin{cases}
-  \left[ 1 - \epsilon_\uparrow (1 - 1/n_\uparrow) \right] \times \left[ 1 - \epsilon_\downarrow (1 - 1/n_\downarrow) \right] & i = j, \mu = \nu \\
-  \left[ 1 - \epsilon_\uparrow (1 - 1/n_\uparrow) \right] \times (\epsilon_\downarrow / n_\downarrow) & i = j, \mu \neq \nu \\
-  (\epsilon_\uparrow / n_\uparrow) \times (1 / n_\downarrow) & i \neq j
-\end{cases}
-$$
-
-### D-types model
-
-#### Base model
-
-**swo figure out how D-types works with N**
-
-As a sensitivity analysis, I will repeat the analyses using the model presented by Lehtinen *et al*. (hereafter "D-types" model).
-
-In the D-types model, there are $n_D$ "duration"-types, each with clearance rate $\mu_d$. Each type $d$ has sensitive and resistant strains, so the compartments are uncolonized $X$, sensitive-colonized $S_d$, and $R_d$. The D-types are subject to balancing selection, encoded by
-$$
-v_d = \left( 1 - \left[ \frac{S_d + R_d}{\sum_{d=1}^{n_D} (S_d + R_d)} - \frac{1}{n_D} \right]\right)^k,
-$$
-where $k \geq 1$ is the force of that selection. Thus:
-$$
-\begin{aligned}
-\dot{S}_d &= v_d \beta S_d X - (\tau + \mu_d) S_d \\
-\dot{R}_d &= v_d \frac{\beta}{c_\beta} R_d X - c_\mu \mu_d R_d \\
-\end{aligned}
-$$
-where $\beta$ is the transmission coefficient, $\tau$ is the antibiotic treatment rate, $c_\beta \geq 1$ and $c_\mu \geq 1$ are the fitness costs of resistance.
-
-The proportion resistant is
-$$
-\rho = \frac{\sum_d R_d}{\sum_d \left( S_d + R_d \right)}.
-$$
-
-#### Populations model
-
-To extend this to multiple populations, we give each compartment an extra subscript $i$ and then need to be careful about the tranmission terms:
-$$
-\begin{aligned}
-\dot{S}_{i,d} &= v_{i,d} \sum_j \beta_{i \leftarrow j} \frac{S_{j, d}}{N_j} X_i - \left( \tau_i + \mu_d \right) S_{i,d} \\
-\dot{R}_{i,d} &= v_{i,d} \frac{1}{c_\beta} \sum_j \beta_{i \leftarrow j} \frac{R_{j, d}}{N_j} X_i - c_\mu \mu_d R_{i,d} \\
-\end{aligned}
-$$
-where the $\beta_{i \leftarrow j}$ follow the same rules as for the WHN model.
-
-#### Parameters
-
-The parameter values are drawn from the paper: $n = 16$, $\beta = 2$, $c_\beta = 1$, $c_\mu = 1.1$, $k = 15$, $\tau \in [0.04, 0.20]$, $\mu_x$ evenly spaced in $[0.5, 2]$. The original figure uses $\tau = 0.075$.
-
-```{r dtypes_parameters}
-# swo: some parms are lists, some are vectors. pick one?
-dtypes_base_parms = list(
-  n_d = 16,
-  min_mu = 0.5,
-  max_mu = 2.0,
-  beta = 2.0,
-  c_beta = 1.0,
-  c_mu = 1.1,
-  k = 15.0
+```{r whn_parameters}
+whn_base_parms = list(
+  beta = 4.0,
+  u = 1.0,
+  tau50 = 1.5 / 12
 )
 
-dtypes_base_parms$mu_d = with(dtypes_base_parms,
-                             seq(min_mu, max_mu, length = n_d))
+# swo: always using davies base parms, so just bake those into the cost function?
+# tau50 is the tau at which resistance prevalence is 50%
+cost_function = function(beta, u, tau50) {
+  k = 1.0
+  
+  1/2*(3*beta*k*tau50 - (3*k - 2)*tau50^2 - (k - 2)*u^2 + (beta*k - 4*(k - 1)*tau50)*u - 
+    sqrt(beta^2*k^2*tau50^2 + (k^2 - 4*k + 4)*tau50^4 + (k^2 - 4*k + 4)*u^4 - 2*(beta*k^2 -
+    2*beta*k)*tau50^3 - 2*(beta*k^2 - 2*beta*k + 8*(k - 1)*tau50)*u^3 + (beta^2*k^2 -
+    2*(k^2 + 12*k - 12)*tau50^2 + 2*(beta*k^2 + 6*beta*k)*tau50)*u^2 - 2*(beta^2*k^2*tau50 +
+    8*(k - 1)*tau50^3 - (beta*k^2 + 6*beta*k)*tau50^2)*u))/(beta*k*tau50 - k*tau50^2 - k*u^2 +
+    (beta*k - 2*k*tau50)*u)
+}
+
+whn_base_parms$cost = with(
+  whn_base_parms,
+  cost_function(beta, u, tau50)
+)
+
+whn_base_parms %>%
+  as_tibble() %>%
+  kable(caption = 'WHN model parameters')
 ```
 
-# Results
+## WHN single-population model
 
-## WHN transmission populations
+**swo** reproduce the original Davies figure here
+
+## WHN multi-population model
 
 ```{r whn_sim}
 # vector to data frame
@@ -371,8 +240,6 @@ whn1 = crossing(
          results = map2(taui, epsilon, whn_sim))
 ```
 
-We are in one of the universes defined by $\epsilon$ and $n$. We don't know which one we're in.
-
 ```{r whn_slopes}
 whn_multipop_plot = whn1 %>%
   unnest() %>%
@@ -387,28 +254,16 @@ ggsave('fig/whn_multipop.png', plot = whn_multipop_plot)
 
 whn1 %>%
   mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
-         slope = map_dbl(linear_model, ~ coef(.)['tau']),
-         cil = map_dbl(linear_model, ~ confint(.)['tau', 1]),
-         ciu = map_dbl(linear_model, ~ confint(.)['tau', 2])) %>%
-  ggplot(aes(factor(epsilon), slope, ymin = cil, ymax = ciu)) +
-  facet_wrap(~ n_pop) +
-  geom_pointrange()
-
-whn1 %>%
-  mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
-         slope = map_dbl(linear_model, ~ coef(.)['tau']),
-         cil = map_dbl(linear_model, ~ confint(.)['tau', 1]),
-         ciu = map_dbl(linear_model, ~ confint(.)['tau', 2])) %>%
-  mutate_at(vars(slope, cil, ciu), ~ round(. * 100)) %>%
-  mutate(slope_range = sprintf('%.1i (%.1i to %.1i)', slope, cil, ciu)) %>%
-  select(n_pop, epsilon, slope_range) %>%
-  spread(n_pop, slope_range) %>%
-  kable()
+         slope = map_dbl(linear_model, ~ coef(.)['tau'])) %>%
+  mutate_at('slope', ~ round(. * 100)) %>%
+  select(n_pop, epsilon, slope) %>%
+  spread(n_pop, slope) %>%
+  kable(caption = 'Slopes measured in WHN multi-population model')
 ```
 
 ## WHN nested populations
 
-```{r whn_nest_results}
+```{r whn_nest_sim}
 whn_nest_sim = function(taui, eps_super, eps_sub) {
   n_pop = length(taui)
   pop_per = sqrt(n_pop)
@@ -460,7 +315,9 @@ whn_nest_sim = function(taui, eps_super, eps_sub) {
            tau = taui,
            rho = R / (S + R + D))
 }
+```
 
+```{r whn_nest_results}
 taui = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
 
 nest_results = crossing(
@@ -469,7 +326,9 @@ nest_results = crossing(
 ) %>%
   filter(eps_super <= eps_sub) %>%
   mutate(data = map2(eps_super, eps_sub, ~ whn_nest_sim(taui, .x, .y)))
+```
 
+```{r whn_nest_display}
 whn_nest_plot = nest_results %>%
   unnest() %>%
   ggplot(aes(tau, rho, color = factor(superpop))) +
@@ -482,12 +341,23 @@ whn_nest_plot = nest_results %>%
   ylim(0 - 0.01, 1.01) +
   theme_classic()
 
+whn_nest_plot
+
 ggsave('fig/whn_nest.png', plot = whn_nest_plot)
+```
+
+```{r nested_model_uses}
+data_frame(
+  population = 1:16,
+  superpopulation = rep(1:4, each = 4),
+  tau = round(taui, 3)
+) %>%
+  kable(caption = 'Antibiotic use rates in nested models')
 ```
 
 How do the within-population slopes compare to the cross-population slopes?
 
-```{r}
+```{r nested_model_slopes}
 nest_results %>%
   unnest() %>%
   nest(-eps_super, -eps_sub, -superpop) %>%
@@ -498,63 +368,55 @@ nest_results %>%
   nest(-eps_super, -eps_sub) %>%
   mutate(super_model = map(data, ~ lm(super_rho ~ super_tau, data = .)),
          super_slope = map_dbl(super_model, ~ coef(.)['super_tau']),
-         mean_sub_slope = map_dbl(data, ~ mean(.$sub_slope)),
-         slope_ratio = super_slope / mean_sub_slope) %>%
-  select(eps_super, eps_sub, super_slope, mean_sub_slope, slope_ratio) %>%
-  mutate_if(is.numeric, ~ round(., 2)) %T>%
-  write_csv('results/whn_nest_results.csv') %>%
-  kable()
+         median_sub_slope = map_dbl(data, ~ median(.$sub_slope)),
+         slope_ratio = super_slope / median_sub_slope) %>%
+  select(eps_super, eps_sub, super_slope, median_sub_slope, slope_ratio) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %>%
+  # organize as per ms table
+  gather('metric', 'value', super_slope, median_sub_slope, slope_ratio) %>%
+  mutate(metric = factor(metric, levels = c('super_slope', 'median_sub_slope', 'slope_ratio'))) %>%
+  spread(eps_sub, value) %>%
+  arrange(metric, eps_super) %>%
+  select(-metric) %>%
+  kable(caption = 'Slopes and ratios in the nested WHN model') %>%
+  group_rows('Super slope', 1, 4) %>%
+  group_rows('Median sub slope', 5, 8) %>%
+  group_rows('Ratio', 9, 12)
 ```
 
-The case where $\epsilon_\downarrow \gg 0$ means that there are effectively no subpopulations; each superpopulation is just one thing. In this sense, our analytical units are smaller than the relevant biology. The badness here is that we inflate the number of assertedly-independent observations, which means we have a greater chance of a Type I error. This seems like a small cost.
+# D-types model
 
-It also seems like aggregating slightly increases the point estimate.
+```{r dtypes_parameters}
+dtypes_base_parms = list(
+  n_d = 16,
+  min_mu = 0.5,
+  max_mu = 2.0,
+  beta = 2.0,
+  c_beta = 1.0,
+  c_mu = 1.1,
+  k = 15.0
+)
 
-```{r steps}
-steps = nest_results %>%
-  unnest() %>%
-  filter(eps_super == 0.0, eps_sub == 0.5)
+dtypes_base_parms %>%
+  as_tibble() %>%
+  kable(caption = 'D-types base parameters')
 
-steps_aggregated = steps %>%
-  group_by(superpop) %>%
-  summarize_at(vars(tau, rho), mean)
+dtypes_base_parms$mu_d = with(dtypes_base_parms,
+                             seq(min_mu, max_mu, length = n_d))
 
-geom_lm = partial(geom_smooth, method = 'lm', se = FALSE)
-
-ggplot(NULL, aes(tau, rho)) +
-  geom_lm(data = steps, color = 'red') +
-  geom_point(data = steps, aes(color = factor(superpop))) +
-  geom_lm(data = steps_aggregated, color = 'black') +
-  geom_point(data = steps_aggregated, size = 3) +
-  guides(color = FALSE) +
-  theme_classic() +
-  xlab('courses per month') +
-  ylab('proportion resistant') +
-  ylim(0, 1)
-
-nest_results %>%
-  mutate(model = map(data, ~ lm(rho ~ tau, data = .)),
-         slope = map_dbl(model, ~ coef(.)['tau']),
-         slope_ciu = map_dbl(model, ~ confint(.)['tau', 1]),
-         slope_cil = map_dbl(model, ~ confint(.)['tau', 2])) %>%
-  ggplot(aes(factor(eps_super), slope, color = factor(eps_sub))) +
-  geom_point() +
-  geom_errorbar(aes(ymin = slope_cil, ymax = slope_ciu))
+dtypes_base_parms %$%
+  data_frame(
+    d = 1:n_d,
+    mu_d = mu_d
+  ) %>%
+  kable(caption = 'D-types mu_d values')
 ```
 
-Going to larger scales, meaning aggregating, has the effect of shrinking the $x$ and $y$ axes, which has the cost of increasing the variance in the measurement. This is also a statistically bad thing.
+## Single-population model
 
-Say that there are $n_0$ points, and we think we aggregate them into $n$ points (i.e., $n_0 / n$ subpops per superpop). This decreases the variance in the residuals (from $\sigma_{\epsilon,0}^2$ to $\sigma_{\epsilon,0}^2 / (n_0 / n)$) but decreases the number of points and the variance in $x$:
-$$
-\begin{aligned}
-\mathrm{Var}[\hat{\beta}_1] &= \frac{\sigma_\epsilon^2}{n \sigma_x^2} \\
-  &= \frac{\sigma_{\epsilon,0}^2 / (n_0 / n)}{n \sigma_x^2} \\
-  &= \frac{\sigma_{\epsilon,0}^2}{n_0 \sigma_x^2}.
-\end{aligned}
-$$
-This is just like the estimator for the non-aggregated estimator except that it has the aggregate variance $\sigma_x^2$ rather than the original $\sigma_{x,0}^2$. So the variance in $\beta_1$ will grow like $\sigma_{x,0}^2 / \sigma_x^2$.
+The original figure uses $\tau = 0.075$.
 
-## D-types
+**swo** make this figure
 
 ```{r dtype_helpers}
 # pack the list into a vector
@@ -687,6 +549,8 @@ dtypes_sim = function(tau_i, epsilon = 0) {
 }
 ```
 
+## D-types multi-population
+
 ```{r dtypes_results}
 dtype1 = crossing(
   n_pop = c(4, 8, 16),
@@ -800,141 +664,4 @@ dtypes_nest_results %>%
   theme_classic()
 ```
 
-## Empirical
-
-# Discussion
-
-As expected the slopes are shallower within islands, but they are a *lot* shallower.
-
-This is especially stark in the D-types model. In that model, coexistence comes from the fact that there are a range of clearance rates $\mu_x$. Some of these rates support sensitives and some support resistants. Whether an individual personally use more or less antibiotics doesn't flip the entire population of D-types. It appears that the individual-level variations in use only weakly modulate the force of infection an individual feels from the rest of the population.
-
-In the within-host model, the within-island slopes are not so immensely shallow, but they are markedly more shallow than the cross-island relationship. The results of the two within-island simulations (fixed-population and time-since-treatment) give nearly identical results.
-
-These results suggest that the best way to change your risk of antibiotic resistance is to change your environment, not your antibiotic use. I always thought that the worst thing about going to the hospital isn't that you're likely to use more antibiotics; it's that you're exposed to way more resistant bugs.
-
-The fact that the within-island slopes are really shallow implies that, if an analysis did go below the relevant length scale, you'd expect a quick drop-off in the slopes.
-
-This toy moel is limited because there's only one length scale. In reality there aren't completely-separated, well-mixed islands; instead there's a network of length scales. I expect that having multiple length scales would soften this weaking of slopes with shorter length scales so that you don't see a sudden cliff.
-
-# Appendix
-
-## WHN time since treatment
-
-### Model
-
-Another way to model this within-island difference is to consider the time between individuals' treatments. This requires modifying the equations so that individuals can transfer between compartments at a single timestep (via colonization or recovery) or can move between time since treatment (via treatment or by "aging out"). I modify the within-host model to show this:
-$$
-\begin{aligned}
-\dot{S}_t &= \beta (S_\bullet + P_\bullet) X_t - (u + \tau) S_t - k \beta (1-c) R_\bullet S_t - \mathbf{1}_{t \neq T} \alpha S_t + \mathbf{1}_{t \neq 1} \alpha S_{t-1} \\
-\dot{R}_t &= \beta (1-c) R_\bullet X_t - (u + \tau) R_t + \mathbf{1}_{t=1} \tau (R_\bullet + D_\bullet) - \mathbf{1}_{t \neq T} \alpha R_t + \mathbf{1}_{t \neq 1} \alpha R_{t-1} \\
-\dot{D}_t &= k \beta (1-c) R_\bullet S_t - (u + \tau) D_t - \mathbf{1}_{t \neq T} \alpha D_t + \mathbf{1}_{t \neq 1} \alpha D_{t-1} \\
-\dot{X}_t &= -\beta (S_\bullet + D_\bullet) X_t - \beta (1-c) R_\bullet X_t + u (S_t + R_t + D_t) - \tau X_t + \\
-  &\qquad \mathbf{1}_{t=1} \tau (S_\bullet + X_\bullet) - \mathbf{1}_{t \neq T} \alpha X_t + \mathbf{1}_{t \neq 1} \alpha X_{t-1}
-\end{aligned}
-$$
-where the subscript $t$ indicates time since treatment ($t=1$ means 0 to 1 month since treatment, $t=2$ means 1-2 months, etc.), $T$ is the number of time brackets recorded, the bullet indicates summation ($S_\bullet = \sum_t S_t$), $\mathbf{1}$ is the indicator function, and $1/\alpha = 1 \text{ month}$ is the duration of the time bracket. Note that treatment moves individuals out of the $X_t$ and $R_t$ compartments not because they change colonization status but because they move individuals back to $X_1$ and $R_1$.
-
-I set $T = 72$ (i.e., recording up to 6 years since treatment). These equations are also solved numerically, setting all initial populations into the "just treated" compartments $t=1$.
-
-The resistance propotion $\rho_t = R_t / (S_t + R_t + D_t)$ depends on the time bracket. Individuals in bracket $t$, who were treated at most $t/\alpha$ ago, have "average use" $\alpha/t$.
-
-### Results
-
-```{r davies_time_sim, eval = FALSE}
-drop_last = function(x) x[-length(x)]
-
-davies_time_sim = function(tau, k = 1.0, tau50 = 1.5 / 12, alpha = 1.0, nT = 72) {
-  # nT = number of time intervals
-  parms = with(davies_base_parms,
-             c(davies_base_parms, tau=tau,
-               alpha = alpha, nT = nT,
-               k = k, cost = cost_function(beta, u, k, tau50)))
-
-  # state is a matrix:
-  # rows are X, S, R, D (=S_R); columns are time brackets
-  # set all compartments to 0 except for the "just-treated" bracket
-  state = matrix(0, nrow = 4, ncol = parms$nT)
-  state[,1] = c(0.998, 0.001, 0.001, 0.0)
-  state_c = as.vector(state)
-  stopifnot(sum(state_c) == 1.0)
-  
-ode_func = function(t, state_c, parms) {
-    with(parms, {
-      # unpack the state
-      state = matrix(state_c, nrow = 4)
-      stopifnot(ncol(state) == nT)
-      X = state[1, ]
-      S = state[2, ]
-      R = state[3, ]
-      D = state[4, ]
-      
-      Xo = sum(X)
-      So = sum(S)
-      Ro = sum(R)
-      Do = sum(D)
-      
-      dX = -beta * (So + Do) * X - beta*(1-cost) * Ro * X + u * (S + R + D) - tau * X + c(tau * (So + Xo), rep(0, nT - 1)) - c(alpha * drop_last(X), 0) + c(0, alpha * drop_last(X))
-      dS = beta * (So + Do) * X - (u + tau) * S - k * beta * (1-cost) * Ro * S - c(alpha * drop_last(S), 0) + c(0, alpha * drop_last(S))
-      dR = beta*(1-cost) * Ro * X - (u + tau) * R + c(tau * (Ro + Do), rep(0, nT - 1)) - c(alpha * drop_last(R), 0) + c(0, alpha * drop_last(R))
-      dD = k * beta*(1-cost) * Ro * S - (u + tau) * D - c(alpha * drop_last(D), 0) + c(0, alpha * drop_last(D))
-      
-      dstate = rbind(dX, dS, dR, dD)
-      dstate_c = as.vector(dstate)
-      stopifnot(abs(sum(dstate_c)) < 1e-6)
-      list(dstate_c)
-    })
-  }
-
-  result = rootSolve::runsteady(state_c, func = ode_func, parms = parms)
-  end_state = result$y %>% matrix(nrow=4)
-  
-  time = 1:parms$nT
-  bind_rows(
-    data_frame(compartment = 'X', time, y = end_state[1,]),
-    data_frame(compartment = 'S', time, y = end_state[2,]),
-    data_frame(compartment = 'R', time, y = end_state[3,]),
-    data_frame(compartment = 'D', time, y = end_state[4,])
-  )
-}
-
-davies_time = crossing(tau = round(c(1.25, 1.5, 1.75) / 12, 3)) %>%
-  mutate(model = map(tau, davies_time_sim)) %>%
-  unnest() %>%
-  rename(big_tau = tau) %>%
-  spread(compartment, y) %>%
-  mutate(tau = 1 / time,
-         rho = R / (S + R + D))
-```
-
-```{r davies_time_plot, eval = FALSE}
-davies_time %>%
-  ggplot(aes(tau, rho)) +
-  geom_line(data = davies_cross) +
-  geom_point(aes(color = factor(big_tau)), shape = 2) +
-  geom_line(aes(color = factor(big_tau)), linetype = 2)
-```
-
-For the time simulation, I verify that there are enough time compartments so that they long-time-since-treatment compartments are nearly empty. The columns are the $\tau$.
-
-```{r confirm_time_comparments, eval = FALSE}
-davies_time %>%
-  gather('compartment', 'value', D:X) %>%
-  ggplot(aes(time, value, color = compartment)) +
-  geom_line() +
-  facet_grid(~ big_tau) +
-  xlab('Time since treatment (months)') +
-  ylab('Proportion')
-```
-
-I compare the cross-island, within-island fixed-population, and within-island recorded-time simulations by plotting all the results on the same plot. The black lines show the cross-island results (i.e., the results from Davies *et al*. Figure 2e, above). The circles show results from the within-island fixed-population simulation. The colored lines show the within-island recorded-time simulation. The color of the circles and lines shows the island-level average $\tau$ used in the simulations. (You can read off those values by looking at where the colored lines intercept the black lines: when the island-level $\tau$ and within-island use are the same, you get the same results.) Panels show values of co-colonization efficiency $k$.
-
-```{r davies_time_comp, eval = FALSE}
-davies_time_comp = davies_time %>% filter(tau < 0.3)
-
-ggplot(data = NULL, aes(tau, rho)) +
-  geom_line(data = filter(davies_cross, k == 1.0)) +
-  geom_point(data = davies_small, aes(color = factor(big_tau)), shape = 1) +
-  geom_line(data = davies_small, aes(color = factor(big_tau))) +
-  geom_point(data = davies_time_comp, aes(color = factor(big_tau)), shape = 2) +
-  geom_line(data = davies_time_comp, aes(color = factor(big_tau)), linetype = 2)
-```
+**swo** create a table of these results analogous to the one for WHN
