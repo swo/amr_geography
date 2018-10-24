@@ -381,6 +381,8 @@ whn_multipop_plot = whn1 %>%
   geom_point() +
   geom_line()
 
+whn_multipop_plot
+
 ggsave('fig/whn_multipop.png', plot = whn_multipop_plot)
 
 whn1 %>%
@@ -391,6 +393,17 @@ whn1 %>%
   ggplot(aes(factor(epsilon), slope, ymin = cil, ymax = ciu)) +
   facet_wrap(~ n_pop) +
   geom_pointrange()
+
+whn1 %>%
+  mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
+         slope = map_dbl(linear_model, ~ coef(.)['tau']),
+         cil = map_dbl(linear_model, ~ confint(.)['tau', 1]),
+         ciu = map_dbl(linear_model, ~ confint(.)['tau', 2])) %>%
+  mutate_at(vars(slope, cil, ciu), ~ round(. * 100)) %>%
+  mutate(slope_range = sprintf('%.1i (%.1i to %.1i)', slope, cil, ciu)) %>%
+  select(n_pop, epsilon, slope_range) %>%
+  spread(n_pop, slope_range) %>%
+  kable()
 ```
 
 ## WHN nested populations
