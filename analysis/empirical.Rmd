@@ -17,43 +17,11 @@ map = purrr::map
 library(boot)
 ```
 
-# To do
-
-- Cf. what I saw in geography. The critical question is whether there are stronger relationships *across* compared to *within* the zones. If so, then we might go up in length scale. If they are the same, no evidence against going down.
-- If we take $n_1$ points from $N(0, \sigma^2_1)$ and $n_2$ from $N(0, \sigma^2_2)$, how do we evaluate if $\sigma^2_1 = \sigma^2_2$? Brown-Forsythe test
-- Cite that guy for European centers?
-- Include refs re: azithromycin
-
-# Take-aways
-
-## Simulation
-
-- Moving to too small a length scale will really hurt the observed relationship
-- Bigger length scales should give you worse power (because of decreased $n$) but no change in consistency.
-
-## Empirical
-- When you have more ways to choose how to aggregate the data, you can get many different results.
-    - It's not obvious if there's one "correct" choice for how to aggregate.
-    - It's not easy to look by eye and say, "this aggregation scheme will lead to a big/small use/res."
-    - The canonical groupings are not obviously in the middle of the pack.
-- Metrics were stable across many values of $k$.
-    - Or, conversely, you could focus on how much they changed.
-    - But I think it's pretty remarkable that you see similar relationships, on average, no matter how you aggregate.
-- There's no general trend in higher vs. lower slopes depending on the size of the aggregates.
-    - For Marketscan, bigger aggregates tend to have stronger median relationships (albeit with more variance).
-    - For Europe, really big aggregates perform worse, suggesting that there are some cross-region differences in the use/resistance relationship.
-- It's anecdotal, but for Marketscan, no clear data that the slope drops off when going from state to HRR.
-
-## Synthesized
-
-- Azithromycin trials suggest that you can go to really small length scales (sub-kebele).
-- UK stuff suggests that you can go from CCG to practice level and still not have a problem.
-- Our data suggests that going to larger scales isn't problematic, and that going to smaller scales is mostly limited by data collection.
-- So, in conclusion, it seems like you should go as low as you can, and not worry too much.
-
 # Methods
 
 ## US/Europe conversions
+
+**swo** Un-convert these results, since there's no need to get everything on the same scale.
 
 Most of the US studies and data are measured in prescriptions (or claims) per 1,000 people per year (PIY); the European studies are usually in DID (DDD per 1,000 people per year). Converting between the two requires asserting how many DDD are in one prescription.
 
@@ -86,20 +54,6 @@ ro_bugdrugs = data_frame(
 
 ro_state = read_tsv('../data/ms-medicare-ro/abg_state.tsv')
 ro_hrr = read_tsv('../data/ms-medicare-ro/abg_hrr.tsv')
-
-medicare_state_use = read_tsv('../data/ms-medicare-ro/ineq_medicare_state.tsv')
-medicare_hrr_use = read_tsv('../data/ms-medicare-ro/ineq_medicare_hrr.tsv')
-
-medicare = bind_rows(
-  inner_join(medicare_state_use, ro_state, by = c('drug_group', 'state')) %>%
-    mutate(level = 'state', unit = state),
-  inner_join(medicare_hrr_use, ro_hrr, by = c('drug_group', 'hrr')) %>%
-    mutate(level = 'hrr', unit = as.character(hrr))
-) %>%
-  inner_join(ro_bugdrugs, by = c('bug', 'drug_group')) %>%
-  mutate(pct_res = 100 * f_ns,
-         did = us_europe_convert(drug_group, total_use * 1000)) %>%
-  select(level, bug, drug = drug_group, unit, did, pct_res)
 ```
 
 ### MarketScan
@@ -175,52 +129,7 @@ nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
 
 # Results
 
-## Medicare & ResistanceOpen
-
-This is a nice chance to ask if going to a smaller scale gives you different regression coefficients. I compare the slopes of the use/resistance relationship when using HRRs and states.
-
-To the eye, it looks like the state and HRR points lie on similar lines:
-
-```{r medicare_levels_plot}
-medicare %>%
-  ggplot(aes(did, pct_res, color = level)) +
-  facet_wrap(~ bug + drug, scales = 'free_x') +
-  geom_point() +
-  geom_smooth(method = 'lm')
-```
-
-Looking at just the regression results emphasizes that:
-
-```{r}
-medicare %>%
-  nest(unit, did, pct_res) %>%
-  mutate(model = map(data, ~ lm(pct_res ~ did, data = .)),
-         slope = map_dbl(model, ~ coef(.)['did']),
-         conf.low = map_dbl(model, ~ confint(.)['did', 1]),
-         conf.high = map_dbl(model, ~ confint(.)['did', 2])) %>%
-  ggplot(aes(level, slope, ymin = conf.low, ymax = conf.high)) +
-  facet_wrap(~ bug + drug) +
-  geom_point() +
-  geom_errorbar()
-```
-
-And I could do something more sophisticated, by running a model $\rho ~ \tau + \tau \times L$, where $L$ is a dummy variable encoding whether the level of the analysis is state or HRR. All those interaction terms are not statistically significant.
-
-```{r}
-medicare %>%
-  mutate(level = as.integer(level == 'hrr')) %>%
-  nest(level, unit, did, pct_res) %>%
-  mutate(model = map(data, ~ lm(pct_res ~ did * level, data = .)),
-         interaction_pval = map_dbl(model, ~ summary(.)$coefficients['did:level', 'Pr(>|t|)'])) %>%
-  select(bug, drug, interaction_pval) %>%
-  kable()
-```
-
-## MAUP
-
-How do the use/resistance relationships change depending on geographical groupings? To answer this, I create many random aggregates, zonally coherent or not, and compare those to the canonical groupings (state, division, region).
-
-### MarketScan
+## MarketScan
 
 ```{r marketscan_maup_setup}
 # group n items into k groups, with at least n_min items in each group
@@ -391,23 +300,57 @@ marketscan_maup = maup_sim(
   canonical_rows = marketscan_canonical,
   maup_data = marketscan_maup_data,
   fn = 'results/marketscan_maup.rds',
-  force_run = TRUE
+  force_run = FALSE
 )
 ```
 
+### Canonical groupings
+
+```{r marketscan_canonical}
+marketscan_canonical_data = marketscan_maup %>%
+  filter(group_type == 'canonical') %>%
+  mutate(level = case_when(
+    .$k == 4 ~ 'region',
+    .$k == 9 ~ 'division',
+    TRUE ~ 'state'
+  )) %>%
+  select(bugdrug, level, group_data) %>%
+  unnest()
+  
+marketscan_canonical_data %>%
+  ggplot(aes(did, pct_res, color = level)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_smooth(aes(fill = level), method = 'lm', alpha = 0.1) +
+  geom_point()
+
+marketscan_canonical_data %>%
+  nest(-bugdrug) %>%
+  mutate(
+    base_model = map(data, ~ lm(pct_res ~ did, data = .)),
+    base_slope = map_dbl(base_model, ~ coef(.)['did']),
+    base_slope_cil = map_dbl(base_model, ~ confint(.)['did', 1]),
+    base_slope_ciu = map_dbl(base_model, ~ confint(.)['did', 2]),
+    level_model = map(data, ~ lm(pct_res ~ did + did:level, data = .)),
+    lr = map2(base_model, level_model, lmtest::lrtest),
+    lr_p_value = map_dbl(lr, ~ .$`Pr(>Chisq)`[2])
+  ) %>%
+  select(bugdrug, base_slope, base_slope_cil, base_slope_ciu, lr_p_value) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %>%
+  kable(caption = 'Likelihood ratio test, comparing R ~ U and R ~ U + U:level')
+```
+
+### MAUP
+
+**swo** figure out how to truncate this better
+
 ```{r marketscan_maup_plot}
 marketscan_maup %>%
-  ggplot(aes(factor(k), super_slope, color = group_type)) +
-  facet_wrap(~ bugdrug, scales = 'free') +
+  select(bugdrug, k, group_type, super_slope, slope_ratio) %>%
+  gather('key', 'value', super_slope, slope_ratio) %>%
+  filter(abs(value) < 1000) %>%
+  ggplot(aes(factor(k), value, color = group_type)) +
+  facet_grid(key ~ bugdrug, scales = 'free') +
   geom_boxplot()
-
-marketscan_maup %>%
-  filter(is.finite(slope_ratio)) %>%
-  ggplot(aes(factor(k), slope_ratio, color = group_type)) +
-  facet_wrap(~ bugdrug, scales = 'free_x') +
-  geom_hline(yintercept = 1) +
-  geom_boxplot() +
-  ylim(-10, 10)
 
 marketscan_maup %>%
   filter(group_type != 'canonical') %>%
@@ -415,7 +358,7 @@ marketscan_maup %>%
   nest(-bugdrug, -group_type, -k) %>%
   mutate(greater_p = map_dbl(data, ~ wilcox.test(.$y, alternative = 'greater')$p.value)) %>%
   select(-data) %>%
-  kable()
+  kable(caption = 'Is the slope ratio greater than 1?')
 ```
 
 ```{r marketscan_maup_vals}
@@ -448,71 +391,7 @@ marketscan_maup %>%
   kable()
 ```
 
-So *maybe* the across slopes are ~2x greater than the within slopes, but only for certain cases.
-
-What are the configurations that lead to the extremal slopes?
-
-```{r extremal_slopes}
-extremum = function(x) {
-  case_when(
-    x == max(x) ~ 'max',
-    x == min(x) ~ 'min',
-    TRUE ~ NA_character_
-  )
-}
-
-marketscan_maup_ext = marketscan_maup %>%
-  group_by(bugdrug, k, group_type) %>%
-  mutate(extremum = extremum(super_slope)) %>%
-  filter(!is.na(extremum)) %>%
-  ungroup() %>%
-  mutate(unit = map(bugdrug, ~ marketscan_maup_data[[.]]$data$unit))
-
-marketscan_maup_ext %>%
-  filter(group_type != 'canonical') %>%
-  select(bugdrug, k, group_type, group_data, extremum) %>%
-  unnest() %>%
-  ggplot(aes(did, pct_res, color = extremum)) +
-  facet_grid(k ~ bugdrug + group_type, scales = 'free') +
-  geom_hline(yintercept = 0.0, color = 'gray') +
-  geom_point() +
-  geom_smooth(method = 'lm') +
-  theme_classic()
-```
-
-```{r extremal_maps}
-hex_map = read_tsv('~/grad/db/us_hex.tsv') %>%
-  rename(unit = state)
-
-marketscan_maup_ext %>%
-  filter(k == 4) %>%
-  select(bugdrug, unit, group, group_type, extremum) %>%
-  unnest() %>%
-  left_join(hex_map, by = 'unit') %>%
-  ggplot(aes(x, y)) +
-  facet_grid(bugdrug ~ group_type + extremum) +
-  geom_polygon(aes(group = unit, fill = factor(group))) +
-  geom_polygon(data = hex_map, aes(group = unit), color = 'black', fill = NA) +
-  scale_fill_brewer(palette = 'Accent') +
-  theme_void() +
-  theme(legend.position = 'none') +
-  ggtitle('k = 4')
-
-marketscan_maup_ext %>%
-  filter(k == 9) %>%
-  select(bugdrug, unit, group, group_type, extremum) %>%
-  unnest() %>%
-  left_join(hex_map, by = 'unit') %>%
-  ggplot(aes(x, y)) +
-  facet_grid(bugdrug ~ group_type + extremum) +
-  geom_polygon(aes(group = unit, fill = factor(group))) +
-  geom_polygon(data = hex_map, aes(group = unit), color = 'black', fill = NA) +
-  theme_void() +
-  theme(legend.position = 'none') +
-  ggtitle('k = 9')
-```
-
-### IMS/NHSN CAUTIs
+## IMS/NHSN CAUTIs
 
 ```{r nhsn}
 nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
@@ -551,9 +430,31 @@ nhsn_maup = maup_sim(
   canonical_rows = nhsn_canonical,
   maup_data = nhsn_maup_data,
   fn = 'results/nhsn_maup.rds',
-  force_run = TRUE
+  force_run = FALSE
 )
 ```
+
+### Canonical groupings
+
+```{r nhsn_canonical}
+nhsn_maup %>%
+  filter(group_type == 'canonical') %>%
+  mutate(level = case_when(
+    .$k == 4 ~ 'region',
+    .$k == 9 ~ 'division',
+    TRUE ~ 'state'
+  )) %>%
+  select(bugdrug, level, group_data) %>%
+  unnest() %>%
+  ggplot(aes(did, pct_res, color = level)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_smooth(aes(fill = level), method = 'lm', alpha = 0.1) +
+  geom_point()
+```
+
+### MAUP
+
+**swo** refactor this in the same style as marketscan. also combine it with Europe at the same time?
 
 ```{r nhsn_maup_plot}
 nhsn_maup %>%
@@ -600,7 +501,7 @@ nhsn_maup %>%
   kable()
 ```
 
-### Europe
+## Europe
 
 ```{r europe_data}
 europe = read_tsv('../data/ecdc/data.tsv') %>%
@@ -643,9 +544,29 @@ europe_maup = maup_sim(
   canonical_rows = europe_canonical,
   maup_data = europe_maup_data,
   fn = 'results/europe_maup.rds',
-  force_run = TRUE
+  force_run = FALSE
 )
 ```
+
+### Canonical
+
+```{r europe_canonical}
+europe_maup %>%
+  filter(group_type == 'canonical') %>%
+  mutate(level = case_when(
+    .$k == 4 ~ 'region',
+    .$k == 9 ~ 'division',
+    TRUE ~ 'state'
+  )) %>%
+  select(bugdrug, level, group_data) %>%
+  unnest() %>%
+  ggplot(aes(did, pct_res, color = level)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_smooth(aes(fill = level), method = 'lm', alpha = 0.1) +
+  geom_point()
+```
+
+### MAUP
 
 ```{r europe_maup_plot}
 europe_maup %>%
