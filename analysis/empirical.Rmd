@@ -421,9 +421,16 @@ bs_p = function(df1, group, n_iterations = 100) {
 
 data_frame(bugdrug = names(marketscan_maup_data)) %>%
   mutate(state_d = map(bugdrug, ~ adhoc(marketscan_maup_data[[.]]$data)),
-         region_p = map_dbl(state_d, ~ bs_p(., region, n_iterations = 100))) %>%
+         region_p = map_dbl(state_d, ~ bs_p(., region)),
+         division_p = map_dbl(state_d, ~ bs_p(., division))) %>%
   select(-state_d) %>%
   kable(caption = 'MarketScan empirical p for different slopes')
+
+data_frame(state_d = list(adhoc(nhsn_maup_data$`Ec/q`$data))) %>%
+  mutate(region_p = map_dbl(state_d, ~ bs_p(., region)),
+         division_p = map_dbl(state_d, ~ bs_p(., division))) %>%
+  select(-state_d) %>%
+  kable(caption = 'NHSN')
 ```
 
 ### MAUP
@@ -600,9 +607,7 @@ europe = read_tsv('../data/ecdc/data.tsv') %>%
   rename(unit = country) %>%
   left_join(select(europe_units, unit, population), by = 'unit') %>%
   select(unit, bugdrug, did, n_resistant = n_ns, n_isolates, population)
-```
 
-```{r europe_maup_compute}
 europe_names = unique(europe$unit)
 
 europe_maup_data = europe %>%
