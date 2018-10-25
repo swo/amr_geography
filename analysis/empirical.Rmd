@@ -324,8 +324,20 @@ marketscan_canonical_data %>%
   geom_point()
 
 marketscan_canonical_data %>%
+  nest(-bugdrug, -level) %>%
+  mutate(sd_x = map_dbl(data, ~ sd(.$did)),
+         model = map(data, ~ lm(pct_res ~ did, data = .)),
+         std_m = map_dbl(model, ~ coef(summary(.))['did', 'Std. Error'])) %>%
+  select(bugdrug, level, sd_x, std_m) %>%
+  group_by(bugdrug) %>%
+  mutate(sd_x_ratio = 1 / (sd_x / tail(sd_x, 1)),
+         std_m_ratio = std_m / tail(std_m, 1)) %>%
+  kable(caption = 'Variances of x-values and stderr of slope')
+
+marketscan_canonical_data %>%
   nest(-bugdrug) %>%
   mutate(
+    var_x = map_dbl(data, ~ var(.$did)),
     base_model = map(data, ~ lm(pct_res ~ did, data = .)),
     base_slope = map_dbl(base_model, ~ coef(.)['did']),
     base_slope_cil = map_dbl(base_model, ~ confint(.)['did', 1]),
@@ -337,6 +349,81 @@ marketscan_canonical_data %>%
   select(bugdrug, base_slope, base_slope_cil, base_slope_ciu, lr_p_value) %>%
   mutate_if(is.numeric, ~ round(., 2)) %>%
   kable(caption = 'Likelihood ratio test, comparing R ~ U and R ~ U + U:level')
+```
+
+**swo** clean up
+
+There are some observed resistance values $y_i$ and uses $x_i$ in each state $i$. A linear fit $y_i \sim x_i$ gives the slope $m_1$. A linear fit on the aggregated data gives $m_2$. The null hypothesis is that $m_1 = m_2$, so the test statistic is $m_1 - m_2$. Is the observed value for that statistic consistent with the null hypothesis?
+
+Define $m = \tfrac{1}{2}(m_1 + m_2)$ as an *ad hoc* guess for that underlying parameter, which defines the errors $\varepsilon_i = y_i - m x_i$. The sample population is defined by the distribution of the $\varepsilon_i$. To sample from the population, in each iteration, draw a bootstrap sample $\varepsilon^\star$ from the $\varepsilon$ to compute $y_i^\star = m x_i + \varepsilon_i^\star$. A regression $y_i^\star \sim x_i$ produces a slope $m_1^\star$, which is not necessarily equal to $m$. The regression on the aggregate data produces $m_2^\star$, and thus the sampled test statistic $m_1^\star - m_2^\star$.
+
+```{r}
+state_groups = select(state_data, unit, region, division)
+
+adhoc = function(df) {
+  df %>%
+    left_join(state_groups, by = 'unit') %>%
+    mutate(pct_res = 100 * n_resistant / n_isolates)
+}
+
+aggregate2 = function(df, group) {
+  group_ = enquo(group)
+  group_by(df, !!group_) %>%
+    summarize(did = weighted.mean(did, w = population),
+              n_resistant = sum(n_resistant),
+              n_isolates = sum(n_isolates)) %>%
+    mutate(n_susceptible = n_isolates - n_resistant,
+           pct_res = n_resistant / n_isolates * 100)
+}
+
+data_frame(bugdrug = names(marketscan_maup_data)) %>%
+  mutate(state_d = map(bugdrug, ~ adhoc(marketscan_maup_data[[.]]$data)),
+         state_slope = map_dbl(state_d, ~ coef(lm(pct_res ~ did, data = .))['did']),
+         division_data = map(state_d, ~ aggregate2(., division)),
+         division_slope = map_dbl(division_data, ~ coef(lm(pct_res ~ did, data = .))['did']),
+         region_data = map(state_d, ~ aggregate2(., region)),
+         region_slope = map_dbl(region_data, ~ coef(lm(pct_res ~ did, data = .))['did'])
+         ) %>%
+  identity()
+
+bs_p = function(df1, group, n_iterations = 100) {
+  group_ = enquo(group)
+  
+  df2 = df1 %>% aggregate2(!!group_)
+  slope_f = function(df) coef(lm(pct_res ~ did, data = df))['did']
+  
+  m1 = slope_f(df1)
+  m2 = slope_f(df2)
+  m = mean(c(m1, m2))
+  
+  eps = df1$pct_res - m * df1$did
+  
+  f = function() {
+    eps_bs = sample(eps, replace = TRUE)
+    y_bs = m * df1$did + eps_bs
+    
+    m1_bs = coef(lm(y_bs ~ df1$did))[2]
+    m2_bs = df1 %>%
+      mutate(y_bs = y_bs) %>%
+      group_by(!!group_) %>%
+      summarize(did = weighted.mean(did, w = population),
+                pct_res = weighted.mean(y_bs, w = n_isolates)) %>%
+      lm(pct_res ~ did, data = .) %>%
+      { coef(.)['did'] }
+    
+    m1_bs - m2_bs
+  }
+  
+  diffs_bs = replicate(n_iterations, f())
+  
+  (sum(abs(m1 - m2) < abs(diffs_bs)) + 1) / (n_iterations + 1)
+}
+
+data_frame(bugdrug = names(marketscan_maup_data)) %>%
+  mutate(state_d = map(bugdrug, ~ adhoc(marketscan_maup_data[[.]]$data)),
+         region_p = map_dbl(state_d, ~ bs_p(., region, n_iterations = 100))) %>%
+  select(-state_d) %>%
+  kable(caption = 'MarketScan empirical p for different slopes')
 ```
 
 ### MAUP
