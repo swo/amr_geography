@@ -166,7 +166,7 @@ random_zones_nmin = function(distances, k, n_min = 2, max_tries = 1e2) {
 
 deg2rad = function(deg) deg * pi / 180
 
-haversine = function(long1, lat1, long2, lat2, R = 1.0) {
+haversine = function(long1, lat1, long2, lat2, R = 6371) {
   long1 = deg2rad(long1)
   lat1 = deg2rad(lat1)
   long2 = deg2rad(long2)
@@ -544,6 +544,19 @@ nhsn_maup %>%
   facet_wrap(~ bugdrug, scales = 'free') +
   geom_smooth(aes(fill = level), method = 'lm', alpha = 0.1) +
   geom_point()
+
+nhsn_maup %>%
+  filter(group_type == 'canonical') %>%
+  mutate(level = case_when(
+    .$k == 4 ~ 'region',
+    .$k == 9 ~ 'division',
+    TRUE ~ 'state'
+  )) %>%
+  mutate(model = map(group_data, ~ lm(pct_res ~ did, data = .)),
+         slope = map_dbl(model, ~ coef(.)['did']),
+         lci = map_dbl(model, ~ confint(.)['did', 1]),
+         uci = map_dbl(model, ~ confint(.)['did', 2])) %>%
+  select(bugdrug, level, slope, lci, uci)
 ```
 
 ### MAUP
@@ -704,3 +717,93 @@ europe_maup %>%
   arrange(metric, bugdrug, group_type, k) %>%
   kable()
 ```
+
+## Distance analysis
+
+If local tranmission "washes out" the use/resistance relationship, then we expect that pairs of states that are closer to one another will have a greater difference in resistance for the same difference in use. That is:
+$$
+\Delta \rho \sim \Delta \tau + \Delta \tau \times d
+$$
+We expect that $\beta_{\tau d} > 1$, meaning that greater distances $d$ give you a bonus in $\Delta \rho$ for that same $\Delta \tau$:
+$$
+\Delta \rho_i = \beta_\tau \Delta \tau + \beta_{\tau d} \Delta \tau \times d = (\beta_\tau + \beta_{\tau d} d) \Delta \tau.
+$$
+
+```{r}
+f = function(bd, n_iter = 1e3) {
+  d = bd$data %>%
+    mutate(pct_res = 10 * n_resistant / n_isolates,
+           i = 1:n()) %>%
+    select(unit, i, did, pct_res)
+  
+  units = unique(d$unit)
+  x = crossing(unit1 = units, unit2 = units) %>%
+    filter(unit1 < unit2) %>%
+    left_join(d, by = c('unit1' = 'unit')) %>%
+    left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
+    mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
+           dr = pct_res2 - pct_res1,
+           du = did2 - did1)
+  
+  # is there an interaction dr ~ du x dist?
+  obs_model = lm(dr ~ du + du:dist, data = x)
+  obs_interaction = coef(obs_model)['du:dist']
+  obs_slope = coef(obs_model)['du']
+  obs_ratio = obs_interaction / obs_slope
+  
+  # permutation test for that
+  permuted_model = function() {
+    id_map = sample(unique(x$i1))
+    permute_m = x %>%
+      mutate(
+        permuted_i1 = id_map[i1],
+        permuted_i2 = id_map[i2],
+        permuted_dist = map2_dbl(permuted_i1, permuted_i2, ~ bd$unit_distances[.x, .y])
+      ) %>%
+      lm(dr ~ du + du:permuted_dist, data = .)
+  }
+
+  permuted_models = rerun(n_iter, permuted_model())
+  
+  permuted_interactions = map_dbl(permuted_models, ~ coef(.)['du:permuted_dist'])
+  permuted_slopes = map_dbl(permuted_models, ~ coef(.)['du'])
+  permuted_ratios = permuted_interactions / permuted_slopes
+  r = sum(abs(obs_ratio) < abs(permuted_ratios))
+  p = (r + 1) / (n_iter + 1)
+  
+  list(
+    obs_model = obs_model,
+    obs_ratio = obs_ratio,
+    permuted_models = permuted_models,
+    permuted_ratios = permuted_ratios,
+    p = p
+  )
+}
+
+g = function(dataset, lst) {
+  data_frame(
+    dataset = dataset,
+    bugdrug = names(lst),
+    results = map(lst, f),
+    bdt = map_dbl(results, ~ .$obs_ratio),
+    p = map_dbl(results, ~ .$p)
+  )
+}
+
+res = bind_rows(
+  g('marketscan', marketscan_maup_data),
+  g('nhsn', nhsn_maup_data),
+  g('europe', europe_maup_data)
+)
+
+res %>%
+  mutate(sig = p.ajust(p, 'BH') < 0.05) %>%
+  select(-results) %>%
+  kable(caption = 'Observed results, and stat tests')
+```
+
+All the point estimates are positive, and some $p$-values are below $0.05$, but none pass an FDR $Q < 0.05$. Interestingly, the point estimates are fairly similar, in the range of $10^{-3}$ or below.
+
+These results suggest that $\beta_{\tau d}$ is of order $10^{-3}$, measured in slope units (percentage points per DID) per kilometer. The distance between the US coasts is about 4,000 kilometers, so a large distance $d$ between states is on the order of 1,000 kilometers, and a large effect would be $\beta_{\tau d} d \approx 1$ percentage points per DID.
+
+Strong slopes are 5-10, so getting a huge geographic range gives you an order of 10% bonus. Could be 50%, but it's not 10-fold.
