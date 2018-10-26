@@ -19,113 +19,6 @@ pdf.options(useDingbats=FALSE, useKerning=FALSE)
 library(kableExtra)
 ```
 
-# Nested model schematic
-
-```{r patch_viz_helpers}
-#swo: these are actually useful functions
-ring_dist = function(i, j, n) pmin(abs(i - j), n - abs(i - j))
-
-beta_ij = function(i, j, n, epsilon) {
-  num = epsilon ** ring_dist(i, j, n)
-  den = sum(epsilon ** ring_dist(0, 0:(n - 1), n))
-  num / den
-}
-```
-
-```{r patch_viz}
-circle = function(cx, cy, r, n = 100) {
-  theta = seq(0, 2 * pi, length.out = n)
-  
-  data_frame(
-    order = 1:n,
-    x = cx + r * cos(theta),
-    y = cy + r * sin(theta)
-  )
-}
-
-wedges_f = function(cx, cy, r, n_wedge, n_arc = 100) {
-  if (n_wedge == 1) {
-    theta = seq(0, 2 * pi, length.out = n_arc)
-    return(data_frame(
-      wedge = 1,
-      x = cx + r * cos(theta),
-      y = cy + r * sin(theta)
-    ))
-  }
-  
-  thetas = function(i) {
-    2 * pi * seq((i - 1.5) / n_wedge, (i - 0.5) / n_wedge, length.out = n_arc)
-  }
-  
-  data_frame(wedge = 1:n_wedge) %>%
-    mutate(data = map(wedge, ~ data_frame(
-      x = cx + r * c(0, cos(thetas(.))),
-      y = cy + r * c(0, sin(thetas(.)))
-    ))) %>%
-    unnest()
-}
-
-ring_scale = Vectorize(function(i, n, scale = 1.0) {
-  if (n == 1) return(0)
-  
-  # rescale so that i=1 -> -scale, i=max dist -> +scale
-  dists = ring_dist(1, 1:n, n)
-  approx(x = c(min(dists), max(dists)),
-         y = scale * c(-1, 1),
-         xout = ring_dist(i, 1, n))$y
-})
-
-ring_viz = function(n_wedge, r, R = 1.0) {
-  n_circle = length(n_wedge)
-  
-  centers = data_frame(
-    center = 1:n_circle,
-    n_wedge = n_wedge,
-    center_theta = seq(0, 2 * pi, length.out = n_circle + 1) %>% head(-1),
-    center_x = R * cos(center_theta),
-    center_y = R * sin(center_theta)
-  )
-  
-  circles = centers %>%
-    mutate(circles = map2(center_x, center_y, ~ circle(.x, .y, r))) %>%
-    select(center, circles) %>%
-    unnest()
-  
-  wedges = centers %>%
-    mutate(data = pmap(list(cx = center_x, cy = center_y, r, n_wedge), wedges_f)) %>%
-    select(center, data) %>%
-    unnest() %>%
-    mutate(group = interaction(center, wedge)) %>%
-    mutate(fill = 1 * ring_scale(center, n_circle) + 1 * ring_scale(wedge, n_wedge))
-  
-  edges = crossing(
-    center_i = 1:n_circle, center_j = 1:n_circle
-  ) %>%
-    filter(center_i < center_j) %>%
-    left_join(select(centers, center_i = center, x = center_x, y = center_y), by = 'center_i') %>%
-    left_join(select(centers, center_j = center, xend = center_x, yend = center_y), by = 'center_j')
-  
-  ggplot(NULL, aes(x, y)) +
-    geom_segment(data = edges, aes(xend = xend, yend = yend), size = 1, color = 'black') +
-    geom_path(data = circles, aes(group = center), color = 'black', size = 2) +
-    geom_polygon(data = wedges, aes(group = group, fill = fill), color = 'black') +
-    coord_fixed() +
-    scale_fill_distiller(direction = 1, palette = 'Oranges', guide = 'none') +
-    theme_void()
-}
-
-multipop_diagram = ring_viz(rep(1, 4), 0.5)
-nested_diagram = ring_viz(rep(6, 4), 0.5)
-
-ggsave('fig/multipop_diagram.png', plot = multipop_diagram)
-ggsave('fig/nested_diagram.png', plot = nested_diagram)
-
-png('fig/combined_diagram.png')
-ggpubr::ggarrange(multipop_diagram, nested_diagram,
-  labels = c('a)', 'b)'))
-dev.off()
-```
-
 # Within-host neutral (WHN) model
 
 ```{r whn_parameters}
@@ -161,8 +54,6 @@ whn_base_parms %>%
 ## WHN single-population model
 
 **swo** reproduce the original Davies figure here
-
-## WHN multi-population model
 
 ```{r whn_sim}
 # vector to data frame
@@ -231,16 +122,30 @@ whn_sim = function(taui, epsilon) {
 }
 ```
 
-```{r whn_results}
+First, I reproduce Figure 2g with $k=1$.
+
+```{r davies_repro}
+whn_repro = whn_sim(taui = seq(0, 3 / 12, length.out = 16), epsilon = 0.0)
+
+whn_repro %>%
+  ggplot(aes(tau, rho)) +
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(name = 'antibiotic tx per month',
+                     sec.axis = sec_axis(~ . * 12)) +
+  ylab('proportion resistant')
+```
+
+```{r whn_single}
 whn1 = crossing(
   n_pop = c(4, 8, 16),
-  epsilon = c(0, 0.01, 0.1, 0.2, 1.0)
+  epsilon = c(0, 0.01, 0.1, 0.25, 0.50, 1.0)
 ) %>%
   mutate(taui = map(n_pop, ~ seq(0.05, 0.2, length.out = .)),
          results = map2(taui, epsilon, whn_sim))
 ```
 
-```{r whn_slopes}
+```{r whn_single_plot}
 whn_multipop_plot = whn1 %>%
   unnest() %>%
   ggplot(aes(taui, rho, color = factor(epsilon))) +
@@ -251,137 +156,34 @@ whn_multipop_plot = whn1 %>%
 whn_multipop_plot
 
 ggsave('fig/whn_multipop.png', plot = whn_multipop_plot)
-
-whn1 %>%
-  mutate(linear_model = map(results, ~ lm(rho ~ tau, data = .)),
-         slope = map_dbl(linear_model, ~ coef(.)['tau'])) %>%
-  mutate_at('slope', ~ round(. * 100)) %>%
-  select(n_pop, epsilon, slope) %>%
-  spread(n_pop, slope) %>%
-  kable(caption = 'Slopes measured in WHN multi-population model')
 ```
 
-## WHN nested populations
+## WHN two-population model
 
-```{r whn_nest_sim}
-whn_nest_sim = function(taui, eps_super, eps_sub) {
-  n_pop = length(taui)
-  pop_per = sqrt(n_pop)
-  
-  if (pop_per != as.integer(pop_per)) {
-    stop('length of taui must be a perfect square')
-  }
-  
-  superpop = rep(1:pop_per, each = pop_per)
-  stopifnot(length(superpop) == length(taui))
-  
-  contact = outer(1:n_pop, 1:n_pop, Vectorize(function(i, j) {
-    if (i == j) {
-      (1 - eps_super * (1 - 1 / pop_per)) * (1 - eps_sub * (1 - 1 / pop_per))
-    } else if (superpop[i] == superpop[j]) {
-      (1 - eps_super * (1 - 1 / pop_per)) * eps_sub / pop_per
-    } else {
-      eps_super / pop_per * 1 / pop_per
-    }
-  }))
-
-  stopifnot(all.equal(rowSums(contact), rep(1.0, n_pop)))
-  stopifnot(all.equal(colSums(contact), rep(1.0, n_pop)))
-
-  parms = with(whn_base_parms, {
-    betaij = beta * contact
-    
-    c(whn_base_parms, list(
-      taui = taui, eps_super = eps_super, eps_sub = eps_sub,
-      betaij = betaij
-    ))
-  })
-  
-  state = data_frame(
-    X = rep(0.990 / n_pop, n_pop),
-    S = rep(0.005 / n_pop, n_pop),
-    R = S,
-    D = 0
-  )
-  
-  state_vector = whn_pack(state)
-  
-  result = rootSolve::runsteady(state_vector, func = whn_ode_func, parms = parms)
-  
-  result$y %>%
-    whn_unpack() %>%
-    mutate(pop = seq_along(taui),
-           superpop = superpop[pop],
-           tau = taui,
-           rho = R / (S + R + D))
-}
-```
-
-```{r whn_nest_results}
-taui = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
-
-nest_results = crossing(
-  eps_super = c(0.0, 0.01, 0.1, 0.5),
-  eps_sub = c(0.0, 0.01, 0.1, 0.5)
+```{r whn_double}
+# swo: this is a bad name
+whn2 = crossing(
+    epsilon = c(0, 0.01, 0.1, 0.25, 0.5, 1.0),
+    size = c('big', 'small')
 ) %>%
-  filter(eps_super <= eps_sub) %>%
-  mutate(data = map2(eps_super, eps_sub, ~ whn_nest_sim(taui, .x, .y)))
+  mutate(taui = lapply(size, function(x) if(x == 'small') c(0.10, 0.15) else c(0.05, 0.20))) %>%
+   mutate(results = map2(taui, epsilon, whn_sim))
 ```
 
-```{r whn_nest_display}
-whn_nest_plot = nest_results %>%
+```{r whn_double_results}
+OR = function(p, q) (p / (1 - p)) / (q / (1 - q))
+
+whn2 %>%
+  filter(epsilon > 0) %>%
   unnest() %>%
-  ggplot(aes(tau, rho, color = factor(superpop))) +
-  facet_grid(eps_super ~ eps_sub, labeller = labeller(.rows = label_both, .cols = label_both)) +
-  geom_hline(yintercept = 0.0) +
-  geom_hline(yintercept = 0.5, color = 'gray', linetype = 2) +
-  geom_smooth(aes(color = NULL), method = 'lm', se = FALSE, color = 'black', size = 0.5) +
-  geom_point() +
-  geom_line() +
-  ylim(0 - 0.01, 1.01) +
-  theme_classic()
-
-whn_nest_plot
-
-ggsave('fig/whn_nest.png', plot = whn_nest_plot)
-```
-
-```{r nested_model_uses}
-data_frame(
-  population = 1:16,
-  superpopulation = rep(1:4, each = 4),
-  tau = round(taui, 3)
-) %>%
-  kable(caption = 'Antibiotic use rates in nested models')
-```
-
-How do the within-population slopes compare to the cross-population slopes?
-
-```{r nested_model_slopes}
-nest_results %>%
-  unnest() %>%
-  nest(-eps_super, -eps_sub, -superpop) %>%
-  mutate(sub_model = map(data, ~ lm(rho ~ tau, data = .)),
-         sub_slope = map_dbl(sub_model, ~ coef(.)['tau']),
-         super_tau = map_dbl(data, ~ mean(.$tau)),
-         super_rho = map_dbl(data, ~ mean(.$rho))) %>%
-  nest(-eps_super, -eps_sub) %>%
-  mutate(super_model = map(data, ~ lm(super_rho ~ super_tau, data = .)),
-         super_slope = map_dbl(super_model, ~ coef(.)['super_tau']),
-         median_sub_slope = map_dbl(data, ~ median(.$sub_slope)),
-         slope_ratio = super_slope / median_sub_slope) %>%
-  select(eps_super, eps_sub, super_slope, median_sub_slope, slope_ratio) %>%
-  mutate_if(is.numeric, ~ round(., 2)) %>%
-  # organize as per ms table
-  gather('metric', 'value', super_slope, median_sub_slope, slope_ratio) %>%
-  mutate(metric = factor(metric, levels = c('super_slope', 'median_sub_slope', 'slope_ratio'))) %>%
-  spread(eps_sub, value) %>%
-  arrange(metric, eps_super) %>%
-  select(-metric) %>%
-  kable(caption = 'Slopes and ratios in the nested WHN model') %>%
-  group_rows('Super slope', 1, 4) %>%
-  group_rows('Median sub slope', 5, 8) %>%
-  group_rows('Ratio', 9, 12)
+  mutate(rho = R / (S + R + D)) %>%
+  group_by(epsilon, size) %>%
+  mutate(delta_u = max(taui) - min(taui)) %>%
+  group_by(epsilon, delta_u) %>%
+  summarize(rr = max(rho) - min(rho),
+            lor = log(OR(min(rho), max(rho)))) %>%
+  mutate(rru = rr / delta_u,
+         loru = lor / delta_u)
 ```
 
 # D-types model
@@ -413,10 +215,6 @@ dtypes_base_parms %$%
 ```
 
 ## Single-population model
-
-The original figure uses $\tau = 0.075$.
-
-**swo** make this figure
 
 ```{r dtype_helpers}
 # pack the list into a vector
@@ -549,119 +347,55 @@ dtypes_sim = function(tau_i, epsilon = 0) {
 }
 ```
 
-## D-types multi-population
+First, I reproduce Figure 3 with $\tau = 0.075$.
 
-```{r dtypes_results}
-dtype1 = crossing(
-  n_pop = c(4, 8, 16),
-  epsilon = c(0, 0.01, 0.1, 0.2, 1.0)
-) %>%
-  mutate(tau_i = map(n_pop, ~ seq(0.05, 0.2, length.out = .)),
-         results = map2(tau_i, epsilon, dtypes_sim))
+```{r dtypes_repro_bars}
+dtype_repro_bars = dtypes_sim(0.075, 0)
 
-dtypes_summarize = function(df) {
-  df %>%
-    group_by(pop, tau, phenotype) %>%
-    summarize_at('value', sum) %>%
-    ungroup() %>%
-    spread(phenotype, value) %>%
-    mutate(rho = R / (S + R))
-}
+dtype_repro_bars %>%
+  mutate(mu_d = dtypes_base_parms$mu_d[dtype]) %>%
+  ggplot(aes(mu_d, value, fill = phenotype)) +
+  geom_col() +
+  xlab('Clearance rate') +
+  ylab('Strain prevalence')
+```
 
-dtype1 %>%
-  mutate(results = map(results, dtypes_summarize)) %>%
-  unnest() %>%
-  ggplot(aes(tau_i, rho, color = factor(epsilon))) +
-  facet_wrap(~ n_pop) +
+Next, I show the jagged line in Figure 4. It may not look exactly right because I didn't run a ton of intermediate points:
+
+```{r dtypes_repro_line}
+dtype_repro_line = dtypes_sim(seq(0.04, 0.20, length.out = 25), 0)
+
+dtype_repro_line %>%
+  group_by(tau) %>%
+  summarize(f_res = sum(value[phenotype == 'R']),
+            f_all = sum(value)) %>%
+  mutate(rho = f_res / f_all) %>%
+  ggplot(aes(tau, rho)) +
   geom_point() +
   geom_line()
 ```
 
-## D-types nested
+## D-types two-population
 
-```{r dtypes_nest_sim}
-dtypes_nest_sim = function(tau_i, eps_super, eps_sub) {
-  n_pop = length(tau_i)
-  pop_per = sqrt(n_pop)
-
-  # swo: a lot of this code is reproduced, find a way to refactor
-  if (pop_per != as.integer(pop_per)) {
-    stop('length of taui must be a perfect square')
-  }
-  
-  superpop = rep(1:pop_per, each = pop_per)
-  stopifnot(length(superpop) == length(tau_i))
-  
-  contact = outer(1:n_pop, 1:n_pop, Vectorize(function(i, j) {
-    if (i == j) {
-      (1 - eps_super * (1 - 1 / pop_per)) * (1 - eps_sub * (1 - 1 / pop_per))
-    } else if (superpop[i] == superpop[j]) {
-      (1 - eps_super * (1 - 1 / pop_per)) * eps_sub / pop_per
-    } else {
-      eps_super / pop_per * 1 / pop_per
-    }
-  }))
-
-  stopifnot(all.equal(rowSums(contact), rep(1.0, n_pop)))
-  stopifnot(all.equal(colSums(contact), rep(1.0, n_pop)))
-
-  parms = with(dtypes_base_parms, {
-    c(dtypes_base_parms, list(
-      beta_ij = beta * contact,
-      n_pop = n_pop, tau_i = tau_i,
-      eps_super = eps_super, eps_sub = eps_sub
-    ))
-  })
-  
-  n_d = parms$n_d
-  
-  state = list(X_i = rep(0.9 / n_pop, n_pop),
-               S_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d),
-               R_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d))
-
-  state_vector = dtypes_pack(state)
-  stopifnot(all.equal(sum(state_vector), 1))
-
-  result = rootSolve::runsteady(state_vector, func = dtypes_ode_func, parms = parms,
-                                stol = 1e-8 / n_pop, rtol = 1e-6 / n_pop, atol = 1e-6 / n_pop)
-
-  result$y %>%
-    dtypes_unpack(n_pop = n_pop, n_d = n_d) %>%
-    dtypes_list_to_df() %>%
-    left_join(data_frame(pop = 1:n_pop, superpop = superpop[pop], tau = tau_i), by = 'pop')
-}
-```
-
-```{r dtypes_nest_results}
-tau_i = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
-
-dtypes_nest_results = crossing(
-  eps_super = c(0.0, 0.01, 0.1, 0.5),
-  eps_sub = c(0.0, 0.01, 0.1, 0.5)
+```{r dtypes_double}
+dtypes2 = crossing(
+    epsilon = c(0, 0.01, 0.1, 0.25, 0.5, 1.0),
+    size = c('big', 'small')
 ) %>%
-  filter(eps_super <= eps_sub) %>%
-  mutate(data = map2(eps_super, eps_sub, ~ dtypes_nest_sim(tau_i, .x, .y)))
-
-janky_superpop_f = function(pop) {
-  n_superpop = sqrt(length(pop))
-  rep(1:n_superpop, each = n_superpop)
-}
-
-dtypes_nest_results %>%
-  mutate(data = map(data, dtypes_summarize)) %>%
-  unnest() %>%
-  group_by(eps_super, eps_sub) %>%
-  mutate(superpop = janky_superpop_f(pop)) %>%
-  ungroup() %>%
-  ggplot(aes(tau, rho, color = factor(superpop))) +
-  facet_grid(eps_super ~ eps_sub, labeller = labeller(.rows = label_both, .cols = label_both)) +
-  geom_hline(yintercept = 0.0) +
-  geom_hline(yintercept = 0.5, color = 'gray', linetype = 2) +
-  geom_smooth(aes(color = NULL), method = 'lm', se = FALSE, color = 'black', size = 0.5) +
-  geom_point() +
-  geom_line() +
-  ylim(0 - 0.01, 1.01) +
-  theme_classic()
+  mutate(taui = lapply(size, function(x) if(x == 'small') c(0.10, 0.15) else c(0.05, 0.20))) %>%
+   mutate(results = map2(taui, epsilon, whn_sim))
 ```
 
-**swo** create a table of these results analogous to the one for WHN
+```{r dtypes_double_results}
+dtypes2 %>%
+  filter(epsilon > 0) %>%
+  unnest() %>%
+  mutate(rho = R / (S + R + D)) %>%
+  group_by(epsilon, size) %>%
+  mutate(delta_u = max(taui) - min(taui)) %>%
+  group_by(epsilon, delta_u) %>%
+  summarize(rr = max(rho) - min(rho),
+            lor = log(OR(min(rho), max(rho)))) %>%
+  mutate(rru = rr / delta_u,
+         loru = lor / delta_u)
+```
