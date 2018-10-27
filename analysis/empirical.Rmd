@@ -59,22 +59,7 @@ ro_hrr = read_tsv('../data/ms-medicare-ro/abg_hrr.tsv')
 ### MarketScan
 
 ```{r maup_db}
-state_census = read_tsv('../db/state_census.tsv') %>%
-  filter(between(year, 2011, 2014)) %>%
-  group_by(state_abbreviation) %>%
-  summarize(population = mean(population))
-
-state_data = data_frame(
-  unit = state.name,
-  state_abbreviation = state.abb,
-  region = state.region,
-  division = state.division,
-  long = state.center$x,
-  lat = state.center$y
-) %>%
-  mutate_if(is.factor, as.character) %>%
-  inner_join(state_census, by = 'state_abbreviation') %>%
-  mutate(unit_id = 1:n())
+state_census = read_tsv('../db/state_census.tsv')
 ```
 
 ```{r marketscan_data}
@@ -732,7 +717,7 @@ $$
 ```{r}
 f = function(bd, n_iter = 1e3) {
   d = bd$data %>%
-    mutate(pct_res = 10 * n_resistant / n_isolates,
+    mutate(pct_res = 100 * n_resistant / n_isolates,
            i = 1:n()) %>%
     select(unit, i, did, pct_res)
   
@@ -797,9 +782,122 @@ res = bind_rows(
 )
 
 res %>%
-  mutate(sig = p.ajust(p, 'BH') < 0.05) %>%
+  mutate(sig = p.adjust(p, 'BH') < 0.05) %>%
   select(-results) %>%
   kable(caption = 'Observed results, and stat tests')
+```
+
+```{r}
+# Bootstrapping CIs on the slope/interaction ratios
+f = function(bd, n_iter = 1e3) {
+  d = bd$data %>%
+    mutate(pct_res = 100 * n_resistant / n_isolates,
+           i = 1:n()) %>%
+    select(unit, i, did, pct_res)
+  
+  units = unique(d$unit)
+  
+  bs = boot::boot(units, statistic = function(data, idx) {
+    crossing(unit1 = data[idx], unit2 = data[idx]) %>%
+      filter(unit1 < unit2) %>%
+      left_join(d, by = c('unit1' = 'unit')) %>%
+      left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
+      mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
+             dr = pct_res2 - pct_res1,
+             du = did2 - did1) %>%
+      lm(dr ~ du + du:dist, data = .) %>%
+      coef() %>%
+      { .['du:dist'] / .['du'] }
+  }, R = n_iter)
+  
+  bs_ci = boot::boot.ci(bs, type = 'bca') %$%
+    bca[c(4, 5)]
+  
+  list(
+    obs_ratio = bs$t0,
+    bs_lci = bs_ci[1],
+    bs_uci = bs_ci[2]
+  )
+}
+
+f(marketscan_maup_data$`Ec/q`)
+
+g = function(dataset, lst) {
+  data_frame(
+    dataset = dataset,
+    bugdrug = names(lst),
+    results = map(lst, f),
+    bdt = map_dbl(results, ~ .$obs_ratio),
+    lci = map_dbl(results, ~ .$bs_lci),
+    uci = map_dbl(results, ~ .$bs_uci)
+  )
+}
+
+bs_res = bind_rows(
+  g('marketscan', marketscan_maup_data),
+  g('nhsn', nhsn_maup_data),
+  g('europe', europe_maup_data)
+)
+
+bs_res %>%
+  select(-results) %>%
+  kable()
+```
+
+```{r}
+# Bootstrapping logistic CIs
+f = function(bd, n_iter = 1e2) {
+  d = bd$data %>%
+    mutate(i = 1:n()) %>%
+    select(unit, i, did, n_resistant, n_isolates)
+  
+  units = unique(d$unit)
+  
+  bs = boot::boot(units, statistic = function(data, idx) {
+    crossing(unit1 = data[idx], unit2 = data[idx]) %>%
+      filter(unit1 < unit2) %>%
+      left_join(d, by = c('unit1' = 'unit')) %>%
+      left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
+      mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
+             dr = pct_res2 - pct_res1,
+             du = did2 - did1) %>%
+      glm(n_resistant ~ du + du:dist, family = 'binomial', weights = n_isolates, data = .) %>%
+      coef() %>%
+      { .['du:dist'] / .['du'] }
+  }, R = n_iter)
+  
+  bs_ci = boot::boot.ci(bs, type = 'bca') %$%
+    bca[c(4, 5)]
+  
+  list(
+    obs_ratio = bs$t0,
+    bs_lci = bs_ci[1],
+    bs_uci = bs_ci[2]
+  )
+}
+
+f(marketscan_maup_data$`Ec/q`)
+
+g = function(dataset, lst) {
+  data_frame(
+    dataset = dataset,
+    bugdrug = names(lst),
+    results = map(lst, f),
+    bdt = map_dbl(results, ~ .$obs_ratio),
+    lci = map_dbl(results, ~ .$bs_lci),
+    uci = map_dbl(results, ~ .$bs_uci)
+  )
+}
+
+bs_res = bind_rows(
+  g('marketscan', marketscan_maup_data),
+  g('nhsn', nhsn_maup_data),
+  g('europe', europe_maup_data)
+)
+
+bs_res %>%
+  select(-results) %>%
+  kable()
 ```
 
 All the point estimates are positive, and some $p$-values are below $0.05$, but none pass an FDR $Q < 0.05$. Interestingly, the point estimates are fairly similar, in the range of $10^{-3}$ or below.
