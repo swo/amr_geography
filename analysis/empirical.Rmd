@@ -715,14 +715,49 @@ We expect that $\beta_{\tau d} > 1$, meaning that greater distances $d$ give you
 $$
 \Delta \rho_i = \beta_\tau \Delta \tau + \beta_{\tau d} \Delta \tau \times d = \beta_\tau \left(1 + \frac{\beta_{\tau d}}{\beta_\tau} d \right) \Delta \tau.
 $$
+Or, more simply:
+$$
+\Delta \rho_i = A (1 + R \times d) \Delta \tau_i + C + \varepsilon_i
+$$
 
-```{r}
-f = function(bd, n_iter = 1e3) {
+**swo** the linear thing can easily be replaced by predicted the log odds ratio of resistance rather than delta rho. You get similar results.
+
+```{r distance}
+# fit the list of pairwise Delta rho, Delta tau, and distances
+distance_nls = function(df) {
+  # odds = function(p) p / (1 - p)
+  # 
+  # dff = df %>%
+  #   mutate(o1 = odds(pct_res1 / 100),
+  #          o2 = odds(pct_res2 / 100),
+  #          lor = log(o2 / o1))
+  
+  # fit the lm for guessing values
+  lm_model = lm(dr ~ du + du:dist, data = df)
+  #lm_model = lm(lor ~ du + du:dist, data = dff)
+  
+  # fit the model
+  nls_model = nls(
+    dr ~ A * (1 + R * dist) * du + C,
+    start = with(as.list(coef(lm_model)), list(A = du, R = `du:dist` / du, C = `(Intercept)`)),
+    data = df
+    #lor ~ A * (1 + R * dist) * du + C,
+    # data = dff
+  )
+  
+  nls_model
+}
+
+# turn the bugdrug bundle into a pairwise list of dr, du, and distances
+distance_fit_data = function(bd) {
+  # prepare the data set
   d = bd$data %>%
-    mutate(pct_res = 100 * n_resistant / n_isolates,
+    mutate(f_res = n_resistant / n_isolates,
+           pct_res = 100 * f_res,
            i = 1:n()) %>%
     select(unit, i, did, pct_res)
   
+  # get all combinations of units
   units = unique(d$unit)
   x = crossing(unit1 = units, unit2 = units) %>%
     filter(unit1 < unit2) %>%
@@ -732,130 +767,107 @@ f = function(bd, n_iter = 1e3) {
            dr = pct_res2 - pct_res1,
            du = did2 - did1)
   
-  # is there an interaction dr ~ du x dist?
-  obs_model = lm(dr ~ du + du:dist, data = x)
-  obs_interaction = coef(obs_model)['du:dist']
-  obs_slope = coef(obs_model)['du']
-  obs_ratio = obs_interaction / obs_slope
-  
-  # permutation test for that
-  permuted_model = function() {
-    id_map = sample(unique(x$i1))
-    permute_m = x %>%
-      mutate(
-        permuted_i1 = id_map[i1],
-        permuted_i2 = id_map[i2],
-        permuted_dist = map2_dbl(permuted_i1, permuted_i2, ~ bd$unit_distances[.x, .y])
-      ) %>%
-      lm(dr ~ du + du:permuted_dist, data = .)
-  }
-
-  permuted_models = rerun(n_iter, permuted_model())
-  
-  permuted_interactions = map_dbl(permuted_models, ~ coef(.)['du:permuted_dist'])
-  permuted_slopes = map_dbl(permuted_models, ~ coef(.)['du'])
-  permuted_ratios = permuted_interactions / permuted_slopes
-  r = sum(abs(obs_ratio) < abs(permuted_ratios))
-  p = (r + 1) / (n_iter + 1)
-  
-  nls_model = nls(dr ~ A * (1 + R * dist) * du + C,
-                  start = list(A = obs_slope, R = obs_ratio, C = 0.0),
-                  data = x)
-  
-  list(
-    obs_model = obs_model,
-    obs_ratio = obs_ratio,
-    permuted_models = permuted_models,
-    permuted_ratios = permuted_ratios,
-    p = p,
-    nls_model = nls_model
-  )
+  x
 }
 
-g = function(dataset, lst) {
+distance_fit = function(dataset, lst) {
   data_frame(
     dataset = dataset,
     bugdrug = names(lst),
-    results = map(lst, f),
-    obs_ratio = map_dbl(results, ~ 1e3 * .$obs_ratio),
-    p = map_dbl(results, ~ .$p)
+    data = map(lst, distance_fit_data),
+    nls_model = map(data, distance_nls),
+    ratio = map_dbl(nls_model, ~ coef(.)['R']),
+    ratio_lci = map_dbl(nls_model, ~ confint.default(.)['R', 1]),
+    ratio_uci = map_dbl(nls_model, ~ confint.default(.)['R', 2]),
+    p_value = map_dbl(nls_model, ~ coef(summary(.))['R', 'Pr(>|t|)']),
+    sig = p_value < 0.05,
+    bh_sig = p.adjust(p_value, 'BH') < 0.05
   )
 }
 
-res = bind_rows(
-  g('marketscan', marketscan_maup_data),
-  g('nhsn', nhsn_maup_data),
-  g('europe', europe_maup_data)
+distance_fit_results = bind_rows(
+  distance_fit('marketscan', marketscan_maup_data),
+  distance_fit('nhsn', nhsn_maup_data),
+  distance_fit('europe', europe_maup_data)
 )
 
-res %>%
-  mutate(sig = p.adjust(p, 'BH') < 0.05,
-         #nlo = map_dbl(results, ~ .$nls_model %>% coef %>% { 1e3 * .['R'] }),
-         nlp = map_dbl(results, ~ .$nls_model %>% summary %>% coef %>% { .['R', 'Pr(>|t|)']}),
-         nlsig = p.adjust(nlp, 'BH') < 0.05,
-         nllci = map_dbl(results, ~ .$nls_model %>% confint.default %>% { 1e3 * .['R', 1] }),
-         nluci = map_dbl(results, ~ .$nls_model %>% confint.default %>% { 1e3 * .['R', 2] })) %>%
-  select(-results) %>%
+distance_fit_results %>%
+  select(-data, -nls_model) %>%
+  mutate_at(vars(starts_with('ratio')), ~ . * 1e3) %>%
+  mutate_if(is.numeric, ~ round(., 3)) %>%
+  arrange(bugdrug) %>%
   kable(caption = 'Observed results, and stat tests. Ratio in u/r per 1,000 km')
 ```
 
-```{r}
-# Bootstrapping CIs on the slope/interaction ratios
-f = function(bd, n_iter = 1e3) {
+**swo** do this a little more cleanly
+
+```{r distance_perm_perm}
+distance_fit_data_f_perm = function(bd) {
+  # prepare the data set,
+  # permuting the indices
   d = bd$data %>%
     mutate(pct_res = 100 * n_resistant / n_isolates,
-           i = 1:n()) %>%
+           i = sample(1:n())) %>%
     select(unit, i, did, pct_res)
   
+  # get all combinations of units
   units = unique(d$unit)
+  x = crossing(unit1 = units, unit2 = units) %>%
+    filter(unit1 < unit2) %>%
+    left_join(d, by = c('unit1' = 'unit')) %>%
+    left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
+    mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
+           dr = pct_res2 - pct_res1,
+           du = did2 - did1)
   
-  bs = boot::boot(units, statistic = function(data, idx) {
-    crossing(unit1 = data[idx], unit2 = data[idx]) %>%
-      filter(unit1 < unit2) %>%
-      left_join(d, by = c('unit1' = 'unit')) %>%
-      left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
-      mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
-             dr = pct_res2 - pct_res1,
-             du = did2 - did1) %>%
-      lm(dr ~ du + du:dist, data = .) %>%
-      coef() %>%
-      { .['du:dist'] / .['du'] }
-  }, R = n_iter)
-  
-  bs_ci = boot::boot.ci(bs, type = 'bca') %$%
-    bca[c(4, 5)]
-  
-  list(
-    obs_ratio = bs$t0,
-    bs_lci = bs_ci[1],
-    bs_uci = bs_ci[2],
-    bs = bs
-  )
+  x
 }
 
-bs_p = function(bs, x0) sum(abs(bs$t - x0) > abs(bs$t0 - x0)) / (bs$R + 1)
+distance_fit_perm_p = function(bd, n_iter) {
+  df1 = distance_fit_data(bd)
+  
+  obs_model = distance_nls(df1)
+  obs_ratio = coef(obs_model)['R']
+  
+  obs_model2 = lm(dr ~ du + du:dist, data = df1)
+  obs_ratio2 = with(as.list(coef(obs_model2)), `du:dist` / du)
+  stopifnot(abs(obs_ratio - obs_ratio2) < 1e-6)
+  
+  perm_ratio = function() {
+    perm_df = distance_fit_data_f_perm(bd)
+    
+    perm_model = lm(dr ~ du + du:dist, data = perm_df)
+    with(as.list(coef(perm_model)), `du:dist` / du)
+  }
 
-g = function(dataset, lst) {
+  perm_ratios = replicate(n_iter, perm_ratio())
+
+  r = sum(abs(obs_ratio) < abs(perm_ratios))
+  p = (r + 1) / (n_iter + 1)
+  
+  p
+}
+
+distance_fit_perm = function(dataset, lst, n_iter) {
   data_frame(
     dataset = dataset,
     bugdrug = names(lst),
-    results = map(lst, f),
-    obs_ratio = map_dbl(results, ~ 1e3 * .$obs_ratio),
-    lci = map_dbl(results, ~ 1e3 * .$bs_lci),
-    uci = map_dbl(results, ~ 1e3 * .$bs_uci),
-    p = map_dbl(results, ~ bs_p(.$bs, 0))
+    p_value = map_dbl(lst, ~ distance_fit_perm_p(., n_iter))
   )
 }
 
-bs_res = bind_rows(
-  g('marketscan', marketscan_maup_data),
-  g('nhsn', nhsn_maup_data),
-  g('europe', europe_maup_data)
+n_iter = 1e3
+distance_fit_results_perm = bind_rows(
+  distance_fit_perm('marketscan', marketscan_maup_data, n_iter),
+  distance_fit_perm('nhsn', nhsn_maup_data, n_iter),
+  distance_fit_perm('europe', europe_maup_data, n_iter)
 )
 
-bs_res %>%
-  select(-results) %>%
-  kable(caption = 'Bootstrap CIs. In per 1,000 km.')
+distance_fit_results_perm %>%
+  select(dataset, bugdrug, p_value) %>%
+  mutate(sig = p_value < 0.05,
+         adj_sig = p.adjust(p_value, 'BH') < 0.05) %>%
+  kable(caption = 'Permutation p')
 ```
 
 All the point estimates are positive, and some $p$-values are below $0.05$, but none pass an FDR $Q < 0.05$. Interestingly, the point estimates are fairly similar, in the range of $10^{-3}$ or below.
