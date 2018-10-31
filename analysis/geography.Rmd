@@ -167,7 +167,7 @@ whn2 = crossing(
     size = c('big', 'small')
 ) %>%
   mutate(taui = lapply(size, function(x) if(x == 'small') c(0.10, 0.15) else c(0.05, 0.20))) %>%
-   mutate(results = map2(taui, epsilon, whn_sim))
+  mutate(results = map2(taui, epsilon, whn_sim))
 ```
 
 ```{r whn_double_results}
@@ -181,9 +181,13 @@ whn2 %>%
   mutate(delta_u = max(taui) - min(taui)) %>%
   group_by(epsilon, delta_u) %>%
   summarize(rr = max(rho) - min(rho),
-            lor = log(OR(min(rho), max(rho)))) %>%
+            or = OR(min(rho), max(rho))) %>%
+  ungroup() %>%
   mutate(rru = rr / delta_u,
-         loru = lor / delta_u)
+         loru = log(or) / delta_u) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %>%
+  arrange(delta_u, epsilon) %>%
+  kable(caption = '2-population effect sizes, WHN model')
 ```
 
 # D-types model
