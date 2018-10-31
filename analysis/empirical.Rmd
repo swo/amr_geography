@@ -59,7 +59,7 @@ ro_hrr = read_tsv('../data/ms-medicare-ro/abg_hrr.tsv')
 ### MarketScan
 
 ```{r maup_db}
-state_census = read_tsv('../db/state_census.tsv')
+state_data = read_tsv('../db/state_census.tsv')
 ```
 
 ```{r marketscan_data}
@@ -334,88 +334,6 @@ marketscan_canonical_data %>%
   select(bugdrug, base_slope, base_slope_cil, base_slope_ciu, lr_p_value) %>%
   mutate_if(is.numeric, ~ round(., 2)) %>%
   kable(caption = 'Likelihood ratio test, comparing R ~ U and R ~ U + U:level')
-```
-
-**swo** clean up
-
-There are some observed resistance values $y_i$ and uses $x_i$ in each state $i$. A linear fit $y_i \sim x_i$ gives the slope $m_1$. A linear fit on the aggregated data gives $m_2$. The null hypothesis is that $m_1 = m_2$, so the test statistic is $m_1 - m_2$. Is the observed value for that statistic consistent with the null hypothesis?
-
-Define $m = \tfrac{1}{2}(m_1 + m_2)$ as an *ad hoc* guess for that underlying parameter, which defines the errors $\varepsilon_i = y_i - m x_i$. The sample population is defined by the distribution of the $\varepsilon_i$. To sample from the population, in each iteration, draw a bootstrap sample $\varepsilon^\star$ from the $\varepsilon$ to compute $y_i^\star = m x_i + \varepsilon_i^\star$. A regression $y_i^\star \sim x_i$ produces a slope $m_1^\star$, which is not necessarily equal to $m$. The regression on the aggregate data produces $m_2^\star$, and thus the sampled test statistic $m_1^\star - m_2^\star$.
-
-```{r}
-state_groups = select(state_data, unit, region, division)
-
-adhoc = function(df) {
-  df %>%
-    left_join(state_groups, by = 'unit') %>%
-    mutate(pct_res = 100 * n_resistant / n_isolates)
-}
-
-aggregate2 = function(df, group) {
-  group_ = enquo(group)
-  group_by(df, !!group_) %>%
-    summarize(did = weighted.mean(did, w = population),
-              n_resistant = sum(n_resistant),
-              n_isolates = sum(n_isolates)) %>%
-    mutate(n_susceptible = n_isolates - n_resistant,
-           pct_res = n_resistant / n_isolates * 100)
-}
-
-data_frame(bugdrug = names(marketscan_maup_data)) %>%
-  mutate(state_d = map(bugdrug, ~ adhoc(marketscan_maup_data[[.]]$data)),
-         state_slope = map_dbl(state_d, ~ coef(lm(pct_res ~ did, data = .))['did']),
-         division_data = map(state_d, ~ aggregate2(., division)),
-         division_slope = map_dbl(division_data, ~ coef(lm(pct_res ~ did, data = .))['did']),
-         region_data = map(state_d, ~ aggregate2(., region)),
-         region_slope = map_dbl(region_data, ~ coef(lm(pct_res ~ did, data = .))['did'])
-         ) %>%
-  identity()
-
-bs_p = function(df1, group, n_iterations = 100) {
-  group_ = enquo(group)
-  
-  df2 = df1 %>% aggregate2(!!group_)
-  slope_f = function(df) coef(lm(pct_res ~ did, data = df))['did']
-  
-  m1 = slope_f(df1)
-  m2 = slope_f(df2)
-  m = mean(c(m1, m2))
-  
-  eps = df1$pct_res - m * df1$did
-  
-  f = function() {
-    eps_bs = sample(eps, replace = TRUE)
-    y_bs = m * df1$did + eps_bs
-    
-    m1_bs = coef(lm(y_bs ~ df1$did))[2]
-    m2_bs = df1 %>%
-      mutate(y_bs = y_bs) %>%
-      group_by(!!group_) %>%
-      summarize(did = weighted.mean(did, w = population),
-                pct_res = weighted.mean(y_bs, w = n_isolates)) %>%
-      lm(pct_res ~ did, data = .) %>%
-      { coef(.)['did'] }
-    
-    m1_bs - m2_bs
-  }
-  
-  diffs_bs = replicate(n_iterations, f())
-  
-  (sum(abs(m1 - m2) < abs(diffs_bs)) + 1) / (n_iterations + 1)
-}
-
-data_frame(bugdrug = names(marketscan_maup_data)) %>%
-  mutate(state_d = map(bugdrug, ~ adhoc(marketscan_maup_data[[.]]$data)),
-         region_p = map_dbl(state_d, ~ bs_p(., region)),
-         division_p = map_dbl(state_d, ~ bs_p(., division))) %>%
-  select(-state_d) %>%
-  kable(caption = 'MarketScan empirical p for different slopes')
-
-data_frame(state_d = list(adhoc(nhsn_maup_data$`Ec/q`$data))) %>%
-  mutate(region_p = map_dbl(state_d, ~ bs_p(., region)),
-         division_p = map_dbl(state_d, ~ bs_p(., division))) %>%
-  select(-state_d) %>%
-  kable(caption = 'NHSN')
 ```
 
 ### MAUP
@@ -703,6 +621,90 @@ europe_maup %>%
   kable()
 ```
 
+## Canonical grouping analysis
+
+**swo** clean up
+
+There are some observed resistance values $y_i$ and uses $x_i$ in each state $i$. A linear fit $y_i \sim x_i$ gives the slope $m_1$. A linear fit on the aggregated data gives $m_2$. The null hypothesis is that $m_1 = m_2$, so the test statistic is $m_1 - m_2$. Is the observed value for that statistic consistent with the null hypothesis?
+
+Define $m = \tfrac{1}{2}(m_1 + m_2)$ as an *ad hoc* guess for that underlying parameter, which defines the errors $\varepsilon_i = y_i - m x_i$. The sample population is defined by the distribution of the $\varepsilon_i$. To sample from the population, in each iteration, draw a bootstrap sample $\varepsilon^\star$ from the $\varepsilon$ to compute $y_i^\star = m x_i + \varepsilon_i^\star$. A regression $y_i^\star \sim x_i$ produces a slope $m_1^\star$, which is not necessarily equal to $m$. The regression on the aggregate data produces $m_2^\star$, and thus the sampled test statistic $m_1^\star - m_2^\star$.
+
+```{r}
+state_groups = select(state_data, unit, region, division)
+
+adhoc = function(df) {
+  df %>%
+    left_join(state_groups, by = 'unit') %>%
+    mutate(pct_res = 100 * n_resistant / n_isolates)
+}
+
+aggregate2 = function(df, group) {
+  group_ = enquo(group)
+  group_by(df, !!group_) %>%
+    summarize(did = weighted.mean(did, w = population),
+              n_resistant = sum(n_resistant),
+              n_isolates = sum(n_isolates)) %>%
+    mutate(n_susceptible = n_isolates - n_resistant,
+           pct_res = n_resistant / n_isolates * 100)
+}
+
+data_frame(bugdrug = names(marketscan_maup_data)) %>%
+  mutate(state_d = map(bugdrug, ~ adhoc(marketscan_maup_data[[.]]$data)),
+         state_slope = map_dbl(state_d, ~ coef(lm(pct_res ~ did, data = .))['did']),
+         division_data = map(state_d, ~ aggregate2(., division)),
+         division_slope = map_dbl(division_data, ~ coef(lm(pct_res ~ did, data = .))['did']),
+         region_data = map(state_d, ~ aggregate2(., region)),
+         region_slope = map_dbl(region_data, ~ coef(lm(pct_res ~ did, data = .))['did'])
+         ) %>%
+  identity()
+
+bs_p = function(df1, group, n_iterations = 100) {
+  group_ = enquo(group)
+  
+  df2 = df1 %>% aggregate2(!!group_)
+  slope_f = function(df) coef(lm(pct_res ~ did, data = df))['did']
+  
+  m1 = slope_f(df1)
+  m2 = slope_f(df2)
+  m = mean(c(m1, m2))
+  
+  eps = df1$pct_res - m * df1$did
+  
+  f = function() {
+    eps_bs = sample(eps, replace = TRUE)
+    y_bs = m * df1$did + eps_bs
+    
+    m1_bs = coef(lm(y_bs ~ df1$did))[2]
+    m2_bs = df1 %>%
+      mutate(y_bs = y_bs) %>%
+      group_by(!!group_) %>%
+      summarize(did = weighted.mean(did, w = population),
+                pct_res = weighted.mean(y_bs, w = n_isolates)) %>%
+      lm(pct_res ~ did, data = .) %>%
+      { coef(.)['did'] }
+    
+    m1_bs - m2_bs
+  }
+  
+  diffs_bs = replicate(n_iterations, f())
+  
+  (sum(abs(m1 - m2) < abs(diffs_bs)) + 1) / (n_iterations + 1)
+}
+
+data_frame(bugdrug = names(marketscan_maup_data)) %>%
+  mutate(state_d = map(bugdrug, ~ adhoc(marketscan_maup_data[[.]]$data)),
+         region_p = map_dbl(state_d, ~ bs_p(., region)),
+         division_p = map_dbl(state_d, ~ bs_p(., division))) %>%
+  select(-state_d) %>%
+  kable(caption = 'MarketScan empirical p for different slopes')
+
+data_frame(state_d = list(adhoc(nhsn_maup_data$`Ec/q`$data))) %>%
+  mutate(region_p = map_dbl(state_d, ~ bs_p(., region)),
+         division_p = map_dbl(state_d, ~ bs_p(., division))) %>%
+  select(-state_d) %>%
+  kable(caption = 'NHSN')
+```
+
 ## Distance analysis
 
 If local tranmission "washes out" the use/resistance relationship, then we expect that pairs of states that are closer to one another will have a greater difference in resistance for the same difference in use. That is:
@@ -711,7 +713,7 @@ $$
 $$
 We expect that $\beta_{\tau d} > 1$, meaning that greater distances $d$ give you a bonus in $\Delta \rho$ for that same $\Delta \tau$:
 $$
-\Delta \rho_i = \beta_\tau \Delta \tau + \beta_{\tau d} \Delta \tau \times d = (\beta_\tau + \beta_{\tau d} d) \Delta \tau.
+\Delta \rho_i = \beta_\tau \Delta \tau + \beta_{\tau d} \Delta \tau \times d = \beta_\tau \left(1 + \frac{\beta_{\tau d}}{\beta_\tau} d \right) \Delta \tau.
 $$
 
 ```{r}
@@ -756,12 +758,17 @@ f = function(bd, n_iter = 1e3) {
   r = sum(abs(obs_ratio) < abs(permuted_ratios))
   p = (r + 1) / (n_iter + 1)
   
+  nls_model = nls(dr ~ A * (1 + R * dist) * du + C,
+                  start = list(A = obs_slope, R = obs_ratio, C = 0.0),
+                  data = x)
+  
   list(
     obs_model = obs_model,
     obs_ratio = obs_ratio,
     permuted_models = permuted_models,
     permuted_ratios = permuted_ratios,
-    p = p
+    p = p,
+    nls_model = nls_model
   )
 }
 
@@ -770,7 +777,7 @@ g = function(dataset, lst) {
     dataset = dataset,
     bugdrug = names(lst),
     results = map(lst, f),
-    bdt = map_dbl(results, ~ .$obs_ratio),
+    obs_ratio = map_dbl(results, ~ 1e3 * .$obs_ratio),
     p = map_dbl(results, ~ .$p)
   )
 }
@@ -782,9 +789,14 @@ res = bind_rows(
 )
 
 res %>%
-  mutate(sig = p.adjust(p, 'BH') < 0.05) %>%
+  mutate(sig = p.adjust(p, 'BH') < 0.05,
+         #nlo = map_dbl(results, ~ .$nls_model %>% coef %>% { 1e3 * .['R'] }),
+         nlp = map_dbl(results, ~ .$nls_model %>% summary %>% coef %>% { .['R', 'Pr(>|t|)']}),
+         nlsig = p.adjust(nlp, 'BH') < 0.05,
+         nllci = map_dbl(results, ~ .$nls_model %>% confint.default %>% { 1e3 * .['R', 1] }),
+         nluci = map_dbl(results, ~ .$nls_model %>% confint.default %>% { 1e3 * .['R', 2] })) %>%
   select(-results) %>%
-  kable(caption = 'Observed results, and stat tests')
+  kable(caption = 'Observed results, and stat tests. Ratio in u/r per 1,000 km')
 ```
 
 ```{r}
@@ -816,20 +828,22 @@ f = function(bd, n_iter = 1e3) {
   list(
     obs_ratio = bs$t0,
     bs_lci = bs_ci[1],
-    bs_uci = bs_ci[2]
+    bs_uci = bs_ci[2],
+    bs = bs
   )
 }
 
-f(marketscan_maup_data$`Ec/q`)
+bs_p = function(bs, x0) sum(abs(bs$t - x0) > abs(bs$t0 - x0)) / (bs$R + 1)
 
 g = function(dataset, lst) {
   data_frame(
     dataset = dataset,
     bugdrug = names(lst),
     results = map(lst, f),
-    bdt = map_dbl(results, ~ .$obs_ratio),
-    lci = map_dbl(results, ~ .$bs_lci),
-    uci = map_dbl(results, ~ .$bs_uci)
+    obs_ratio = map_dbl(results, ~ 1e3 * .$obs_ratio),
+    lci = map_dbl(results, ~ 1e3 * .$bs_lci),
+    uci = map_dbl(results, ~ 1e3 * .$bs_uci),
+    p = map_dbl(results, ~ bs_p(.$bs, 0))
   )
 }
 
@@ -841,67 +855,11 @@ bs_res = bind_rows(
 
 bs_res %>%
   select(-results) %>%
-  kable()
-```
-
-```{r}
-# Bootstrapping logistic CIs
-f = function(bd, n_iter = 1e2) {
-  d = bd$data %>%
-    mutate(i = 1:n()) %>%
-    select(unit, i, did, n_resistant, n_isolates)
-  
-  units = unique(d$unit)
-  
-  bs = boot::boot(units, statistic = function(data, idx) {
-    crossing(unit1 = data[idx], unit2 = data[idx]) %>%
-      filter(unit1 < unit2) %>%
-      left_join(d, by = c('unit1' = 'unit')) %>%
-      left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
-      mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
-             dr = pct_res2 - pct_res1,
-             du = did2 - did1) %>%
-      glm(n_resistant ~ du + du:dist, family = 'binomial', weights = n_isolates, data = .) %>%
-      coef() %>%
-      { .['du:dist'] / .['du'] }
-  }, R = n_iter)
-  
-  bs_ci = boot::boot.ci(bs, type = 'bca') %$%
-    bca[c(4, 5)]
-  
-  list(
-    obs_ratio = bs$t0,
-    bs_lci = bs_ci[1],
-    bs_uci = bs_ci[2]
-  )
-}
-
-f(marketscan_maup_data$`Ec/q`)
-
-g = function(dataset, lst) {
-  data_frame(
-    dataset = dataset,
-    bugdrug = names(lst),
-    results = map(lst, f),
-    bdt = map_dbl(results, ~ .$obs_ratio),
-    lci = map_dbl(results, ~ .$bs_lci),
-    uci = map_dbl(results, ~ .$bs_uci)
-  )
-}
-
-bs_res = bind_rows(
-  g('marketscan', marketscan_maup_data),
-  g('nhsn', nhsn_maup_data),
-  g('europe', europe_maup_data)
-)
-
-bs_res %>%
-  select(-results) %>%
-  kable()
+  kable(caption = 'Bootstrap CIs. In per 1,000 km.')
 ```
 
 All the point estimates are positive, and some $p$-values are below $0.05$, but none pass an FDR $Q < 0.05$. Interestingly, the point estimates are fairly similar, in the range of $10^{-3}$ or below.
 
-These results suggest that $\beta_{\tau d}$ is of order $10^{-3}$, measured in slope units (percentage points per DID) per kilometer. The distance between the US coasts is about 4,000 kilometers, so a large distance $d$ between states is on the order of 1,000 kilometers, and a large effect would be $\beta_{\tau d} d \approx 1$ percentage points per DID.
+These results suggest that $\beta_{\tau d}/\beta_\tau$ is of order $10^{-3}$, measured in slope units (percentage points per DID) per kilometer. The distance between the US coasts is about 4,000 kilometers, so a large distance $d$ between states is on the order of 1,000 kilometers, and a large effect would be $\beta_{\tau d} d \approx 1$ percentage points per DID.
 
 Strong slopes are 5-10, so getting a huge geographic range gives you an order of 10% bonus. Could be 50%, but it's not 10-fold.
