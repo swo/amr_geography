@@ -583,47 +583,15 @@ europe %>%
 
 If local tranmission "washes out" the use/resistance relationship, then we expect that pairs of states that are closer to one another will have a greater difference in resistance for the same difference in use. That is:
 $$
-\Delta \rho \sim \Delta \tau + \Delta \tau \times d
+\frac{\Delta \rho}{\Delta \tau} \sim d,
 $$
-We expect that $\beta_{\tau d} > 1$, meaning that greater distances $d$ give you a bonus in $\Delta \rho$ for that same $\Delta \tau$:
-$$
-\Delta \rho_i = \beta_\tau \Delta \tau + \beta_{\tau d} \Delta \tau \times d = \beta_\tau \left(1 + \frac{\beta_{\tau d}}{\beta_\tau} d \right) \Delta \tau.
-$$
-Or, more simply:
-$$
-\Delta \rho_i = A (1 + R \times d) \Delta \tau_i + C + \varepsilon_i
-$$
+where $d$ is the distance between the two units.
 
-**swo** the linear thing can easily be replaced by predicted the log odds ratio of resistance rather than delta rho. You get similar results.
+In these analyses, we'll zero-center $d$ by subtracting its mean so that the regression intercept gives the expected ARRU at "average" distances. This should be comparable to the slope in $\rho \sim \tau$ across units.
 
-```{r distance}
-# fit the list of pairwise Delta rho, Delta tau, and distances
-distance_nls = function(df) {
-  # odds = function(p) p / (1 - p)
-  # 
-  # dff = df %>%
-  #   mutate(o1 = odds(pct_res1 / 100),
-  #          o2 = odds(pct_res2 / 100),
-  #          lor = log(o2 / o1))
-  
-  # fit the lm for guessing values
-  lm_model = lm(dr ~ du + du:dist, data = df)
-  #lm_model = lm(lor ~ du + du:dist, data = dff)
-  
-  # fit the model
-  nls_model = nls(
-    dr ~ A * (1 + R * dist) * du + C,
-    start = with(as.list(coef(lm_model)), list(A = du, R = `du:dist` / du, C = `(Intercept)`)),
-    data = df
-    #lor ~ A * (1 + R * dist) * du + C,
-    # data = dff
-  )
-  
-  nls_model
-}
-
+```{r dist_point}
 # turn the bugdrug bundle into a pairwise list of dr, du, and distances
-distance_fit_data = function(bd) {
+distance_fit_data = function(bd, permute = FALSE) {
   # prepare the data set
   d = bd$data %>%
     mutate(f_res = n_resistant / n_isolates,
@@ -631,17 +599,50 @@ distance_fit_data = function(bd) {
            i = 1:n()) %>%
     select(unit, i, use, pct_res)
   
+  if (permute) {
+    d %<>% mutate(i = sample(i))
+  }
+  
   # get all combinations of units
   units = unique(d$unit)
-  x = crossing(unit1 = units, unit2 = units) %>%
+  crossing(unit1 = units, unit2 = units) %>%
     filter(unit1 < unit2) %>%
     left_join(d, by = c('unit1' = 'unit')) %>%
     left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
     mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
            dr = pct_res2 - pct_res1,
-           du = use2 - use1)
+           du = use2 - use1,
+           y = dr / du,
+           x = dist - mean(dist))
+}
+
+bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
+
+slope_p = function(bd, n_iter = 999, method = bisquare) {
+  slope = function(permute) {
+    bd %>%
+      distance_fit_data(permute = permute) %>%
+      method(y ~ x, data = .) %>%
+      coef() %>%
+      extract('x')
+  }
   
-  x
+  base_slope = slope(FALSE)
+  perm_slopes = replicate(n_iter, slope(TRUE))
+  
+  r = sum(perm_slopes > base_slope)
+  
+  (r + 1) / (n_iter + 1)
+}
+
+# uses the t values reported by MASS::rlm
+bs_model_p = function(model) {
+  model %>%
+    summary() %>%
+    coef() %>%
+    { .['x', 't value'] } %>%
+    { -abs(.) } %>%
+    pt(df = length(model$residuals) - 2)
 }
 
 distance_fit = function(dataset, lst) {
@@ -649,13 +650,15 @@ distance_fit = function(dataset, lst) {
     dataset = dataset,
     bugdrug = names(lst),
     data = map(lst, distance_fit_data),
-    nls_model = map(data, distance_nls),
-    ratio = map_dbl(nls_model, ~ coef(.)['R']),
-    ratio_lci = map_dbl(nls_model, ~ confint.default(.)['R', 1]),
-    ratio_uci = map_dbl(nls_model, ~ confint.default(.)['R', 2]),
-    p_value = map_dbl(nls_model, ~ coef(summary(.))['R', 'Pr(>|t|)']),
-    sig = p_value < 0.05,
-    bh_sig = p.adjust(p_value, 'BH') < 0.05
+    model_lm = map(data, ~ lm(y ~ x, data = .)),
+    inter_lm = map_dbl(model_lm, ~ coef(.)['(Intercept)']),
+    slope_lm = map_dbl(model_lm, ~ coef(.)['x']),
+    p_lm = map_dbl(model_lm, ~ coef(summary(.))['x', 'Pr(>|t|)']),
+    model_bs = map(data, ~ bisquare(y ~ x, data = .)),
+    inter_bs = map_dbl(model_bs, ~ coef(.)['(Intercept)']),
+    slope_bs = map_dbl(model_bs, ~ coef(.)['x']),
+    p_value = map_dbl(lst, slope_p),
+    p2 = map_dbl(model_bs, bs_model_p)
   )
 }
 
@@ -666,86 +669,14 @@ distance_fit_results = bind_rows(
 )
 
 distance_fit_results %>%
-  select(-data, -nls_model) %>%
-  mutate_at(vars(starts_with('ratio')), ~ . * 1e3) %>%
+  mutate(fdr = p.adjust(p_value, 'BH') < 0.05) %>%
+  select(dataset, bugdrug, inter_lm, slope_lm, p_lm, inter_bs, slope_bs, p_value, fdr) %>%
+  mutate_at(vars(starts_with('slope')), ~ . * 1e3) %>%
   mutate_if(is.numeric, ~ round(., 3)) %>%
-  arrange(bugdrug) %>%
-  kable(caption = 'Observed results, and stat tests. Ratio in u/r per 1,000 km')
+  arrange(dataset, bugdrug) %>%
+  kable(caption = 'Point estimates of intercept (dr/du, in p.p. resistance per unit use) and slope (dr/du per 10^3 km).')
 ```
 
-**swo** do this a little more cleanly
+In the robust regressions, all the point estimates are positive, and some $p$-values are below $0.05$, but none pass an FDR $Q < 0.05$. Interestingly, the point estimates are fairly similar, after accounting for the fact that the European metric is ~10x the US metric.
 
-```{r distance_perm_perm}
-distance_fit_data_f_perm = function(bd) {
-  # prepare the data set,
-  # permuting the indices
-  d = bd$data %>%
-    mutate(pct_res = 100 * n_resistant / n_isolates,
-           i = sample(1:n())) %>%
-    select(unit, i, use, pct_res)
-  
-  # get all combinations of units
-  units = unique(d$unit)
-  x = crossing(unit1 = units, unit2 = units) %>%
-    filter(unit1 < unit2) %>%
-    left_join(d, by = c('unit1' = 'unit')) %>%
-    left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
-    mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
-           dr = pct_res2 - pct_res1,
-           du = use2 - use1)
-  
-  x
-}
-
-distance_fit_perm_p = function(bd, n_iter) {
-  df1 = distance_fit_data(bd)
-  
-  obs_model = distance_nls(df1)
-  obs_ratio = coef(obs_model)['R']
-  
-  obs_model2 = lm(dr ~ du + du:dist, data = df1)
-  obs_ratio2 = with(as.list(coef(obs_model2)), `du:dist` / du)
-  stopifnot(abs(obs_ratio - obs_ratio2) < 1e-6)
-  
-  perm_ratio = function() {
-    perm_df = distance_fit_data_f_perm(bd)
-    
-    perm_model = lm(dr ~ du + du:dist, data = perm_df)
-    with(as.list(coef(perm_model)), `du:dist` / du)
-  }
-
-  perm_ratios = replicate(n_iter, perm_ratio())
-
-  r = sum(abs(obs_ratio) < abs(perm_ratios))
-  p = (r + 1) / (n_iter + 1)
-  
-  p
-}
-
-distance_fit_perm = function(dataset, lst, n_iter) {
-  data_frame(
-    dataset = dataset,
-    bugdrug = names(lst),
-    p_value = map_dbl(lst, ~ distance_fit_perm_p(., n_iter))
-  )
-}
-
-n_iter = 1e3
-distance_fit_results_perm = bind_rows(
-  distance_fit_perm('marketscan', marketscan_maup_data, n_iter),
-  distance_fit_perm('nhsn', nhsn_maup_data, n_iter),
-  distance_fit_perm('europe', europe_maup_data, n_iter)
-)
-
-distance_fit_results_perm %>%
-  select(dataset, bugdrug, p_value) %>%
-  mutate(sig = p_value < 0.05,
-         adj_sig = p.adjust(p_value, 'BH') < 0.05) %>%
-  kable(caption = 'Permutation p')
-```
-
-All the point estimates are positive, and some $p$-values are below $0.05$, but none pass an FDR $Q < 0.05$. Interestingly, the point estimates are fairly similar, in the range of $10^{-3}$ or below.
-
-These results suggest that $\beta_{\tau d}/\beta_\tau$ is of order $10^{-3}$, measured in slope units (percentage points per DID) per kilometer. The distance between the US coasts is about 4,000 kilometers, so a large distance $d$ between states is on the order of 1,000 kilometers, and a large effect would be $\beta_{\tau d} d \approx 1$ percentage points per DID.
-
-Strong slopes are 5-10, so getting a huge geographic range gives you an order of 10% bonus. Could be 50%, but it's not 10-fold.
+These results suggest that an increased sitance of $10^3$ km leads to an ~10% improvement in $\Delta \rho / \Delta \tau$.
