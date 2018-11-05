@@ -524,16 +524,15 @@ maup_plot(europe_maup)
 
 To see if the observed (canonical) aggregate slope is anything special, compare it to the regional slopes you would get from permuting the region labels.
 
-```{r}
-agg_slope = function(df, group_, permute = FALSE) {
-  groupn_ = quo_name(group_)
-  
-  expected_names = c(groupn_, 'use', 'population', 'n_resistant', 'n_isolates')
-  cat(setdiff(expected_names, names(df)))
+```{r aggregate_slope_analysis}
+agg_slope_f = function(df, group, permute = FALSE) {
+  expected_names = c(group, 'use', 'population', 'n_resistant', 'n_isolates')
   stopifnot(all(expected_names %in% names(df)))
   
+  group_ = as.symbol(group)
+  
   permute_f = if (permute) {
-    function(x) mutate(x, !!groupn_ := sample(!!group_))
+    function(x) mutate(x, !!group := sample(!!group_))
   } else {
     identity
   }
@@ -552,31 +551,35 @@ agg_slope = function(df, group_, permute = FALSE) {
     unname()
 }
 
-agg_slope_p = function(df, group, n_iterations) {
-  group_ = enquo(group)
-  obs_slope = agg_slope(df, group_, permute = FALSE)
-  perm_slopes = replicate(n_iterations, agg_slope(df, group_, permute = TRUE))
+# group as character
+agg_slope_p = function(df, group, n_iter) {
+  obs_slope = agg_slope_f(df, group, permute = FALSE)
+  perm_slopes = replicate(n_iter, agg_slope_f(df, group, permute = TRUE))
   
   r = sum(perm_slopes > obs_slope)
-  (r + 1) / (n_iterations + 1)
+  (r + 1) / (n_iter + 1)
 }
 
-marketscan %>%
-  left_join(state_data) %>%
-  nest(-bugdrug) %>%
-  mutate(region_p = map_dbl(data, ~ agg_slope_p(., region, 100)),
-         division_p = map_dbl(data, ~ agg_slope_p(., division, 100)))
+agg_slope = function(df, unit_data, groups, n_iter = 99) {
+  dfn = quo_name(enquo(df))
+  mutate(df) %>%
+    left_join(unit_data, by = c('unit', 'population')) %>%
+    nest(-bugdrug) %>%
+    crossing(group = groups) %>%
+    mutate(p_value = map2_dbl(data, group, ~ agg_slope_p(.x, .y, n_iter)),
+           dataset = dfn)
+}
 
-nhsn %>%
-  left_join(state_data) %>%
-  nest(-bugdrug) %>%
-  mutate(region_p = map_dbl(data, ~ agg_slope_p(., region, 100)),
-         division_p = map_dbl(data, ~ agg_slope_p(., division, 100)))
+agg_slope_results = bind_rows(
+  agg_slope(marketscan, state_data, c('region', 'division')),
+  agg_slope(nhsn, state_data, c('region', 'division')),
+  agg_slope(europe, europe_units, c('region_name'))
+)
 
-europe %>%
-  left_join(europe_units) %>%
-  nest(-bugdrug) %>%
-  mutate(region_p = map_dbl(data, ~ agg_slope_p(., region_name, 100)))
+agg_slope_results %>%
+  mutate(fdr = p.adjust(p_value, 'BH') < 0.05) %>%
+  select(dataset, bugdrug, group, p_value, fdr) %>%
+  kable(caption = 'Empiricial tests, swapping the group labels')
 ```
 
 ## Distance analysis
