@@ -379,6 +379,8 @@ marketscan_maup %>%
   kable()
 ```
 
+Histogram of slopes over the random aggregates (zonal and sample) for each bug/drug and $k$. Dotted blue line shows the slope over the raw units (states).
+
 ```{r marketscan_maup_plot}
 ss = marketscan_state_slopes %>%
   crossing(k = c(4, 9))
