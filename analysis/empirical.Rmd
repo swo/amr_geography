@@ -379,34 +379,18 @@ marketscan_maup %>%
   kable()
 ```
 
-```{r marketscan_maup_vals}
-bootstrap_ci = function(x, f, R = 1000) {
-  if (length(x) == 1) return(c(NA, NA))
-  statistic = function(data, idx) f(data[idx])
-  boot(data = x, statistic = statistic, R = R) %>%
-    boot.ci(type = 'bca') %$%
-    bca[c(4, 5)]
-}
+```{r marketscan_maup_plot}
+ss = marketscan_state_slopes %>%
+  crossing(k = c(4, 9))
 
 marketscan_maup %>%
-  select(bugdrug, k, group_type, super_slope, median_sub_slope, slope_ratio) %>%
-  gather('metric', 'value', super_slope, median_sub_slope, slope_ratio) %>%
-  nest(value) %>%
-  mutate(values = map(data, ~ .$value),
-         median_ = map_dbl(values, median),
-         variance = map_dbl(values, var),
-         median_ci = map(values, ~ bootstrap_ci(., median)),
-         median_lci = map_dbl(median_ci, ~ .[1]),
-         median_uci = map_dbl(median_ci, ~ .[2]),
-         variance_ci = map(values, ~ bootstrap_ci(., var)),
-         variance_lci = map_dbl(variance_ci, ~ .[1]),
-         variance_uci = map_dbl(variance_ci, ~ .[2])
-  ) %>%
-  filter(!(group_type == 'canonical' & metric %in% c('median_sub_slope', 'slope_ratio'))) %>%
-  select(metric, bugdrug, group_type, k, median_, median_lci, median_uci, variance, variance_lci, variance_uci) %>%
-  mutate_if(is.numeric, ~ round(., 2)) %>%
-  arrange(metric, bugdrug, group_type, k) %>%
-  kable()
+  filter(group_type != 'canonical') %>%
+  select(bugdrug, k, group_type, super_slope) %>%
+  ggplot(aes(super_slope, fill = group_type)) +
+  facet_grid(k ~ bugdrug, scales = 'free') +
+  geom_vline(data = ss, aes(xintercept = state_slope), color = 'blue', linetype = 2) +
+  geom_histogram(position = 'dodge') +
+  xlab('slope over random aggregate')
 ```
 
 ## IMS/NHSN CAUTIs
