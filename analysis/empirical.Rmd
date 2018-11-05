@@ -312,12 +312,24 @@ marketscan_canonical_data %>%
   nest(-bugdrug, -level) %>%
   mutate(sd_x = map_dbl(data, ~ sd(.$did)),
          model = map(data, ~ lm(pct_res ~ did, data = .)),
+         slope = map_dbl(model, ~ coef(.)['did']),
          std_m = map_dbl(model, ~ coef(summary(.))['did', 'Std. Error'])) %>%
   select(bugdrug, level, sd_x, std_m) %>%
   group_by(bugdrug) %>%
   mutate(sd_x_ratio = 1 / (sd_x / tail(sd_x, 1)),
          std_m_ratio = std_m / tail(std_m, 1)) %>%
   kable(caption = 'Variances of x-values and stderr of slope')
+
+marketscan_canonical_data %>%
+  nest(-bugdrug, -level) %>%
+  mutate(
+    model = map(data, ~ lm(pct_res ~ did, data = .)),
+    slope = map_dbl(model, ~ coef(.)['did']),
+    slope_cil = map_dbl(model, ~ confint(.)['did', 1]),
+    slope_ciu = map_dbl(model, ~ confint(.)['did', 2])
+  ) %>%
+  select(bugdrug, level, starts_with('slope')) %>%
+  kable(caption = 'Slopes')
 
 marketscan_canonical_data %>%
   nest(-bugdrug) %>%
@@ -341,21 +353,30 @@ marketscan_canonical_data %>%
 **swo** figure out how to truncate this better
 
 ```{r marketscan_maup_plot}
-marketscan_maup %>%
-  select(bugdrug, k, group_type, super_slope, slope_ratio) %>%
-  gather('key', 'value', super_slope, slope_ratio) %>%
-  filter(abs(value) < 1000) %>%
-  ggplot(aes(factor(k), value, color = group_type)) +
-  facet_grid(key ~ bugdrug, scales = 'free') +
-  geom_boxplot()
+marketscan_state_slopes = marketscan_canonical_data %>%
+  filter(level == 'state') %>%
+  nest(-bugdrug) %>%
+  mutate(model = map(data, ~ lm(pct_res ~ did, data = .)),
+         state_slope = map_dbl(model, ~ coef(.)['did'])) %>%
+  select(bugdrug, state_slope)
 
 marketscan_maup %>%
-  filter(group_type != 'canonical') %>%
-  mutate(y = slope_ratio - 1) %>%
-  nest(-bugdrug, -group_type, -k) %>%
-  mutate(greater_p = map_dbl(data, ~ wilcox.test(.$y, alternative = 'greater')$p.value)) %>%
-  select(-data) %>%
-  kable(caption = 'Is the slope ratio greater than 1?')
+  filter(group_type != 'canonical' | k %in% c(4, 9)) %>%
+  select(bugdrug, k, group_type, super_slope) %>%
+  nest(super_slope) %>%
+  mutate(data = map(data, ~ unlist(., use.names = FALSE)),
+         median_super = map_dbl(data, median),
+         iqr_super = map_dbl(data, IQR)) %>%
+  left_join(marketscan_state_slopes, by = 'bugdrug') %>%
+  mutate(wilcox_p = map2_dbl(data, state_slope, ~ wilcox.test(.x - .y, alternative = 'greater')$p.value),
+    fdr = p.adjust(wilcox_p, 'BH') < 0.05) %>%
+  mutate(wilcox_p = if_else(group_type == 'canonical', NA_real_, wilcox_p),
+         p2 = log10(wilcox_p),
+         fdr = if_else(group_type == 'canonical', NA, fdr)) %>%
+  select(bugdrug, k, group_type, state_slope, median_super, iqr_super, wilcox_p, p2, fdr) %>%
+  mutate_if(is.numeric, ~ round(., 3)) %>%
+  arrange(bugdrug, group_type, k) %>%
+  kable()
 ```
 
 ```{r marketscan_maup_vals}
@@ -511,6 +532,37 @@ nhsn_maup %>%
   kable()
 ```
 
+### Example regions
+
+```{r hex}
+hex_map = read_tsv('~/grad/db/us_hex.tsv') %>%
+  filter(!is.na(state)) %>%
+  rename(unit = state)
+
+hex_labels = hex_map %>%
+  filter(order %in% c(0, 3)) %>%
+  group_by(unit) %>%
+  summarize_at(c('x', 'y'), mean) %>%
+  mutate(abb = state.abb[match(unit, state.name)]) %>%
+  crossing(k = c(4, 9), group_type = c('canonical', 'sample', 'zone'))
+
+hex_borders = hex_map %>%
+  crossing(k = c(4, 9), group_type = c('canonical', 'sample', 'zone'))
+
+nhsn_maup %>%
+  filter(group_type == 'canonical' | iteration == 1, k %in% c(4, 9)) %>%
+  mutate(unit = map(group, ~ nhsn_maup_data$`Ec/q`$unit_data$unit)) %>%
+  select(k, group_type, group, unit) %>%
+  unnest() %>%
+  right_join(hex_borders, by = c('unit', 'k', 'group_type')) %>%
+  ggplot(aes(x, y, group = unit)) +
+  facet_grid(group_type ~ k) +
+  geom_polygon(aes(fill = factor(group)), color = 'black', show.legend = FALSE) +
+  geom_text(data = hex_labels, aes(label = abb)) +
+  coord_fixed() +
+  theme_void()
+```
+
 ## Europe
 
 ```{r europe_data}
@@ -622,6 +674,10 @@ europe_maup %>%
 ```
 
 ## Canonical grouping analysis
+
+### Table of results
+
+### Significance test
 
 **swo** clean up
 
