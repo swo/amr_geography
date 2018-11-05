@@ -52,6 +52,9 @@ marketscan = marketscan_use %>%
 ### ECDC
 
 ```{r ecdc}
+europe_units = read_tsv('../db/europe_units.tsv') %>%
+  select(unit = country, long = longitude, lat = latitude, population, unit_id, region_name)
+
 europe = read_tsv('../data/ecdc/data.tsv') %>%
   mutate(bugdrug = case_when(
     .$bug == 'Escherichia coli' & .$drug == 'quinolone' ~ 'Ec/q',
@@ -70,9 +73,8 @@ europe_names = unique(europe$unit)
 ```{r nhsn_ims}
 nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
   mutate(dataset = 'NHSN/IMS', bug = 'E. coli', drug = 'quinolone',
-         pct_res = 100 * n_resistant / n_isolates,
-         use = us_europe_convert(drug, rx_1k_year)) %>%
-  select(dataset, bug, drug, unit = state, use, pct_res, n_isolates)
+         pct_res = 100 * n_resistant / n_isolates) %>%
+  select(dataset, bug, drug, unit = state, use = rx_1k_year, pct_res, n_isolates)
 ```
 
 # Results
@@ -200,9 +202,6 @@ marketscan_canonical = crossing(
   group_type = c('region', 'division', 'state')
 )
 
-europe_units = read_tsv('../db/europe_units.tsv') %>%
-  select(unit = country, long = longitude, lat = latitude, population, unit_id, region_name)
-
 add_canonical_data = function(df, maup_data) {
   df %>%
     mutate(group = map2(group_type, bugdrug,
@@ -248,7 +247,7 @@ marketscan_maup = maup_sim(
   canonical_rows = marketscan_canonical,
   maup_data = marketscan_maup_data,
   fn = 'results/marketscan_maup.rds',
-  force_run = FALSE
+  force_run = TRUE
 )
 ```
 
@@ -384,7 +383,7 @@ nhsn_maup = maup_sim(
   canonical_rows = nhsn_canonical,
   maup_data = nhsn_maup_data,
   fn = 'results/nhsn_maup.rds',
-  force_run = FALSE
+  force_run = TRUE
 )
 ```
 
@@ -398,23 +397,17 @@ nhsn_canonical_data = nhsn_maup %>%
     .$k == 9 ~ 'division',
     TRUE ~ 'state'
   )) %>%
-  select(bugdrug, level, group_data) %>%
-  unnest()
+  select(bugdrug, level, data = group_data)
 
 nhsn_canonical_data %>%
+  unnest() %>%
   ggplot(aes(use, pct_res, color = level)) +
   facet_wrap(~ bugdrug, scales = 'free') +
   geom_smooth(aes(fill = level), method = 'lm', alpha = 0.1) +
   geom_point()
 
 nhsn_canonical_data %>%
-  # filter(group_type == 'canonical') %>%
-  # mutate(level = case_when(
-  #   .$k == 4 ~ 'region',
-  #   .$k == 9 ~ 'division',
-  #   TRUE ~ 'state'
-  # )) %>%
-  mutate(model = map(group_data, ~ lm(pct_res ~ use, data = .)),
+  mutate(model = map(data, ~ lm(pct_res ~ use, data = .)),
          slope = map_dbl(model, ~ coef(.)['use']),
          lci = map_dbl(model, ~ confint(.)['use', 1]),
          uci = map_dbl(model, ~ confint(.)['use', 2])) %>%
@@ -493,7 +486,7 @@ europe_maup = maup_sim(
   canonical_rows = europe_canonical,
   maup_data = europe_maup_data,
   fn = 'results/europe_maup.rds',
-  force_run = FALSE
+  force_run = TRUE
 )
 ```
 
@@ -529,86 +522,61 @@ maup_plot(europe_maup)
 
 ### Significance test
 
-**swo** clean up
-
-There are some observed resistance values $y_i$ and uses $x_i$ in each state $i$. A linear fit $y_i \sim x_i$ gives the slope $m_1$. A linear fit on the aggregated data gives $m_2$. The null hypothesis is that $m_1 = m_2$, so the test statistic is $m_1 - m_2$. Is the observed value for that statistic consistent with the null hypothesis?
-
-Define $m = \tfrac{1}{2}(m_1 + m_2)$ as an *ad hoc* guess for that underlying parameter, which defines the errors $\varepsilon_i = y_i - m x_i$. The sample population is defined by the distribution of the $\varepsilon_i$. To sample from the population, in each iteration, draw a bootstrap sample $\varepsilon^\star$ from the $\varepsilon$ to compute $y_i^\star = m x_i + \varepsilon_i^\star$. A regression $y_i^\star \sim x_i$ produces a slope $m_1^\star$, which is not necessarily equal to $m$. The regression on the aggregate data produces $m_2^\star$, and thus the sampled test statistic $m_1^\star - m_2^\star$.
+To see if the observed (canonical) aggregate slope is anything special, compare it to the regional slopes you would get from permuting the region labels.
 
 ```{r}
-state_groups = select(state_data, unit, region, division)
-
-adhoc = function(df) {
+agg_slope = function(df, group_, permute = FALSE) {
+  groupn_ = quo_name(group_)
+  
+  expected_names = c(groupn_, 'use', 'population', 'n_resistant', 'n_isolates')
+  cat(setdiff(expected_names, names(df)))
+  stopifnot(all(expected_names %in% names(df)))
+  
+  permute_f = if (permute) {
+    function(x) mutate(x, !!groupn_ := sample(!!group_))
+  } else {
+    identity
+  }
+  
   df %>%
-    left_join(state_groups, by = 'unit') %>%
-    mutate(pct_res = 100 * n_resistant / n_isolates)
-}
-
-aggregate2 = function(df, group) {
-  group_ = enquo(group)
-  group_by(df, !!group_) %>%
+    permute_f() %>%
+    group_by(!!group_) %>%
     summarize(use = weighted.mean(use, w = population),
               n_resistant = sum(n_resistant),
               n_isolates = sum(n_isolates)) %>%
     mutate(n_susceptible = n_isolates - n_resistant,
-           pct_res = n_resistant / n_isolates * 100)
+           pct_res = n_resistant / n_isolates * 100) %>%
+    lm(pct_res ~ use, data = .) %>%
+    coef() %>%
+    extract('use') %>%
+    unname()
 }
 
-data_frame(bugdrug = names(marketscan_maup_data)) %>%
-  mutate(state_d = map(bugdrug, ~ adhoc(marketscan_maup_data[[.]]$data)),
-         state_slope = map_dbl(state_d, ~ coef(lm(pct_res ~ use, data = .))['use']),
-         division_data = map(state_d, ~ aggregate2(., division)),
-         division_slope = map_dbl(division_data, ~ coef(lm(pct_res ~ use, data = .))['use']),
-         region_data = map(state_d, ~ aggregate2(., region)),
-         region_slope = map_dbl(region_data, ~ coef(lm(pct_res ~ use, data = .))['use'])
-         ) %>%
-  identity()
-
-bs_p = function(df1, group, n_iterations = 100) {
+agg_slope_p = function(df, group, n_iterations) {
   group_ = enquo(group)
+  obs_slope = agg_slope(df, group_, permute = FALSE)
+  perm_slopes = replicate(n_iterations, agg_slope(df, group_, permute = TRUE))
   
-  df2 = df1 %>% aggregate2(!!group_)
-  slope_f = function(df) coef(lm(pct_res ~ use, data = df))['use']
-  
-  m1 = slope_f(df1)
-  m2 = slope_f(df2)
-  m = mean(c(m1, m2))
-  
-  eps = df1$pct_res - m * df1$use
-  
-  f = function() {
-    eps_bs = sample(eps, replace = TRUE)
-    y_bs = m * df1$use + eps_bs
-    
-    m1_bs = coef(lm(y_bs ~ df1$use))[2]
-    m2_bs = df1 %>%
-      mutate(y_bs = y_bs) %>%
-      group_by(!!group_) %>%
-      summarize(use = weighted.mean(use, w = population),
-                pct_res = weighted.mean(y_bs, w = n_isolates)) %>%
-      lm(pct_res ~ use, data = .) %>%
-      { coef(.)['use'] }
-    
-    m1_bs - m2_bs
-  }
-  
-  diffs_bs = replicate(n_iterations, f())
-  
-  (sum(abs(m1 - m2) < abs(diffs_bs)) + 1) / (n_iterations + 1)
+  r = sum(perm_slopes > obs_slope)
+  (r + 1) / (n_iterations + 1)
 }
 
-data_frame(bugdrug = names(marketscan_maup_data)) %>%
-  mutate(state_d = map(bugdrug, ~ adhoc(marketscan_maup_data[[.]]$data)),
-         region_p = map_dbl(state_d, ~ bs_p(., region)),
-         division_p = map_dbl(state_d, ~ bs_p(., division))) %>%
-  select(-state_d) %>%
-  kable(caption = 'MarketScan empirical p for different slopes')
+marketscan %>%
+  left_join(state_data) %>%
+  nest(-bugdrug) %>%
+  mutate(region_p = map_dbl(data, ~ agg_slope_p(., region, 100)),
+         division_p = map_dbl(data, ~ agg_slope_p(., division, 100)))
 
-data_frame(state_d = list(adhoc(nhsn_maup_data$`Ec/q`$data))) %>%
-  mutate(region_p = map_dbl(state_d, ~ bs_p(., region)),
-         division_p = map_dbl(state_d, ~ bs_p(., division))) %>%
-  select(-state_d) %>%
-  kable(caption = 'NHSN')
+nhsn %>%
+  left_join(state_data) %>%
+  nest(-bugdrug) %>%
+  mutate(region_p = map_dbl(data, ~ agg_slope_p(., region, 100)),
+         division_p = map_dbl(data, ~ agg_slope_p(., division, 100)))
+
+europe %>%
+  left_join(europe_units) %>%
+  nest(-bugdrug) %>%
+  mutate(region_p = map_dbl(data, ~ agg_slope_p(., region_name, 100)))
 ```
 
 ## Distance analysis
