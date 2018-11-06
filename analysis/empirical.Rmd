@@ -593,6 +593,10 @@ where $d$ is the distance between the two units.
 In these analyses, we'll zero-center $d$ by subtracting its mean so that the regression intercept gives the expected ARRU at "average" distances. This should be comparable to the slope in $\rho \sim \tau$ across units.
 
 ```{r dist_point}
+odds = function(p) p / (1 - p)
+odds_ratio = function(p, q) odds(p) / odds(q)
+coef1 = function(model, term) model %>% coef() %>% extract(term) %>% unname()
+
 # turn the bugdrug bundle into a pairwise list of dr, du, and distances
 distance_fit_data = function(bd, permute = FALSE) {
   # prepare the data set
@@ -615,25 +619,30 @@ distance_fit_data = function(bd, permute = FALSE) {
     mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
            dr = pct_res2 - pct_res1,
            du = use2 - use1,
-           y = dr / du,
-           x = dist - mean(dist))
+           arru = dr / du,
+           loru = log(odds_ratio(pct_res2 / 100, pct_res1 / 100)) / du,
+           d = dist - mean(dist))
 }
 
 bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
 
-slope_p = function(bd, n_iter = 999, method = bisquare) {
-  slope = function(permute) {
-    bd %>%
-      distance_fit_data(permute = permute) %>%
-      method(y ~ x, data = .) %>%
-      coef() %>%
-      extract('x')
+regression_p = function(bd, n_iter = 999, method = bisquare) {
+  vals = function(permute) {
+    dfd = distance_fit_data(bd, permute = permute)
+    
+    arru = method(arru ~ d, data = dfd) %>%
+      coef1('d')
+    
+    loru = method(loru ~ d, data = dfd) %>%
+      coef1('d')
+    
+    c('arru' = arru, 'loru' = loru)
   }
   
-  base_slope = slope(FALSE)
-  perm_slopes = replicate(n_iter, slope(TRUE))
+  base_vals = vals(FALSE)
+  perm_vals = replicate(n_iter, vals(TRUE))
   
-  r = sum(perm_slopes > base_slope)
+  r = rowSums(perm_vals > base_vals)
   
   (r + 1) / (n_iter + 1)
 }
@@ -643,9 +652,19 @@ bs_model_p = function(model) {
   model %>%
     summary() %>%
     coef() %>%
-    { .['x', 't value'] } %>%
+    { .['d', 't value'] } %>%
     { -abs(.) } %>%
     pt(df = length(model$residuals) - 2)
+}
+
+confint.rlm = function(m) {
+  cs = coef(summary(m))
+  estimate = cs[, 'Value']
+  se = cs[, 'Std. Error']
+  result = cbind(estimate - 1.96 * se, estimate + 1.96 * se)
+  rownames(result) <- names(estimate)
+  colnames(result) <- c('2.5%', '97.5%')
+  result
 }
 
 distance_fit = function(dataset, lst) {
@@ -653,15 +672,11 @@ distance_fit = function(dataset, lst) {
     dataset = dataset,
     bugdrug = names(lst),
     data = map(lst, distance_fit_data),
-    model_lm = map(data, ~ lm(y ~ x, data = .)),
-    inter_lm = map_dbl(model_lm, ~ coef(.)['(Intercept)']),
-    slope_lm = map_dbl(model_lm, ~ coef(.)['x']),
-    p_lm = map_dbl(model_lm, ~ coef(summary(.))['x', 'Pr(>|t|)']),
-    model_bs = map(data, ~ bisquare(y ~ x, data = .)),
-    inter_bs = map_dbl(model_bs, ~ coef(.)['(Intercept)']),
-    slope_bs = map_dbl(model_bs, ~ coef(.)['x']),
-    p_value = map_dbl(lst, slope_p),
-    p2 = map_dbl(model_bs, bs_model_p)
+    model_arru = map(data, ~ bisquare(arru ~ d, data = .)),
+    model_loru = map(data, ~ bisquare(loru ~ d, data = .)),
+    p_values = map(lst, regression_p),
+    arru_p = map_dbl(p_values, ~ .['arru']),
+    loru_p = map_dbl(p_values, ~ .['loru'])
   )
 }
 
@@ -671,13 +686,33 @@ distance_fit_results = bind_rows(
   distance_fit('europe', europe_maup_data)
 )
 
-distance_fit_results %>%
-  mutate(fdr = p.adjust(p_value, 'BH') < 0.05) %>%
-  select(dataset, bugdrug, inter_lm, slope_lm, p_lm, inter_bs, slope_bs, p_value, fdr) %>%
-  mutate_at(vars(starts_with('slope')), ~ . * 1e3) %>%
-  mutate_if(is.numeric, ~ round(., 3)) %>%
-  arrange(dataset, bugdrug) %>%
-  kable(caption = 'Point estimates of intercept (dr/du, in p.p. resistance per unit use) and slope (dr/du per 10^3 km).')
+distance_fit_table = function(model, p) {
+  model_ = enquo(model)
+  p_ = enquo(p)
+
+  distance_fit_results %>%
+    select(dataset, bugdrug, model = !!model_) %>%
+    mutate(vals = map(model, tidy)) %>%
+    select(-model) %>%
+    unnest() %>%
+    mutate_at(c('estimate', 'std.error'), function(x) if_else(.$term == 'd', 1e3 * x, x)) %>%
+    mutate(hci = 1.96 * std.error,
+           cil = estimate - hci,
+           ciu = estimate + hci,
+           range = sprintf('%.3f (%.3f to %.3f)', estimate, cil, ciu)) %>%
+    select(dataset, bugdrug, term, range) %>%
+    spread(term, range) %>%
+    rename(slope = d) %>%
+    left_join(select(distance_fit_results, dataset, bugdrug, slope_p = !!p_)) %>%
+    mutate(fdr = p.adjust(slope_p, 'BH') < 0.05) %>%
+    arrange(dataset, bugdrug)
+}
+
+distance_fit_table(model_arru, arru_p) %>%
+  kable(caption = 'Point estimates of intercept (ARRU, in p.p. resistance per unit use) and slope (ARRU per 10^3 km).')
+
+distance_fit_table(model_loru, loru_p) %>%
+  kable(caption = 'Point estimates of intercept (LORU, in per unit use) and slope (LORU per 10^3 km).')
 ```
 
 In the robust regressions, all the point estimates are positive, and some $p$-values are below $0.05$, but none pass an FDR $Q < 0.05$. Interestingly, the point estimates are fairly similar, after accounting for the fact that the European metric is ~10x the US metric.
