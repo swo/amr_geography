@@ -27,7 +27,7 @@ state_data = read_tsv('../db/state_census.tsv')
 
 ```{r marketscan_data}
 marketscan_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv') %>%
-  rename(drug=drug_group) %>%
+  rename(drug = drug_group) %>%
   mutate(bugdrug = case_when(
     .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
     .$bug == 'S. pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
@@ -38,9 +38,8 @@ marketscan_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv'
   select(bugdrug, drug, state, n_resistant, n_isolates)
 
 marketscan_use = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
-  rename(drug = drug_group) %>%
-  filter(drug %in% c('quinolone', 'beta_lactam', 'macrolide')) %>%
-  mutate(use = total_use * 1000)
+  rename(drug = drug_group, use = total_use) %>%
+  filter(drug %in% c('quinolone', 'beta_lactam', 'macrolide'))
 
 marketscan = marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
@@ -49,13 +48,48 @@ marketscan = marketscan_use %>%
   select(unit, bugdrug, use, n_resistant, n_isolates, population)
 ```
 
+### NHSN/IMS
+
+```{r nhsn_ims}
+# nhsn1 = read_tsv('../data/nhsn-ims/data.tsv') %>%
+#   mutate(dataset = 'NHSN/IMS', bugdrug = 'Ec/q',
+#          use = rx_1k_year / 1e3) %>%
+#   select(dataset, bugdrug, unit = state, use, n_resistant, n_isolates)
+
+nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
+  rename(state_abbreviation = state) %>%
+  filter(state_abbreviation %in% state.abb) %>%
+  mutate(state_id = match(state_abbreviation, state.abb),
+         unit = state.name[state_id],
+         bugdrug = 'Ec/q',
+         use = rx_1k_year / 1e3) %>%
+  arrange(unit) %>%
+  left_join(select(state_data, unit, population), by = 'unit') %>%
+  select(unit, bugdrug, use, n_resistant, n_isolates, population)
+```
+
 ### ECDC
+
+For the European data, we convert to "treatments" per person per year, assuming a certain conversion from DDD to treatments. This is just an *ad hoc* adjustment to get the European data to the same scales as used in the simulations and the US data.
+
+```{r ecdc_convert}
+did_cpy_map = data_frame(
+  drug = c('beta_lactam', 'quinolone', 'macrolide'),
+  ddd_per_tx = c(10, 10, 7),
+  cpy_per_did = 365 / (1e3 * ddd_per_tx)
+)
+
+did_cpy_map %>%
+  kable(caption = 'DDD to treatment conversion')
+```
 
 ```{r ecdc}
 europe_units = read_tsv('../db/europe_units.tsv') %>%
   select(unit = country, long = longitude, lat = latitude, population, unit_id, region_name)
 
 europe = read_tsv('../data/ecdc/data.tsv') %>%
+  left_join(did_cpy_map, by = 'drug') %>%
+  mutate(use = cpy_per_did * did) %>%
   mutate(bugdrug = case_when(
     .$bug == 'Escherichia coli' & .$drug == 'quinolone' ~ 'Ec/q',
     .$bug == 'Streptococcus pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
@@ -63,18 +97,9 @@ europe = read_tsv('../data/ecdc/data.tsv') %>%
   )) %>%
   rename(unit = country) %>%
   left_join(select(europe_units, unit, population), by = 'unit') %>%
-  select(unit, bugdrug, use = did, n_resistant = n_ns, n_isolates, population)
+  select(unit, bugdrug, use, n_resistant = n_ns, n_isolates, population)
 
 europe_names = unique(europe$unit)
-```
-
-### NHSN/IMS
-
-```{r nhsn_ims}
-nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
-  mutate(dataset = 'NHSN/IMS', bug = 'E. coli', drug = 'quinolone',
-         pct_res = 100 * n_resistant / n_isolates) %>%
-  select(dataset, bug, drug, unit = state, use = rx_1k_year, pct_res, n_isolates)
 ```
 
 # Results
@@ -149,14 +174,14 @@ aggregate = function(df, group) {
               n_resistant = sum(n_resistant),
               n_isolates = sum(n_isolates)) %>%
     mutate(n_susceptible = n_isolates - n_resistant,
-           pct_res = n_resistant / n_isolates * 100)
+           res = n_resistant / n_isolates)
 }
 
 group_models = function(df, group) {
   df %>%
-    mutate(pct_res = n_resistant / n_isolates * 100) %>%
+    mutate(res = n_resistant / n_isolates) %>%
     split(group) %>%
-    map(~ lm(pct_res ~ use, data = .))
+    map(~ lm(res ~ use, data = .))
 }
 
 try_load = function(fn, expr, force_run = FALSE) {
@@ -227,14 +252,14 @@ maup_sim = function(bugdrug, k, n_iterations, canonical_rows, maup_data, fn, for
       mutate(
         group_data = map2(bugdrug, group, ~ aggregate(maup_data[[.x]]$data, .y)),
         group_type = if_else(group_type %in% c('state', 'region', 'division', 'europe_region'), 'canonical', group_type),
-        super_model = map(group_data, ~ lm(pct_res ~ use, data = .)),
+        super_model = map(group_data, ~ lm(res ~ use, data = .)),
         super_slope = map_dbl(super_model, ~ coef(.)['use']),
         sub_models = map2(bugdrug, group, ~ group_models(maup_data[[.x]]$data, .y)),
         sub_slopes = map(sub_models, function(ms) map_dbl(ms, ~ coef(.)['use'])),
         median_sub_slope = map_dbl(sub_slopes, ~ median(., na.rm = TRUE)),
         slope_ratio = super_slope / median_sub_slope,
         # weighted linear models
-        w_super_model = map(group_data, ~ lm(pct_res ~ use, weights = n_isolates, data = .)),
+        w_super_model = map(group_data, ~ lm(res ~ use, weights = n_isolates, data = .)),
         w_super_slope = map_dbl(w_super_model, ~ coef(.)['use'])
       )
   }, force_run = force_run)
@@ -265,14 +290,14 @@ marketscan_canonical_data = marketscan_maup %>%
   
 marketscan_canonical_data %>%
   unnest() %>%
-  ggplot(aes(use, pct_res, color = level)) +
+  ggplot(aes(use, res, color = level)) +
   facet_wrap(~ bugdrug, scales = 'free') +
   geom_smooth(aes(fill = level), method = 'lm', alpha = 0.1) +
   geom_point()
 
 marketscan_canonical_data %>%
   mutate(
-    model = map(data, ~ lm(pct_res ~ use, data = .)),
+    model = map(data, ~ lm(res ~ use, data = .)),
     slope = map_dbl(model, ~ coef(.)['use']),
     slope_cil = map_dbl(model, ~ confint(.)['use', 1]),
     slope_ciu = map_dbl(model, ~ confint(.)['use', 2])
@@ -352,16 +377,6 @@ maup_plot(marketscan_maup)
 ## IMS/NHSN CAUTIs
 
 ```{r nhsn}
-nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
-  rename(state_abbreviation = state) %>%
-  filter(state_abbreviation %in% state.abb) %>%
-  mutate(state_id = match(state_abbreviation, state.abb),
-         unit = state.name[state_id],
-         bugdrug = 'Ec/q') %>%
-  arrange(unit) %>%
-  left_join(select(state_data, unit, population), by = 'unit') %>%
-  select(unit, bugdrug, use = rx_1k_year, n_resistant, n_isolates, population)
-
 nhsn_maup_data = nhsn %>%
   nest(-bugdrug) %>%
   mutate(
@@ -405,13 +420,13 @@ nhsn_canonical_data = nhsn_maup %>%
 
 nhsn_canonical_data %>%
   unnest() %>%
-  ggplot(aes(use, pct_res, color = level)) +
+  ggplot(aes(use, res, color = level)) +
   facet_wrap(~ bugdrug, scales = 'free') +
   geom_smooth(aes(fill = level), method = 'lm', alpha = 0.1) +
   geom_point()
 
 nhsn_canonical_data %>%
-  mutate(model = map(data, ~ lm(pct_res ~ use, data = .)),
+  mutate(model = map(data, ~ lm(res ~ use, data = .)),
          slope = map_dbl(model, ~ coef(.)['use']),
          lci = map_dbl(model, ~ confint(.)['use', 1]),
          uci = map_dbl(model, ~ confint(.)['use', 2])) %>%
@@ -506,7 +521,7 @@ europe_maup %>%
   )) %>%
   select(bugdrug, level, group_data) %>%
   unnest() %>%
-  ggplot(aes(use, pct_res, color = level)) +
+  ggplot(aes(use, res, color = level)) +
   facet_wrap(~ bugdrug, scales = 'free') +
   geom_smooth(aes(fill = level), method = 'lm', alpha = 0.1) +
   geom_point()
@@ -548,8 +563,8 @@ agg_slope_f = function(df, group, permute = FALSE) {
               n_resistant = sum(n_resistant),
               n_isolates = sum(n_isolates)) %>%
     mutate(n_susceptible = n_isolates - n_resistant,
-           pct_res = n_resistant / n_isolates * 100) %>%
-    lm(pct_res ~ use, data = .) %>%
+           res = n_resistant / n_isolates) %>%
+    lm(res ~ use, data = .) %>%
     coef() %>%
     extract('use') %>%
     unname()
@@ -605,10 +620,9 @@ coef1 = function(model, term) model %>% coef() %>% extract(term) %>% unname()
 distance_fit_data = function(bd, permute = FALSE) {
   # prepare the data set
   d = bd$data %>%
-    mutate(f_res = n_resistant / n_isolates,
-           pct_res = 100 * f_res,
+    mutate(res = n_resistant / n_isolates,
            i = 1:n()) %>%
-    select(unit, i, use, pct_res)
+    select(unit, i, use, res)
   
   if (permute) {
     d %<>% mutate(i = sample(i))
@@ -621,16 +635,16 @@ distance_fit_data = function(bd, permute = FALSE) {
     left_join(d, by = c('unit1' = 'unit')) %>%
     left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
     mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
-           dr = pct_res2 - pct_res1,
+           dr = res2 - res1,
            du = use2 - use1,
            arru = dr / du,
-           loru = log(odds_ratio(pct_res2 / 100, pct_res1 / 100)) / du,
+           loru = log(odds_ratio(res2, res1)) / du,
            d = dist - mean(dist))
 }
 
 bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
 
-regression_p = function(bd, n_iter = 999, method = bisquare) {
+regression_p = function(bd, n_iter = 99, method = bisquare) {
   vals = function(permute) {
     dfd = distance_fit_data(bd, permute = permute)
     
