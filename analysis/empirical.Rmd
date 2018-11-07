@@ -296,12 +296,16 @@ maup_table = function(maup, base_level = 'state', ks = c(4, 9)) {
     filter(group_type != 'canonical' | k %in% ks) %>%
     select(bugdrug, k, group_type, super_slope) %>%
     nest(super_slope) %>%
-    mutate(data = map(data, ~ unlist(., use.names = FALSE)),
-           median_super = map_dbl(data, median),
-           iqr_super = map_dbl(data, IQR)) %>%
+    mutate(
+      data = map(data, ~ unlist(., use.names = FALSE)),
+      median_super = map_dbl(data, median),
+      iqr_super = map_dbl(data, IQR)
+    ) %>%
     left_join(base_slopes, by = 'bugdrug') %>%
-    mutate(wilcox_p = map2_dbl(data, base_slope, ~ wilcox.test(.x - .y, alternative = 'greater')$p.value),
-      fdr = p.adjust(wilcox_p, 'BH') < 0.05) %>%
+    mutate(
+      wilcox_p = map2_dbl(data, base_slope, ~ wilcox.test(.x - .y, alternative = 'greater')$p.value),
+      fdr = p.adjust(wilcox_p, 'BH') < 0.05
+    ) %>%
     mutate(wilcox_p = if_else(group_type == 'canonical', NA_real_, wilcox_p),
            log10p = log10(wilcox_p),
            fdr = if_else(group_type == 'canonical', NA, fdr)) %>%
