@@ -184,7 +184,115 @@ whn2 %>%
   kable(caption = '2-population effect sizes, WHN model')
 ```
 
-## WHN nested model
+## WHN nested populations
+
+```{r whn_nest_sim}
+whn_nest_sim = function(taui, eps_super, eps_sub) {
+  n_pop = length(taui)
+  pop_per = sqrt(n_pop)
+  
+  if (pop_per != as.integer(pop_per)) {
+    stop('length of taui must be a perfect square')
+  }
+  
+  superpop = rep(1:pop_per, each = pop_per)
+  stopifnot(length(superpop) == length(taui))
+  
+  contact = outer(1:n_pop, 1:n_pop, Vectorize(function(i, j) {
+    if (i == j) {
+      (1 - eps_super * (1 - 1 / pop_per)) * (1 - eps_sub * (1 - 1 / pop_per))
+    } else if (superpop[i] == superpop[j]) {
+      (1 - eps_super * (1 - 1 / pop_per)) * eps_sub / pop_per
+    } else {
+      eps_super / pop_per * 1 / pop_per
+    }
+  }))
+
+  stopifnot(all.equal(rowSums(contact), rep(1.0, n_pop)))
+  stopifnot(all.equal(colSums(contact), rep(1.0, n_pop)))
+
+  parms = with(whn_base_parms, {
+    betaij = beta * contact
+    
+    c(whn_base_parms, list(
+      taui = taui, eps_super = eps_super, eps_sub = eps_sub,
+      betaij = betaij
+    ))
+  })
+  
+  state = data_frame(
+    X = rep(0.990 / n_pop, n_pop),
+    S = rep(0.005 / n_pop, n_pop),
+    R = S,
+    D = 0
+  )
+  
+  state_vector = whn_pack(state)
+  
+  result = rootSolve::runsteady(state_vector, func = whn_ode_func, parms = parms)
+  
+  result$y %>%
+    whn_unpack() %>%
+    mutate(pop = seq_along(taui),
+           superpop = superpop[pop],
+           tau = taui,
+           rho = R / (S + R + D))
+}
+```
+
+```{r whn_nest_results}
+taui = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
+
+nest_results = crossing(
+  eps_super = c(0.0, 0.01, 0.1, 0.5),
+  eps_sub = c(0.0, 0.01, 0.1, 0.5)
+) %>%
+  filter(eps_super <= eps_sub) %>%
+  mutate(data = map2(eps_super, eps_sub, ~ whn_nest_sim(taui, .x, .y)))
+```
+
+```{r whn_nest_display}
+whn_nest_plot = nest_results %>%
+  unnest() %>%
+  mutate_at(vars(starts_with('eps')), ~ sprintf('%.2f', .)) %>%
+  ggplot(aes(tau * 12, rho)) +
+  facet_grid(eps_sub ~ eps_super) +
+  geom_hline(yintercept = 0.5, color = 'gray', linetype = 2) +
+  geom_smooth(aes(color = NULL), method = 'lm', se = FALSE, color = 'black', size = 0.5) +
+  geom_point(aes(shape = factor(superpop))) +
+  scale_shape_manual(values = c(0, 1, 2, 5)) +
+  scale_x_continuous(
+    name = 'antibiotic use (yearly treatments per person)',
+    limits = c(0.5, 2.5), breaks = c(0.5, 1.5, 2.5)
+  ) +
+  scale_y_continuous(
+    name = 'resistance (proportion of hosts)',
+    limits = c(0.0, 1.01), expand = c(0, 0), breaks = c(0, 0.5, 1.0)
+  ) +
+  theme_classic() +
+  theme(
+    #text = element_text(family = 'Times'),
+    axis.title = element_text(size = 8),
+    axis.text = element_text(size = 8, color = 'black'),
+    panel.spacing = unit(3, 'mm'),
+    legend.position = 'none',
+    strip.background = element_blank(),
+    strip.text = element_text(size = 8, color = 'black', face = 'bold')
+  )
+
+whn_nest_plot
+
+ggsave('fig/whn_nest.pdf', plot = whn_nest_plot, width = 88, height = 110, units = 'mm')
+```
+
+```{r nested_model_uses}
+data_frame(
+  population = 1:16,
+  superpopulation = rep(1:4, each = 4),
+  tau = round(taui, 3)
+) %>%
+  kable(caption = 'Antibiotic use rates in nested models')
+```
 
 # D-types model
 
@@ -399,4 +507,91 @@ dtypes2 %>%
   mutate(rru = rr / delta_u,
          loru = lor / delta_u) %>%
   kable(caption = '2-population effect sizes, D-types model')
+```
+
+## D-types nested
+
+```{r dtypes_nest_sim}
+dtypes_nest_sim = function(tau_i, eps_super, eps_sub) {
+  n_pop = length(tau_i)
+  pop_per = sqrt(n_pop)
+
+  # swo: a lot of this code is reproduced, find a way to refactor
+  if (pop_per != as.integer(pop_per)) {
+    stop('length of taui must be a perfect square')
+  }
+  
+  superpop = rep(1:pop_per, each = pop_per)
+  stopifnot(length(superpop) == length(tau_i))
+  
+  contact = outer(1:n_pop, 1:n_pop, Vectorize(function(i, j) {
+    if (i == j) {
+      (1 - eps_super * (1 - 1 / pop_per)) * (1 - eps_sub * (1 - 1 / pop_per))
+    } else if (superpop[i] == superpop[j]) {
+      (1 - eps_super * (1 - 1 / pop_per)) * eps_sub / pop_per
+    } else {
+      eps_super / pop_per * 1 / pop_per
+    }
+  }))
+
+  stopifnot(all.equal(rowSums(contact), rep(1.0, n_pop)))
+  stopifnot(all.equal(colSums(contact), rep(1.0, n_pop)))
+
+  parms = with(dtypes_base_parms, {
+    c(dtypes_base_parms, list(
+      beta_ij = beta * contact,
+      n_pop = n_pop, tau_i = tau_i,
+      eps_super = eps_super, eps_sub = eps_sub
+    ))
+  })
+  
+  n_d = parms$n_d
+  
+  state = list(X_i = rep(0.9 / n_pop, n_pop),
+               S_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d),
+               R_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d))
+
+  state_vector = dtypes_pack(state)
+  stopifnot(all.equal(sum(state_vector), 1))
+
+  result = rootSolve::runsteady(state_vector, func = dtypes_ode_func, parms = parms,
+                                stol = 1e-8 / n_pop, rtol = 1e-6 / n_pop, atol = 1e-6 / n_pop)
+
+  result$y %>%
+    dtypes_unpack(n_pop = n_pop, n_d = n_d) %>%
+    dtypes_list_to_df() %>%
+    left_join(data_frame(pop = 1:n_pop, superpop = superpop[pop], tau = tau_i), by = 'pop')
+}
+```
+
+```{r dtypes_nest_results}
+tau_i = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
+
+dtypes_nest_results = crossing(
+  eps_super = c(0.0, 0.01, 0.1, 0.5),
+  eps_sub = c(0.0, 0.01, 0.1, 0.5)
+) %>%
+  filter(eps_super <= eps_sub) %>%
+  mutate(data = map2(eps_super, eps_sub, ~ dtypes_nest_sim(tau_i, .x, .y)))
+
+janky_superpop_f = function(pop) {
+  n_superpop = sqrt(length(pop))
+  rep(1:n_superpop, each = n_superpop)
+}
+
+dtypes_nest_results %>%
+  mutate(data = map(data, dtypes_summarize)) %>%
+  unnest() %>%
+  group_by(eps_super, eps_sub) %>%
+  mutate(superpop = janky_superpop_f(pop)) %>%
+  ungroup() %>%
+  ggplot(aes(tau, rho, color = factor(superpop))) +
+  facet_grid(eps_super ~ eps_sub, labeller = labeller(.rows = label_both, .cols = label_both)) +
+  geom_hline(yintercept = 0.0) +
+  geom_hline(yintercept = 0.5, color = 'gray', linetype = 2) +
+  geom_smooth(aes(color = NULL), method = 'lm', se = FALSE, color = 'black', size = 0.5) +
+  geom_point() +
+  geom_line() +
+  ylim(0 - 0.01, 1.01) +
+  theme_classic()
 ```
