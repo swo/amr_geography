@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
 pdf.options(useDingbats = FALSE, useKerning = FALSE)
 
 map = purrr::map
+select = dplyr::select
 ```
 
 # Methods
@@ -80,7 +81,7 @@ did_cpy_map %>%
 
 ```{r ecdc}
 europe_units = read_tsv('../db/europe_units.tsv') %>%
-  select(unit_id, unit = country, long = longitude, lat = latitude, population, eu_region = region_name)
+  select(unit_id, unit, long = longitude, lat = latitude, population, eu_region = region)
 
 europe = read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
@@ -268,18 +269,41 @@ marketscan_maup = maup_sim(
 
 ### Canonical groupings
 
-```{r marketscan_canonical}
+```{r marketscan_canonical_plot}
 canonical_grouping_plot = function(maup) {
   maup %>%
+    mutate(bugdrug = case_when(
+      .$bugdrug == 'Ec/q' ~ 'E. coli & quinolones',
+      .$bugdrug == 'Sp/bl' ~ 'S. pneumoniae & beta-lactams',
+      .$bugdrug == 'Sp/m' ~ 'S. pneumoniae & macrolides'
+    )) %>%
     filter(group_type == 'canonical') %>%
     select(bugdrug, canonical_type, data = group_data) %>%
     unnest() %>%
-    ggplot(aes(use, res, color = canonical_type)) +
+    ggplot(aes(use, res)) +
     facet_wrap(~ bugdrug, scales = 'free') +
-    geom_smooth(aes(fill = canonical_type), method = 'lm', alpha = 0.1) +
-    geom_point()
+    geom_smooth(aes(linetype = canonical_type), method = 'lm', alpha = 0.1, color = 'black', size = 0.5) +
+    scale_linetype_manual(values = c(5, 3, 1)) +
+    geom_point(aes(shape = canonical_type)) +
+    scale_shape_manual(values = c(16, 0, 1)) +
+    xlab('antibiotic use (yearly treatments per capita)') +
+    ylab('antibiotic resistance (proportion of isolates)') +
+    theme_classic() +
+    theme(
+      legend.position = 'none',
+      strip.text = element_text(size = 8),
+      axis.text = element_text(size = 8, color = 'black'),
+      axis.title = element_text(size = 8)
+    )
 }
 
+cgp = canonical_grouping_plot(marketscan_maup)
+cgp
+
+ggsave('fig/marketscan_canonical.pdf', plot = cgp, width = 180, height = 80, units = 'mm')
+```
+
+```{r marketscan_canonical_table}
 canonical_grouping_table = function(maup) {
   dataset = quo_name(enquo(maup))
   
@@ -296,7 +320,6 @@ canonical_grouping_table = function(maup) {
     kable(caption = str_interp('slopes for canonical groupings (${dataset})'))
 }
 
-canonical_grouping_plot(marketscan_maup)
 canonical_grouping_table(marketscan_maup)
 ```
 
@@ -672,7 +695,7 @@ ecu = europe_maup_data$`Ec/q` %>%
   regression_p(n_iter = 9999)
 ```
 
-```{r dist_point_display}
+```{r dist_table}
 distance_fit_table = function(model, p) {
   model_ = enquo(model)
   p_ = enquo(p)
@@ -706,6 +729,36 @@ distance_fit_table(model_arru_1k, arru_p_1k) %>%
 ```
 
 ```{r dist_point_plot}
+library(MASS)
+ycut = 75
+
+dat = distance_fit_results %>%
+  filter(dataset == 'europe', bugdrug == 'Ec/q') %$%
+  data[[1]]
+
+dpp = dat %>%
+  ggplot(aes(dist, loru)) +
+  geom_point(shape = 1) +
+  geom_smooth(method = 'rlm', color = 'black', size = 0.5) +
+  coord_cartesian(ylim = ycut * c(-1, 1)) +
+  xlab('Distance between countries (km)') +
+  ylab('use-resistance relationship (LORU)') +
+  theme_classic() +
+  theme(
+    axis.text = element_text(size = 8, color = 'black'),
+    axis.title = element_text(size = 8)
+  )
+
+dpp
+
+dat %>%
+  count(abs(loru) <= ycut) %>%
+  kable(caption = 'Counts of points inside the y-axis truncated')
+
+ggsave('fig/distance_plot.pdf', plot = dpp, width = 88, units = 'mm')
+```
+
+```{r dist_point_cut}
 breakpoint = 1e3
 distance_fit_results %>%
   mutate(

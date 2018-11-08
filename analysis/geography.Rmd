@@ -260,7 +260,7 @@ whn_nest_plot = nest_results %>%
   geom_hline(yintercept = 0.5, color = 'gray', linetype = 2) +
   geom_smooth(aes(color = NULL), method = 'lm', se = FALSE, color = 'black', size = 0.5) +
   geom_point(aes(shape = factor(superpop))) +
-  scale_shape_manual(values = c(0, 1, 2, 5)) +
+  scale_shape_manual(values = c(16, 1, 15, 0)) +
   scale_x_continuous(
     name = 'antibiotic use (yearly treatments per person)',
     limits = c(0.5, 2.5), breaks = c(0.5, 1.5, 2.5)
