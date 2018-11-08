@@ -1,22 +1,17 @@
 ---
 title: "Theory of use-resistance relationships over geographic scales"
 author: "Scott Olesen"
-output:
-  pdf_document: default
-header-includes:
-    - \usepackage{bm}
-    - \usepackage{mathrsfs}
 ---
 
 ```{r global_options, include=FALSE}
 knitr::opts_chunk$set(
   fig.width=7, fig.height=4, fig.path='fig/',
-  dev=c('pdf', 'png'),
+  dev=c('png', 'pdf'),
   echo=FALSE, warning=FALSE, message=FALSE,
   cache=TRUE, autodep=TRUE)
 pdf.options(useDingbats=FALSE, useKerning=FALSE)
 
-library(kableExtra)
+#library(kableExtra)
 ```
 
 # Within-host neutral (WHN) model
@@ -52,8 +47,6 @@ whn_base_parms %>%
 ```
 
 ## WHN single-population model
-
-**swo** reproduce the original Davies figure here
 
 ```{r whn_sim}
 # vector to data frame
@@ -136,16 +129,16 @@ whn_repro %>%
   ylab('proportion resistant')
 ```
 
-```{r whn_single}
+```{r whn_single, eval = FALSE}
 whn1 = crossing(
   n_pop = c(4, 8, 16),
-  epsilon = c(0, 0.01, 0.1, 0.25, 0.50, 1.0)
+  epsilon = c(0.00, 0.01, 0.10, 0.25, 0.50)
 ) %>%
   mutate(taui = map(n_pop, ~ seq(0.05, 0.2, length.out = .)),
          results = map2(taui, epsilon, whn_sim))
 ```
 
-```{r whn_single_plot}
+```{r whn_multi_plot, eval = FALSE}
 whn_multipop_plot = whn1 %>%
   unnest() %>%
   ggplot(aes(taui, rho, color = factor(epsilon))) +
@@ -162,33 +155,36 @@ ggsave('fig/whn_multipop.png', plot = whn_multipop_plot)
 
 ```{r whn_double}
 # swo: this is a bad name
-whn2 = crossing(
-    epsilon = c(0, 0.01, 0.1, 0.25, 0.5, 1.0),
-    size = c('big', 'small')
+whn2 = data_frame(
+  size = c('small', 'large'),
+  taui = list(c(0.10, 0.15), c(0.05, 0.20))
 ) %>%
-  mutate(taui = lapply(size, function(x) if(x == 'small') c(0.10, 0.15) else c(0.05, 0.20))) %>%
+  crossing(epsilon = c(0, 0.01, 0.1, 0.25, 0.5, 1.0)) %>%
   mutate(results = map2(taui, epsilon, whn_sim))
 ```
 
 ```{r whn_double_results}
-OR = function(p, q) (p / (1 - p)) / (q / (1 - q))
+odds = function(p) p / (1 - p)
+odds_ratio = function(p, q) odds(p) / odds(q)
 
 whn2 %>%
   filter(epsilon > 0) %>%
   unnest() %>%
   mutate(rho = R / (S + R + D)) %>%
   group_by(epsilon, size) %>%
-  mutate(delta_u = max(taui) - min(taui)) %>%
+  mutate(delta_u = max(tau) - min(tau)) %>%
   group_by(epsilon, delta_u) %>%
-  summarize(rr = max(rho) - min(rho),
-            or = OR(min(rho), max(rho))) %>%
+  summarize(arr = max(rho) - min(rho),
+            lor = log(odds_ratio(min(rho), max(rho)))) %>%
   ungroup() %>%
-  mutate(rru = rr / delta_u,
-         loru = log(or) / delta_u) %>%
+  mutate(arru = arr / delta_u,
+         loru = lor / delta_u) %>%
   mutate_if(is.numeric, ~ round(., 2)) %>%
-  arrange(delta_u, epsilon) %>%
+  arrange(epsilon, delta_u) %>%
   kable(caption = '2-population effect sizes, WHN model')
 ```
+
+## WHN nested model
 
 # D-types model
 
@@ -399,7 +395,8 @@ dtypes2 %>%
   mutate(delta_u = max(taui) - min(taui)) %>%
   group_by(epsilon, delta_u) %>%
   summarize(rr = max(rho) - min(rho),
-            lor = log(OR(min(rho), max(rho)))) %>%
+            lor = log(odds_ratio(min(rho), max(rho)))) %>%
   mutate(rru = rr / delta_u,
-         loru = lor / delta_u)
+         loru = lor / delta_u) %>%
+  kable(caption = '2-population effect sizes, D-types model')
 ```

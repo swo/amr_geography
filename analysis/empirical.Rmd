@@ -602,20 +602,19 @@ distance_fit_data = function(bd, permute = FALSE) {
            du = use2 - use1,
            arru = dr / du,
            loru = log(odds_ratio(res2, res1)) / du,
-           d = dist - mean(dist))
+           # swo: can modify this to get different intercepts
+           d = dist)
 }
 
 bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
 
-regression_p = function(bd, n_iter = 99, method = bisquare) {
+regression_p = function(bd, n_iter = 999, method = bisquare, max_dist = Inf) {
   vals = function(permute) {
-    dfd = distance_fit_data(bd, permute = permute)
+    dfd = distance_fit_data(bd, permute = permute) %>%
+      filter(dist <= max_dist)
     
-    arru = method(arru ~ d, data = dfd) %>%
-      coef1('d')
-    
-    loru = method(loru ~ d, data = dfd) %>%
-      coef1('d')
+    arru = method(arru ~ d, data = dfd) %>% coef1('d')
+    loru = method(loru ~ d, data = dfd) %>% coef1('d')
     
     c('arru' = arru, 'loru' = loru)
   }
@@ -630,10 +629,7 @@ regression_p = function(bd, n_iter = 99, method = bisquare) {
 
 # uses the t values reported by MASS::rlm
 bs_model_p = function(model) {
-  model %>%
-    summary() %>%
-    coef() %>%
-    { .['d', 't value'] } %>%
+  coef(summary(model))['d', 't value'] %>%
     { -abs(.) } %>%
     pt(df = length(model$residuals) - 2)
 }
@@ -642,10 +638,10 @@ confint.rlm = function(m) {
   cs = coef(summary(m))
   estimate = cs[, 'Value']
   se = cs[, 'Std. Error']
-  result = cbind(estimate - 1.96 * se, estimate + 1.96 * se)
-  rownames(result) <- names(estimate)
-  colnames(result) <- c('2.5%', '97.5%')
-  result
+  
+  cbind(estimate - 1.96 * se, estimate + 1.96 * se) %>%
+    set_rownames(names(estimate)) %>%
+    set_colnames(c('2.5%', '97.5%'))
 }
 
 distance_fit = function(dataset, lst) {
@@ -657,7 +653,12 @@ distance_fit = function(dataset, lst) {
     model_loru = map(data, ~ bisquare(loru ~ d, data = .)),
     p_values = map(lst, regression_p),
     arru_p = map_dbl(p_values, ~ .['arru']),
-    loru_p = map_dbl(p_values, ~ .['loru'])
+    loru_p = map_dbl(p_values, ~ .['loru']),
+    # doing analysis only when including pairs less than 1k distant
+    data1k = map(data, ~ filter(., dist < 1e3)),
+    model_arru_1k = map(data1k, ~ bisquare(arru ~ d, data = .)),
+    p_values1k = map(lst, ~ regression_p(., max_dist = 1e3)),
+    arru_p_1k = map_dbl(p_values1k, ~ .['arru'])
   )
 }
 
@@ -667,6 +668,11 @@ distance_fit_results = bind_rows(
   distance_fit('europe', europe_maup_data)
 )
 
+ecu = europe_maup_data$`Ec/q` %>%
+  regression_p(n_iter = 9999)
+```
+
+```{r dist_point_display}
 distance_fit_table = function(model, p) {
   model_ = enquo(model)
   p_ = enquo(p)
@@ -684,14 +690,34 @@ distance_fit_table = function(model, p) {
     select(dataset, bugdrug, term, range) %>%
     spread(term, range) %>%
     rename(slope = d) %>%
-    left_join(select(distance_fit_results, dataset, bugdrug, slope_p = !!p_)) %>%
+    left_join(select(distance_fit_results, dataset, bugdrug, slope_p = !!p_), by = c('dataset', 'bugdrug')) %>%
     mutate(fdr = p.adjust(slope_p, 'BH') < 0.05) %>%
     arrange(dataset, bugdrug)
 }
 
 distance_fit_table(model_arru, arru_p) %>%
-  kable(caption = 'Point estimates of intercept (ARRU, in p.p. resistance per unit use) and slope (ARRU per 10^3 km).')
+  kable(caption = 'Point estimates of intercept (ARRU) and slope (ARRU per 10^3 km).')
 
 distance_fit_table(model_loru, loru_p) %>%
-  kable(caption = 'Point estimates of intercept (LORU, in per unit use) and slope (LORU per 10^3 km).')
+  kable(caption = 'Point estimates of intercept (LORU) and slope (LORU per 10^3 km).')
+
+distance_fit_table(model_arru_1k, arru_p_1k) %>%
+  kable(caption = 'Point estimates of intercept (ARRU) and slope (LORU per 10^3 km), but with the analysis restricted to just those pairs at most 1,000 km distant.')
+```
+
+```{r dist_point_plot}
+breakpoint = 1e3
+distance_fit_results %>%
+  mutate(
+    data_lo = map(data, ~ mutate(filter(., dist < breakpoint), where = 'lo')),
+    data_hi = map(data, ~ mutate(filter(., dist > breakpoint), where = 'hi')),
+    data_comb = map2(data_lo, data_hi, bind_rows)
+  ) %>%
+  select(dataset, bugdrug, data_comb) %>%
+  unnest() %>%
+  ggplot(aes(dist, loru, color = where)) +
+  facet_wrap(~ dataset + bugdrug, scales = 'free') +
+  geom_point(shape = 1) +
+  geom_smooth(method = 'rlm') +
+  coord_cartesian(ylim = 50 * c(-1, 1))
 ```
