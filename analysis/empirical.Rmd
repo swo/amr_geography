@@ -24,7 +24,8 @@ select = dplyr::select
 
 ```{r maup_db}
 state_data = read_tsv('../db/state_census.tsv') %>%
-  rename(us_region = region, us_division = division)
+  rename(us_region = region, us_division = division) %>%
+  mutate(density = population / area)
 ```
 
 ```{r marketscan_data}
@@ -47,7 +48,7 @@ marketscan = marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
   rename(unit = state) %>%
   left_join(state_data, by = 'unit') %>%
-  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population)
+  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population, density)
 ```
 
 ### NHSN/IMS
@@ -61,7 +62,7 @@ nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
          use = rx_1k_year / 1e3) %>%
   arrange(unit_id) %>%
   left_join(state_data, by = 'unit_id') %>%
-  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population)
+  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population, density)
 ```
 
 ### ECDC
@@ -608,7 +609,7 @@ distance_fit_data = function(bd, permute = FALSE) {
   d = bd$data %>%
     mutate(res = n_resistant / n_isolates,
            i = 1:n()) %>%
-    select(unit, i, use, res)
+    select(unit, i, use, res, density)
   
   if (permute) {
     d %<>% mutate(i = sample(i))
@@ -620,13 +621,16 @@ distance_fit_data = function(bd, permute = FALSE) {
     filter(unit1 < unit2) %>%
     left_join(d, by = c('unit1' = 'unit')) %>%
     left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
-    mutate(dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
-           dr = res2 - res1,
-           du = use2 - use1,
-           arru = dr / du,
-           loru = log(odds_ratio(res2, res1)) / du,
-           # swo: can modify this to get different intercepts
-           d = dist)
+    mutate(
+      dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
+      dr = res2 - res1,
+      du = use2 - use1,
+      arru = dr / du,
+      loru = log(odds_ratio(res2, res1)) / du,
+      # swo: can modify this to get different intercepts
+      d = dist,
+      d_density = density2 - density1
+    )
 }
 
 bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
@@ -638,8 +642,10 @@ regression_p = function(bd, n_iter = 999, method = bisquare, max_dist = Inf) {
     
     arru = method(arru ~ d, data = dfd) %>% coef1('d')
     loru = method(loru ~ d, data = dfd) %>% coef1('d')
+    arru_density = method(arru ~ d + d_density, data = dfd) %>% coef('d')
+    loru_density = method(loru ~ d + d_density, data = dfd) %>% coef('d')
     
-    c('arru' = arru, 'loru' = loru)
+    c('arru' = arru, 'loru' = loru, 'arru_density' = arru_density, 'loru_density' = loru_density)
   }
   
   base_vals = vals(FALSE)
@@ -681,7 +687,12 @@ distance_fit = function(dataset, lst) {
     data1k = map(data, ~ filter(., dist < 1e3)),
     model_arru_1k = map(data1k, ~ bisquare(arru ~ d, data = .)),
     p_values1k = map(lst, ~ regression_p(., max_dist = 1e3)),
-    arru_p_1k = map_dbl(p_values1k, ~ .['arru'])
+    arru_p_1k = map_dbl(p_values1k, ~ .['arru']),
+    # including population density
+    model_arru_density = map(data, ~ bisquare(arru ~ d + d_density, data = .)),
+    model_loru_density = map(data, ~ bisquare(loru ~ d + d_density, data = .)),
+    arru_p_density = map_dbl(p_values, ~ .['arru']),
+    loru_p_density = map_dbl(p_values, ~ .['loru'])
   )
 }
 
@@ -756,6 +767,7 @@ dat %>%
   kable(caption = 'Counts of points inside the y-axis truncated')
 
 ggsave('fig/distance_plot.pdf', plot = dpp, width = 88, units = 'mm')
+ggsave('fig/distance_plot.png', plot = dpp, width = 88, units = 'mm')
 ```
 
 ```{r dist_point_cut}
@@ -773,4 +785,10 @@ distance_fit_results %>%
   geom_point(shape = 1) +
   geom_smooth(method = 'rlm') +
   coord_cartesian(ylim = 50 * c(-1, 1))
+```
+
+### With population density
+
+```{r}
+
 ```
