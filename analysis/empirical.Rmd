@@ -82,7 +82,8 @@ did_cpy_map %>%
 
 ```{r ecdc}
 europe_units = read_tsv('../db/europe_units.tsv') %>%
-  select(unit_id, unit, long = longitude, lat = latitude, population, eu_region = region)
+  mutate(density = population / area) %>%
+  select(unit_id, unit, long = longitude, lat = latitude, population, eu_region = region, density)
 
 europe = read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
@@ -94,7 +95,7 @@ europe = read_tsv('../data/ecdc/data.tsv') %>%
   )) %>%
   rename(unit = country) %>%
   left_join(europe_units, by = 'unit') %>%
-  select(unit_id, unit, bugdrug, use, n_resistant = n_ns, n_isolates, population)
+  select(unit_id, unit, bugdrug, use, n_resistant = n_ns, n_isolates, population, density)
 
 europe_names = unique(europe$unit)
 ```
@@ -642,8 +643,8 @@ regression_p = function(bd, n_iter = 999, method = bisquare, max_dist = Inf) {
     
     arru = method(arru ~ d, data = dfd) %>% coef1('d')
     loru = method(loru ~ d, data = dfd) %>% coef1('d')
-    arru_density = method(arru ~ d + d_density, data = dfd) %>% coef('d')
-    loru_density = method(loru ~ d + d_density, data = dfd) %>% coef('d')
+    arru_density = method(arru ~ d + d_density, data = dfd) %>% coef1('d')
+    loru_density = method(loru ~ d + d_density, data = dfd) %>% coef1('d')
     
     c('arru' = arru, 'loru' = loru, 'arru_density' = arru_density, 'loru_density' = loru_density)
   }
@@ -702,8 +703,8 @@ distance_fit_results = bind_rows(
   distance_fit('europe', europe_maup_data)
 )
 
-ecu = europe_maup_data$`Ec/q` %>%
-  regression_p(n_iter = 9999)
+# ecu = europe_maup_data$`Ec/q` %>%
+#   regression_p(n_iter = 9999)
 ```
 
 ```{r dist_table}
@@ -785,10 +786,4 @@ distance_fit_results %>%
   geom_point(shape = 1) +
   geom_smooth(method = 'rlm') +
   coord_cartesian(ylim = 50 * c(-1, 1))
-```
-
-### With population density
-
-```{r}
-
 ```
