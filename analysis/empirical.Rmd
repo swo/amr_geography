@@ -23,7 +23,7 @@ select = dplyr::select
 ### MarketScan
 
 ```{r maup_db}
-state_data = read_tsv('../db/state_census.tsv') %>%
+state_data = read_tsv('../db/state_data.tsv') %>%
   rename(us_region = region, us_division = division) %>%
   mutate(density = population / area)
 ```
@@ -48,7 +48,7 @@ marketscan = marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
   rename(unit = state) %>%
   left_join(state_data, by = 'unit') %>%
-  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population, density)
+  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population, density, income, temperature)
 ```
 
 ### NHSN/IMS
@@ -62,7 +62,7 @@ nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
          use = rx_1k_year / 1e3) %>%
   arrange(unit_id) %>%
   left_join(state_data, by = 'unit_id') %>%
-  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population, density)
+  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population, density, income, temperature)
 ```
 
 ### ECDC
@@ -610,7 +610,7 @@ distance_fit_data = function(bd, permute = FALSE) {
   d = bd$data %>%
     mutate(res = n_resistant / n_isolates,
            i = 1:n()) %>%
-    select(unit, i, use, res, density)
+    select(unit, i, use, res, density, income, temperature)
   
   if (permute) {
     d %<>% mutate(i = sample(i))
@@ -630,7 +630,9 @@ distance_fit_data = function(bd, permute = FALSE) {
       loru = log(odds_ratio(res2, res1)) / du,
       # swo: can modify this to get different intercepts
       d = dist,
-      d_density = density2 - density1
+      d_density = density2 - density1,
+      d_income = income2 - income1,
+      d_temp = temperature2 - temperature1
     )
 }
 
@@ -643,8 +645,8 @@ regression_p = function(bd, n_iter = 999, method = bisquare, max_dist = Inf) {
     
     arru = method(arru ~ d, data = dfd) %>% coef1('d')
     loru = method(loru ~ d, data = dfd) %>% coef1('d')
-    arru_density = method(arru ~ d + d_density, data = dfd) %>% coef1('d')
-    loru_density = method(loru ~ d + d_density, data = dfd) %>% coef1('d')
+    arru_density = method(arru ~ d + d_density + d_income + d_temp, data = dfd) %>% coef1('d')
+    loru_density = method(loru ~ d + d_density + d_income + d_temp, data = dfd) %>% coef1('d')
     
     c('arru' = arru, 'loru' = loru, 'arru_density' = arru_density, 'loru_density' = loru_density)
   }
@@ -692,18 +694,18 @@ distance_fit = function(dataset, lst) {
     # including population density
     model_arru_density = map(data, ~ bisquare(arru ~ d + d_density, data = .)),
     model_loru_density = map(data, ~ bisquare(loru ~ d + d_density, data = .)),
-    arru_p_density = map_dbl(p_values, ~ .['arru']),
-    loru_p_density = map_dbl(p_values, ~ .['loru'])
+    arru_p_density = map_dbl(p_values, ~ .['arru_density']),
+    loru_p_density = map_dbl(p_values, ~ .['loru_density'])
   )
 }
 
 distance_fit_results = bind_rows(
   distance_fit('marketscan', marketscan_maup_data),
   distance_fit('nhsn', nhsn_maup_data),
-  distance_fit('europe', europe_maup_data)
+  #distance_fit('europe', europe_maup_data)
 )
 
-# ecu = europe_maup_data$`Ec/q` %>%
+# eec = europe_maup_data$`Ec/q` %>%
 #   regression_p(n_iter = 9999)
 ```
 
