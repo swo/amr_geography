@@ -83,7 +83,7 @@ did_cpy_map %>%
 ```{r ecdc}
 europe_units = read_tsv('../db/europe_units.tsv') %>%
   mutate(density = population / area) %>%
-  select(unit_id, unit, long = longitude, lat = latitude, population, eu_region = region, density)
+  select(unit_id, unit, long = longitude, lat = latitude, population, eu_region = region, density, income, temperature)
 
 europe = read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
@@ -95,7 +95,7 @@ europe = read_tsv('../data/ecdc/data.tsv') %>%
   )) %>%
   rename(unit = country) %>%
   left_join(europe_units, by = 'unit') %>%
-  select(unit_id, unit, bugdrug, use, n_resistant = n_ns, n_isolates, population, density)
+  select(unit_id, unit, bugdrug, use, n_resistant = n_ns, n_isolates, population, density, temperature, income)
 
 europe_names = unique(europe$unit)
 ```
@@ -626,8 +626,9 @@ distance_fit_data = function(bd, permute = FALSE) {
       dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
       dr = res2 - res1,
       du = use2 - use1,
+      lor = log(odds(res2)) - log(odds(res1)),
       arru = dr / du,
-      loru = log(odds_ratio(res2, res1)) / du,
+      loru = lor / du,
       # swo: can modify this to get different intercepts
       d = dist,
       d_density = density2 - density1,
@@ -638,7 +639,7 @@ distance_fit_data = function(bd, permute = FALSE) {
 
 bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
 
-regression_p = function(bd, n_iter = 999, method = bisquare, max_dist = Inf) {
+regression_p = function(bd, n_iter = 9, method = bisquare, max_dist = Inf) {
   vals = function(permute) {
     dfd = distance_fit_data(bd, permute = permute) %>%
       filter(dist <= max_dist)
@@ -660,10 +661,10 @@ regression_p = function(bd, n_iter = 999, method = bisquare, max_dist = Inf) {
 }
 
 # uses the t values reported by MASS::rlm
-bs_model_p = function(model) {
-  coef(summary(model))['d', 't value'] %>%
-    { -abs(.) } %>%
-    pt(df = length(model$residuals) - 2)
+model_p = function(model) {
+  df = length(model$residuals) - length(coef(model))
+  t_vals = coef(summary(model))[, 't value']
+  2 * pt(-abs(t_vals), df = df)
 }
 
 confint.rlm = function(m) {
@@ -683,26 +684,45 @@ distance_fit = function(dataset, lst) {
     data = map(lst, distance_fit_data),
     model_arru = map(data, ~ bisquare(arru ~ d, data = .)),
     model_loru = map(data, ~ bisquare(loru ~ d, data = .)),
-    p_values = map(lst, regression_p),
-    arru_p = map_dbl(p_values, ~ .['arru']),
-    loru_p = map_dbl(p_values, ~ .['loru']),
+    #p_values = map(lst, regression_p),
+    #arru_p = map_dbl(p_values, ~ .['arru']),
+    #loru_p = map_dbl(p_values, ~ .['loru']),
     # doing analysis only when including pairs less than 1k distant
     data1k = map(data, ~ filter(., dist < 1e3)),
     model_arru_1k = map(data1k, ~ bisquare(arru ~ d, data = .)),
-    p_values1k = map(lst, ~ regression_p(., max_dist = 1e3)),
-    arru_p_1k = map_dbl(p_values1k, ~ .['arru']),
+    model_loru_1k = map(data1k, ~ bisquare(loru ~ d, data = .)),
+    #p_values1k = map(lst, ~ regression_p(., max_dist = 1e3)),
+    #arru_p_1k = map_dbl(p_values1k, ~ .['arru']),
     # including population density
-    model_arru_density = map(data, ~ bisquare(arru ~ d + d_density, data = .)),
-    model_loru_density = map(data, ~ bisquare(loru ~ d + d_density, data = .)),
+    model_arru_density = map(data, ~ bisquare(arru ~ d + d_density + d_income + d_temp, data = .)),
+    model_loru_density = map(data, ~ bisquare(loru ~ d + d_density + d_income + d_temp, data = .)),
     arru_p_density = map_dbl(p_values, ~ .['arru_density']),
     loru_p_density = map_dbl(p_values, ~ .['loru_density'])
+  )
+}
+
+# swo: dr ~ du * dist + ...
+distance_fit = function(dataset, lst) {
+  data_frame(
+    dataset = dataset,
+    bugdrug = names(lst),
+    data = map(lst, distance_fit_data),
+    model_arru = map(data, ~ bisquare(dr ~ du + du:d, data = .)),
+    model_loru = map(data, ~ bisquare(lor ~ du + du:d, data = .)),
+    # doing analysis only when including pairs less than 1k distant
+    data1k = map(data, ~ filter(., dist < 1e3)),
+    model_arru_1k = map(data1k, ~ bisquare(dr ~ du + du:d, data = .)),
+    model_loru_1k = map(data1k, ~ bisquare(lor ~ du + du:d, data = .)),
+    # including population density
+    model_arru_density = map(data, ~ bisquare(dr ~ du + du:d + d_density + d_income + d_temp, data = .)),
+    model_loru_density = map(data, ~ bisquare(lor ~ du + du:d + d_density + d_income + d_temp, data = .))
   )
 }
 
 distance_fit_results = bind_rows(
   distance_fit('marketscan', marketscan_maup_data),
   distance_fit('nhsn', nhsn_maup_data),
-  #distance_fit('europe', europe_maup_data)
+  distance_fit('europe', europe_maup_data)
 )
 
 # eec = europe_maup_data$`Ec/q` %>%
