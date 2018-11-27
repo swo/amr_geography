@@ -741,7 +741,7 @@ distance_fit_results %>%
   mutate(arru = map_dbl(model_arru, coef2),
          loru = map_dbl(model_loru, coef2)) %>%
   select(dataset, bugdrug, arru, loru) %>%
-  mutate_if(is.numeric, ~ . * 1e4) %>%
+  mutate_if(is.numeric, ~ round(. * 1e4, 2)) %>%
   kable(caption = 'Point estimates for ratio')
 ```
 
@@ -784,5 +784,6 @@ distance_fit_results %>%
   facet_wrap(~ dataset + bugdrug, scales = 'free') +
   geom_point(shape = 1) +
   geom_smooth(method = 'rlm') +
-  coord_cartesian(ylim = 50 * c(-1, 1))
+  coord_cartesian(ylim = 50 * c(-1, 1)) +
+  theme_classic()
 ```
