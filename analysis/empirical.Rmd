@@ -623,14 +623,14 @@ distance_fit_data = function(bd, permute = FALSE) {
     left_join(d, by = c('unit1' = 'unit')) %>%
     left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
     mutate(
+      # use the (possibly shuffled) distances
       dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
       dr = res2 - res1,
       du = use2 - use1,
       lor = log(odds(res2)) - log(odds(res1)),
       arru = dr / du,
       loru = lor / du,
-      # swo: can modify this to get different intercepts
-      d = dist,
+      # other determinants
       d_density = density2 - density1,
       d_income = income2 - income1,
       d_temp = temperature2 - temperature1
@@ -639,17 +639,21 @@ distance_fit_data = function(bd, permute = FALSE) {
 
 bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
 
-regression_p = function(bd, n_iter = 9, method = bisquare, max_dist = Inf) {
+regression_p = function(bd, n_iter = 99, method = bisquare, max_dist = Inf) {
   vals = function(permute) {
     dfd = distance_fit_data(bd, permute = permute) %>%
       filter(dist <= max_dist)
     
-    arru = method(arru ~ d, data = dfd) %>% coef1('d')
-    loru = method(loru ~ d, data = dfd) %>% coef1('d')
-    arru_density = method(arru ~ d + d_density + d_income + d_temp, data = dfd) %>% coef1('d')
-    loru_density = method(loru ~ d + d_density + d_income + d_temp, data = dfd) %>% coef1('d')
+    coef2 = function(x) coef1(x, 'du:d') / coef1(x, 'du')
     
-    c('arru' = arru, 'loru' = loru, 'arru_density' = arru_density, 'loru_density' = loru_density)
+    arru = method(arru ~ du + du:d + d_density + d_income + d_temp, data = dfd) %>% coef2()
+    loru = method(loru ~ du + du:d + d_density + d_income + d_temp, data = dfd) %>% coef2()
+    # unadjusted models
+    arru_ua = method(arru ~ du + du:d, data = dfd) %>% coef2()
+    loru_ua = method(loru ~ du + du:d, data = dfd) %>% coef2()
+    
+    c('arru' = arru, 'loru' = loru,
+      'arru_ua' = arru_ua, 'loru_ua' = loru_ua)
   }
   
   base_vals = vals(FALSE)
@@ -682,40 +686,22 @@ distance_fit = function(dataset, lst) {
     dataset = dataset,
     bugdrug = names(lst),
     data = map(lst, distance_fit_data),
-    model_arru = map(data, ~ bisquare(arru ~ d, data = .)),
-    model_loru = map(data, ~ bisquare(loru ~ d, data = .)),
-    #p_values = map(lst, regression_p),
-    #arru_p = map_dbl(p_values, ~ .['arru']),
-    #loru_p = map_dbl(p_values, ~ .['loru']),
-    # doing analysis only when including pairs less than 1k distant
-    data1k = map(data, ~ filter(., dist < 1e3)),
-    model_arru_1k = map(data1k, ~ bisquare(arru ~ d, data = .)),
-    model_loru_1k = map(data1k, ~ bisquare(loru ~ d, data = .)),
-    #p_values1k = map(lst, ~ regression_p(., max_dist = 1e3)),
-    #arru_p_1k = map_dbl(p_values1k, ~ .['arru']),
-    # including population density
-    model_arru_density = map(data, ~ bisquare(arru ~ d + d_density + d_income + d_temp, data = .)),
-    model_loru_density = map(data, ~ bisquare(loru ~ d + d_density + d_income + d_temp, data = .)),
-    arru_p_density = map_dbl(p_values, ~ .['arru_density']),
-    loru_p_density = map_dbl(p_values, ~ .['loru_density'])
-  )
-}
-
-# swo: dr ~ du * dist + ...
-distance_fit = function(dataset, lst) {
-  data_frame(
-    dataset = dataset,
-    bugdrug = names(lst),
-    data = map(lst, distance_fit_data),
-    model_arru = map(data, ~ bisquare(dr ~ du + du:d, data = .)),
-    model_loru = map(data, ~ bisquare(lor ~ du + du:d, data = .)),
+    # adjusted models
+    model_arru = map(data, ~ bisquare(dr ~ du + du:d + d_density + d_income + d_temp, data = .)),
+    model_loru = map(data, ~ bisquare(lor ~ du + du:d + d_density + d_income + d_temp, data = .)),
+    # unadjusted models
+    model_arru_ua = map(data, ~ bisquare(dr ~ du + du:d, data = .)),
+    model_loru_ua = map(data, ~ bisquare(lor ~ du + du:d, data = .)),
+    # p values
+    p_values = map(lst, regression_p),
+    arru_p = map_dbl(p_values, ~ .['arru']),
+    loru_p = map_dbl(p_values, ~ .['loru']),
+    arru_p_ua = map_dbl(p_values, ~ .['arru_ua']),
+    loru_p_ua = map_dbl(p_values, ~ .['loru_ua']),
     # doing analysis only when including pairs less than 1k distant
     data1k = map(data, ~ filter(., dist < 1e3)),
     model_arru_1k = map(data1k, ~ bisquare(dr ~ du + du:d, data = .)),
-    model_loru_1k = map(data1k, ~ bisquare(lor ~ du + du:d, data = .)),
-    # including population density
-    model_arru_density = map(data, ~ bisquare(dr ~ du + du:d + d_density + d_income + d_temp, data = .)),
-    model_loru_density = map(data, ~ bisquare(lor ~ du + du:d + d_density + d_income + d_temp, data = .))
+    model_loru_1k = map(data1k, ~ bisquare(lor ~ du + du:d, data = .))
   )
 }
 
@@ -724,42 +710,39 @@ distance_fit_results = bind_rows(
   distance_fit('nhsn', nhsn_maup_data),
   distance_fit('europe', europe_maup_data)
 )
-
-# eec = europe_maup_data$`Ec/q` %>%
-#   regression_p(n_iter = 9999)
 ```
 
-```{r dist_table}
-distance_fit_table = function(model, p) {
-  model_ = enquo(model)
-  p_ = enquo(p)
+```{r}
+distance_fit_results %>%
+  select(dataset, bugdrug, arru_p, loru_p, arru_p_ua, loru_p_ua) %>%
+  kable(caption = 'Permutation p values')
 
-  distance_fit_results %>%
-    select(dataset, bugdrug, model = !!model_) %>%
-    mutate(vals = map(model, tidy)) %>%
-    select(-model) %>%
-    unnest() %>%
-    mutate_at(c('estimate', 'std.error'), function(x) if_else(.$term == 'd', 1e3 * x, x)) %>%
-    mutate(hci = 1.96 * std.error,
-           cil = estimate - hci,
-           ciu = estimate + hci,
-           range = sprintf('%.3f (%.3f to %.3f)', estimate, cil, ciu)) %>%
-    select(dataset, bugdrug, term, range) %>%
-    spread(term, range) %>%
-    rename(slope = d) %>%
-    left_join(select(distance_fit_results, dataset, bugdrug, slope_p = !!p_), by = c('dataset', 'bugdrug')) %>%
-    mutate(fdr = p.adjust(slope_p, 'BH') < 0.05) %>%
-    arrange(dataset, bugdrug)
-}
+distance_fit_results %>%
+  rename(model = model_arru) %>%
+  mutate(ci = map(model, ~ as_tibble(confint(.), rownames = 'term'))) %>%
+  select(dataset, bugdrug, ci) %>%
+  unnest() %>%
+  filter(term %in% c('du', 'du:d')) %>%
+  mutate(`2.5%` = if_else(term == 'du:d', `2.5%` * 1e4, `2.5%`)) %>%
+  mutate(`97.5%` = if_else(term == 'du:d', `97.5%` * 1e4, `97.5%`)) %>%
+  kable(caption = 'ARRU model term CIs')
 
-distance_fit_table(model_arru, arru_p) %>%
-  kable(caption = 'Point estimates of intercept (ARRU) and slope (ARRU per 10^3 km).')
+distance_fit_results %>%
+  rename(model = model_loru) %>%
+  mutate(ci = map(model, ~ as_tibble(confint(.), rownames = 'term'))) %>%
+  select(dataset, bugdrug, ci) %>%
+  unnest() %>%
+  filter(term %in% c('du', 'du:d')) %>%
+  mutate(`2.5%` = if_else(term == 'du:d', `2.5%` * 1e4, `2.5%`)) %>%
+  mutate(`97.5%` = if_else(term == 'du:d', `97.5%` * 1e4, `97.5%`)) %>%
+  kable(caption = 'LORU model term CIs')
 
-distance_fit_table(model_loru, loru_p) %>%
-  kable(caption = 'Point estimates of intercept (LORU) and slope (LORU per 10^3 km).')
-
-distance_fit_table(model_arru_1k, arru_p_1k) %>%
-  kable(caption = 'Point estimates of intercept (ARRU) and slope (LORU per 10^3 km), but with the analysis restricted to just those pairs at most 1,000 km distant.')
+distance_fit_results %>%
+  mutate(arru = map_dbl(model_arru, coef2),
+         loru = map_dbl(model_loru, coef2)) %>%
+  select(dataset, bugdrug, arru, loru) %>%
+  mutate_if(is.numeric, ~ . * 1e4) %>%
+  kable(caption = 'Point estimates for ratio')
 ```
 
 ```{r dist_point_plot}
@@ -794,16 +777,10 @@ ggsave('fig/distance_plot.png', plot = dpp, width = 88, units = 'mm')
 ```
 
 ```{r dist_point_cut}
-breakpoint = 1e3
 distance_fit_results %>%
-  mutate(
-    data_lo = map(data, ~ mutate(filter(., dist < breakpoint), where = 'lo')),
-    data_hi = map(data, ~ mutate(filter(., dist > breakpoint), where = 'hi')),
-    data_comb = map2(data_lo, data_hi, bind_rows)
-  ) %>%
-  select(dataset, bugdrug, data_comb) %>%
+  select(dataset, bugdrug, data) %>%
   unnest() %>%
-  ggplot(aes(dist, loru, color = where)) +
+  ggplot(aes(dist, loru)) +
   facet_wrap(~ dataset + bugdrug, scales = 'free') +
   geom_point(shape = 1) +
   geom_smooth(method = 'rlm') +
