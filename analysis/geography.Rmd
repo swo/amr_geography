@@ -154,11 +154,12 @@ ggsave('fig/whn_multipop.png', plot = whn_multipop_plot)
 ## WHN two-population model
 
 ```{r whn_double}
-# swo: this is a bad name
-whn2 = data_frame(
+twopop_taui_df = data_frame(
   size = c('small', 'large'),
   taui = list(c(0.10, 0.15), c(0.05, 0.20))
-) %>%
+)
+
+whn2 = twopop_taui_df %>%
   crossing(epsilon = c(0, 0.01, 0.1, 0.25, 0.5, 1.0)) %>%
   mutate(results = map2(taui, epsilon, whn_sim))
 ```
@@ -182,6 +183,17 @@ whn2 %>%
   mutate_if(is.numeric, ~ round(., 2)) %>%
   arrange(epsilon, delta_u) %>%
   kable(caption = '2-population effect sizes, WHN model')
+
+whn2 %>%
+  filter(epsilon > 0) %>%
+  unnest() %>%
+  # swo: check this sum
+  mutate(rho = R / (S + R + D)) %>%
+  group_by(epsilon, size) %>%
+  summarize_at('rho', mean) %>%
+  arrange(epsilon, rev(size)) %>%
+  mutate(rho = round(rho * 100, 1)) %>%
+  kable(caption = 'Overall resistance levels')
 ```
 
 ## WHN nested populations
@@ -241,18 +253,18 @@ whn_nest_sim = function(taui, eps_super, eps_sub) {
 ```
 
 ```{r whn_nest_results}
-taui = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
+whn_nest_taui = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
 
-nest_results = crossing(
+whn_nest_results = crossing(
   eps_super = c(0.0, 0.01, 0.1, 0.5),
   eps_sub = c(0.0, 0.01, 0.1, 0.5)
 ) %>%
   filter(eps_super <= eps_sub) %>%
-  mutate(data = map2(eps_super, eps_sub, ~ whn_nest_sim(taui, .x, .y)))
+  mutate(data = map2(eps_super, eps_sub, ~ whn_nest_sim(whn_nest_taui, .x, .y)))
 ```
 
 ```{r whn_nest_display}
-whn_nest_plot = nest_results %>%
+whn_nest_plot = whn_nest_results %>%
   unnest() %>%
   mutate_at(vars(starts_with('eps')), ~ sprintf('%.2f', .)) %>%
   ggplot(aes(tau * 12, rho)) +
@@ -271,7 +283,6 @@ whn_nest_plot = nest_results %>%
   ) +
   theme_classic() +
   theme(
-    #text = element_text(family = 'Times'),
     axis.title = element_text(size = 8),
     axis.text = element_text(size = 8, color = 'black'),
     panel.spacing = unit(3, 'mm'),
@@ -280,7 +291,7 @@ whn_nest_plot = nest_results %>%
     strip.text = element_text(size = 8, color = 'black', face = 'bold')
   )
 
-whn_nest_plot
+show(whn_nest_plot)
 
 ggsave('fig/whn_nest.pdf', plot = whn_nest_plot, width = 88, height = 110, units = 'mm')
 ```
@@ -289,7 +300,7 @@ ggsave('fig/whn_nest.pdf', plot = whn_nest_plot, width = 88, height = 110, units
 data_frame(
   population = 1:16,
   superpopulation = rep(1:4, each = 4),
-  tau = round(taui, 3)
+  tau = round(whn_nest_taui, 3)
 ) %>%
   kable(caption = 'Antibiotic use rates in nested models')
 ```
@@ -486,26 +497,38 @@ dtype_repro_line %>%
 ## D-types two-population
 
 ```{r dtypes_double}
-dtypes2 = crossing(
-    epsilon = c(0, 0.01, 0.1, 0.25, 0.5, 1.0),
-    size = c('big', 'small')
-) %>%
-  mutate(taui = lapply(size, function(x) if(x == 'small') c(0.10, 0.15) else c(0.05, 0.20))) %>%
-   mutate(results = map2(taui, epsilon, whn_sim))
+dtypes2 = twopop_taui_df %>%
+  crossing(epsilon = c(0, 0.01, 0.1, 0.25, 0.5, 1.0)) %>%
+  mutate(results = map2(taui, epsilon, dtypes_sim))
 ```
 
 ```{r dtypes_double_results}
+dtypes_simplify_results = function(df) {
+  df %>%
+    group_by(pop, phenotype) %>%
+    summarize(
+      value = sum(value),
+      tau = unique(tau)
+    ) %>%
+    ungroup() %>%
+    spread(phenotype, value) %>%
+    mutate(rho = R / (R + S))
+}
+
 dtypes2 %>%
-  filter(epsilon > 0) %>%
+  mutate(results = map(results, dtypes_simplify_results)) %>%
   unnest() %>%
-  mutate(rho = R / (S + R + D)) %>%
+  filter(epsilon > 0) %>%
   group_by(epsilon, size) %>%
-  mutate(delta_u = max(taui) - min(taui)) %>%
+  mutate(delta_u = max(tau) - min(tau)) %>%
   group_by(epsilon, delta_u) %>%
-  summarize(rr = max(rho) - min(rho),
+  summarize(arr = max(rho) - min(rho),
             lor = log(odds_ratio(min(rho), max(rho)))) %>%
-  mutate(rru = rr / delta_u,
+  ungroup() %>%
+  mutate(arru = arr / delta_u,
          loru = lor / delta_u) %>%
+  mutate_if(is.numeric, ~ round(., 2)) %>%
+  arrange(epsilon, delta_u) %>%
   kable(caption = '2-population effect sizes, D-types model')
 ```
 
@@ -565,14 +588,14 @@ dtypes_nest_sim = function(tau_i, eps_super, eps_sub) {
 ```
 
 ```{r dtypes_nest_results}
-tau_i = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
+dtypes_nest_taui = rep(seq(0.07, 0.18, length.out = 4), each = 4) + 0.02 * rep(seq(-1, 1, length.out = 4), 4)
 
 dtypes_nest_results = crossing(
   eps_super = c(0.0, 0.01, 0.1, 0.5),
   eps_sub = c(0.0, 0.01, 0.1, 0.5)
 ) %>%
   filter(eps_super <= eps_sub) %>%
-  mutate(data = map2(eps_super, eps_sub, ~ dtypes_nest_sim(tau_i, .x, .y)))
+  mutate(data = map2(eps_super, eps_sub, ~ dtypes_nest_sim(dtypes_nest_taui, .x, .y)))
 
 janky_superpop_f = function(pop) {
   n_superpop = sqrt(length(pop))
@@ -580,18 +603,36 @@ janky_superpop_f = function(pop) {
 }
 
 dtypes_nest_results %>%
-  mutate(data = map(data, dtypes_summarize)) %>%
   unnest() %>%
-  group_by(eps_super, eps_sub) %>%
-  mutate(superpop = janky_superpop_f(pop)) %>%
+  group_by(eps_super, eps_sub, superpop, pop, phenotype) %>%
+  summarize(
+    value = sum(value),
+    tau = unique(tau)
+  ) %>%
   ungroup() %>%
-  ggplot(aes(tau, rho, color = factor(superpop))) +
-  facet_grid(eps_super ~ eps_sub, labeller = labeller(.rows = label_both, .cols = label_both)) +
-  geom_hline(yintercept = 0.0) +
+  spread(phenotype, value) %>%
+  mutate(rho = R / (S + R)) %>%
+  ggplot(aes(tau * 12, rho)) +
+  facet_grid(eps_sub ~ eps_super) +
   geom_hline(yintercept = 0.5, color = 'gray', linetype = 2) +
   geom_smooth(aes(color = NULL), method = 'lm', se = FALSE, color = 'black', size = 0.5) +
-  geom_point() +
-  geom_line() +
-  ylim(0 - 0.01, 1.01) +
-  theme_classic()
+  geom_point(aes(shape = factor(superpop))) +
+  scale_shape_manual(values = c(16, 1, 15, 0)) +
+  scale_x_continuous(
+    name = 'antibiotic use (yearly treatments per person)',
+    limits = c(0.5, 2.5), breaks = c(0.5, 1.5, 2.5)
+  ) +
+  scale_y_continuous(
+    name = 'resistance (proportion of hosts)',
+    limits = c(0.0, 1.01), expand = c(0, 0.1), breaks = c(0, 0.5, 1.0)
+  ) +
+  theme_classic() +
+  theme(
+    axis.title = element_text(size = 8),
+    axis.text = element_text(size = 8, color = 'black'),
+    panel.spacing = unit(3, 'mm'),
+    legend.position = 'none',
+    strip.background = element_blank(),
+    strip.text = element_text(size = 8, color = 'black', face = 'bold')
+  )
 ```
