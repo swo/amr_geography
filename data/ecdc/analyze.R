@@ -29,19 +29,44 @@ use = read_tsv('esac/esac.tsv') %>%
   summarize(did = sum(did)) %>%
   ungroup()
 
-# average these values over all the years
+# average these values over 2011-2015
+
+first_year = 2011
+last_year = 2015
 
 ares = res %>%
+  filter(between(year, first_year, last_year)) %>%
   group_by(bug, drug, country) %>%
-  summarize(n_ns = sum(n_ns),
-            n_isolates = sum(n_isolates)) %>%
+  summarize(
+    n_ns = sum(n_ns),
+    n_isolates = sum(n_isolates),
+    first_res_year = min(year),
+    last_res_year = max(year)
+  ) %>%
   ungroup() %>%
   mutate(f_ns = n_ns / n_isolates)
 
 ause = use %>%
+  filter(between(year, first_year, last_year)) %>%
   group_by(drug, country) %>%
-  summarize(did = mean(did))
+  summarize(
+    did = mean(did),
+    first_use_year = min(year),
+    last_use_year = max(year)
+  )
 
 acomb = inner_join(ares, ause, by=c('drug', 'country'))
+
+# say which bug-drug-countries don't meet the 2011-2015 end points
+
+acomb %>%
+  filter(
+    first_res_year != first_year |
+    last_res_year != last_year |
+    first_use_year != first_year |
+    last_use_year != last_year
+  ) %>%
+  select(bug, drug, country, ends_with('year')) %>%
+  write_tsv('year_exceptions.tsv')
 
 write_tsv(acomb, 'data.tsv')
