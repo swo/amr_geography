@@ -3,7 +3,7 @@ title: "Theory of use-resistance relationships over geographic scales"
 author: "Scott Olesen"
 ---
 
-```{r global_options}
+```{r global_options, echo = FALSE}
 knitr::opts_chunk$set(
   fig.width = 7, fig.height = 4, fig.path = 'fig/',
   dev = c('png', 'pdf'),

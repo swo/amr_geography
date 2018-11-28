@@ -603,33 +603,32 @@ In these analyses, we'll zero-center $d$ by subtracting its mean so that the reg
 ```{r dist_point}
 odds_ratio = function(p, q) odds(p) / odds(q)
 coef1 = function(model, term) model %>% coef() %>% extract(term) %>% unname()
+coef2 = function(x) coef1(x, 'du:d') / coef1(x, 'du')
 
 # turn the bugdrug bundle into a pairwise list of dr, du, and distances
 distance_fit_data = function(bd, permute = FALSE) {
   # prepare the data set
-  d = bd$data %>%
+  df = bd$data %>%
     mutate(res = n_resistant / n_isolates,
            i = 1:n()) %>%
     select(unit, i, use, res, density, income, temperature)
   
   if (permute) {
-    d %<>% mutate(i = sample(i))
+    df %<>% mutate(i = sample(i))
   }
   
   # get all combinations of units
-  units = unique(d$unit)
+  units = unique(df$unit)
   crossing(unit1 = units, unit2 = units) %>%
     filter(unit1 < unit2) %>%
-    left_join(d, by = c('unit1' = 'unit')) %>%
-    left_join(d, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
+    left_join(df, by = c('unit1' = 'unit')) %>%
+    left_join(df, by = c('unit2' = 'unit'), suffix = c('1', '2')) %>%
     mutate(
       # use the (possibly shuffled) distances
-      dist = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
+      d = map2_dbl(i1, i2, ~ bd$unit_distances[.x, .y]),
       dr = res2 - res1,
       du = use2 - use1,
       lor = log(odds(res2)) - log(odds(res1)),
-      arru = dr / du,
-      loru = lor / du,
       # other determinants
       d_density = density2 - density1,
       d_income = income2 - income1,
@@ -639,18 +638,15 @@ distance_fit_data = function(bd, permute = FALSE) {
 
 bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
 
-regression_p = function(bd, n_iter = 99, method = bisquare, max_dist = Inf) {
+regression_p = function(bd, n_iter = 999, method = bisquare) {
   vals = function(permute) {
-    dfd = distance_fit_data(bd, permute = permute) %>%
-      filter(dist <= max_dist)
+    dfd = distance_fit_data(bd, permute = permute)
     
-    coef2 = function(x) coef1(x, 'du:d') / coef1(x, 'du')
-    
-    arru = method(arru ~ du + du:d + d_density + d_income + d_temp, data = dfd) %>% coef2()
-    loru = method(loru ~ du + du:d + d_density + d_income + d_temp, data = dfd) %>% coef2()
+    arru = method(dr ~ du + du:d + d_density + d_income + d_temp, data = dfd) %>% coef2()
+    loru = method(lor ~ du + du:d + d_density + d_income + d_temp, data = dfd) %>% coef2()
     # unadjusted models
-    arru_ua = method(arru ~ du + du:d, data = dfd) %>% coef2()
-    loru_ua = method(loru ~ du + du:d, data = dfd) %>% coef2()
+    arru_ua = method(dr ~ du + du:d, data = dfd) %>% coef2()
+    loru_ua = method(lor ~ du + du:d, data = dfd) %>% coef2()
     
     c('arru' = arru, 'loru' = loru,
       'arru_ua' = arru_ua, 'loru_ua' = loru_ua)
@@ -697,11 +693,7 @@ distance_fit = function(dataset, lst) {
     arru_p = map_dbl(p_values, ~ .['arru']),
     loru_p = map_dbl(p_values, ~ .['loru']),
     arru_p_ua = map_dbl(p_values, ~ .['arru_ua']),
-    loru_p_ua = map_dbl(p_values, ~ .['loru_ua']),
-    # doing analysis only when including pairs less than 1k distant
-    data1k = map(data, ~ filter(., dist < 1e3)),
-    model_arru_1k = map(data1k, ~ bisquare(dr ~ du + du:d, data = .)),
-    model_loru_1k = map(data1k, ~ bisquare(lor ~ du + du:d, data = .))
+    loru_p_ua = map_dbl(p_values, ~ .['loru_ua'])
   )
 }
 
@@ -713,36 +705,28 @@ distance_fit_results = bind_rows(
 ```
 
 ```{r}
-distance_fit_results %>%
-  select(dataset, bugdrug, arru_p, loru_p, arru_p_ua, loru_p_ua) %>%
-  kable(caption = 'Permutation p values')
+peci = function(model, term, digits = 2, mult = 1) {
+  pe = coef1(model, term)
+  ci = confint(model)[term, ]
+  clean = function(x) as.character(round(x, digits))
+  sprintf('%s (%s to %s)', clean(pe * mult), clean(ci[1] * mult), clean(ci[2] * mult))
+}
 
 distance_fit_results %>%
-  rename(model = model_arru) %>%
-  mutate(ci = map(model, ~ as_tibble(confint(.), rownames = 'term'))) %>%
-  select(dataset, bugdrug, ci) %>%
-  unnest() %>%
-  filter(term %in% c('du', 'du:d')) %>%
-  mutate(`2.5%` = if_else(term == 'du:d', `2.5%` * 1e4, `2.5%`)) %>%
-  mutate(`97.5%` = if_else(term == 'du:d', `97.5%` * 1e4, `97.5%`)) %>%
-  kable(caption = 'ARRU model term CIs')
-
-distance_fit_results %>%
-  rename(model = model_loru) %>%
-  mutate(ci = map(model, ~ as_tibble(confint(.), rownames = 'term'))) %>%
-  select(dataset, bugdrug, ci) %>%
-  unnest() %>%
-  filter(term %in% c('du', 'du:d')) %>%
-  mutate(`2.5%` = if_else(term == 'du:d', `2.5%` * 1e4, `2.5%`)) %>%
-  mutate(`97.5%` = if_else(term == 'du:d', `97.5%` * 1e4, `97.5%`)) %>%
-  kable(caption = 'LORU model term CIs')
-
-distance_fit_results %>%
-  mutate(arru = map_dbl(model_arru, coef2),
-         loru = map_dbl(model_loru, coef2)) %>%
-  select(dataset, bugdrug, arru, loru) %>%
-  mutate_if(is.numeric, ~ round(. * 1e4, 2)) %>%
-  kable(caption = 'Point estimates for ratio')
+  mutate(
+    arru_du = map_chr(model_arru, ~ peci(., 'du')),
+    arru_dud = map_chr(model_arru, ~ peci(., 'du:d', mult = 1e4)),
+    arru_ratio = map_dbl(model_arru, ~ round(coef2(.) * 1e4, 2)),
+    loru_du = map_chr(model_loru, ~ peci(., 'du')),
+    loru_dud = map_chr(model_loru, ~ peci(., 'du:d', mult = 1e4)),
+    loru_ratio = map_dbl(model_loru, ~ round(coef2(.) * 1e4, 2)),
+  ) %>%
+  select(
+    dataset, bugdrug,
+    arru_du, arru_dud, arru_ratio, arru_p,
+    loru_du, loru_dud, loru_ratio, loru_p
+  ) %>%
+  kable()
 ```
 
 ```{r dist_point_plot}
