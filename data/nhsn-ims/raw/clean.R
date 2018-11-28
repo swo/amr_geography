@@ -12,12 +12,13 @@ ims = read_csv('Data_OAU.csv') %>%
 # NHSN
 
 nhsn = read_csv('PSA_States.csv') %>%
-  filter(Phenotype == 'E.coli R to fluoroquinolones',
-         State != 'PR', # IMS doesn't have Puerto Rico
-         EventType == 'CAUTI',
-         EventYear == 'All Years',
-         AgeCategory == 'All Ages',
-         !(NumberTested %in% c('(0)', '(1-19)'))) %>%
+  filter(
+    Phenotype == 'E.coli R to fluoroquinolones',
+    State != 'PR', # IMS doesn't have Puerto Rico
+    EventType == 'CAUTI',
+    EventYear == 'All Years',
+    AgeCategory == 'All Ages'
+  ) %>%
   mutate_at(vars(starts_with('Number')), as.integer) %>%
   mutate_at(vars(PercentResistant, matches('95CI')), as.numeric) %>%
   select(state=State, n_isolates=NumberTested, n_resistant=NumberResistant,
