@@ -269,102 +269,7 @@ marketscan_maup = maup_sim(
 )
 ```
 
-### Canonical groupings
-
-```{r marketscan_canonical_plot}
-canonical_grouping_plot = function(maup) {
-  maup %>%
-    mutate(bugdrug = case_when(
-      .$bugdrug == 'Ec/q' ~ 'E. coli & quinolones',
-      .$bugdrug == 'Sp/bl' ~ 'S. pneumoniae & beta-lactams',
-      .$bugdrug == 'Sp/m' ~ 'S. pneumoniae & macrolides'
-    )) %>%
-    filter(group_type == 'canonical') %>%
-    select(bugdrug, canonical_type, data = group_data) %>%
-    unnest() %>%
-    ggplot(aes(use, res)) +
-    facet_wrap(~ bugdrug, scales = 'free') +
-    geom_smooth(aes(linetype = canonical_type), method = 'lm', alpha = 0.1, color = 'black', size = 0.5) +
-    scale_linetype_manual(values = c(5, 3, 1)) +
-    geom_point(aes(shape = canonical_type)) +
-    scale_shape_manual(values = c(16, 0, 1)) +
-    xlab('antibiotic use (yearly treatments per capita)') +
-    ylab('antibiotic resistance (proportion of isolates)') +
-    theme_classic() +
-    theme(
-      legend.position = 'none',
-      strip.text = element_text(size = 8),
-      axis.text = element_text(size = 8, color = 'black'),
-      axis.title = element_text(size = 8)
-    )
-}
-
-cgp = canonical_grouping_plot(marketscan_maup)
-cgp
-
-ggsave('fig/marketscan_canonical.pdf', plot = cgp, width = 180, height = 80, units = 'mm')
-```
-
-```{r marketscan_canonical_table}
-canonical_grouping_table = function(maup) {
-  dataset = quo_name(enquo(maup))
-  
-  maup %>%
-    filter(group_type == 'canonical') %>%
-    mutate(
-      slope_arru_cil = map_dbl(model_arru, ~ confint(.)['use', 1]),
-      slope_arru_ciu = map_dbl(model_arru, ~ confint(.)['use', 2]),
-      slope_loru_cil = map_dbl(model_loru, ~ confint(.)['use', 1]),
-      slope_loru_ciu = map_dbl(model_loru, ~ confint(.)['use', 2])
-    ) %>%
-    select(bugdrug, canonical_type, starts_with('slope')) %>%
-    mutate_if(is.numeric, ~ round(., 2)) %>%
-    kable(caption = str_interp('slopes for canonical groupings (${dataset})'))
-}
-
-canonical_grouping_table(marketscan_maup)
-```
-
 ### MAUP
-
-```{r marketscan_maup_table}
-maup_table = function(maup, canonical_base = 'us_state') {
-  slopes = maup %>%
-    select(bugdrug, k, group_type, canonical_type, starts_with('slope')) %>%
-    gather('metric', 'slope', starts_with('slope'))
-  
-  base_slopes = slopes %>%
-    filter(canonical_type == canonical_base) %>%
-    select(bugdrug, metric, base_slope = slope)
-  
-  slopes %>%
-    filter(group_type != 'canonical') %>%
-    left_join(base_slopes, by = c('bugdrug', 'metric')) %>%
-    mutate(slope_diff = slope - base_slope) %>%
-    group_by(bugdrug, k, group_type, metric) %>%
-    summarize(
-      slope = list(slope),
-      slope_diff = list(slope_diff),
-      base_slope = unique(base_slope)
-    ) %>%
-    ungroup() %>%
-    mutate(
-      median_slope = map_dbl(slope, median),
-      q25 = map_dbl(slope, ~ quantile(., 0.25)),
-      q75 = map_dbl(slope, ~ quantile(., 0.75)),
-      wilcox = map(slope_diff, ~ wilcox.test(., alternative = 'greater')),
-      wilcox_p = map_dbl(wilcox, ~ .$p.value),
-      wilcox_p_log10 = log10(wilcox_p),
-      fdr = p.adjust(wilcox_p, 'BH') < 0.05
-    ) %>%
-    select(metric, bugdrug, group_type, k, base_slope, median_slope, q25, q75, wilcox_p, wilcox_p_log10, fdr) %>%
-    arrange(metric, bugdrug, group_type, k) %>%
-    mutate_if(is.numeric, ~ round(., 3)) %>%
-    kable(caption = 'Comparing base and MAUP slopes')
-}
-
-maup_table(marketscan_maup)
-```
 
 Histogram of slopes over the random aggregates (zonal and sample) for each bug/drug and $k$. Dotted blue line shows the slope over the raw units (states).
 
@@ -425,18 +330,7 @@ nhsn_maup = maup_sim(
 )
 ```
 
-### Canonical groupings
-
-```{r nhsn_canonical}
-canonical_grouping_plot(nhsn_maup)
-canonical_grouping_table(nhsn_maup)
-```
-
 ### MAUP
-
-```{r nhsn_maup_table}
-maup_table(nhsn_maup)
-```
 
 ```{r nhsn_maup_plot}
 maup_plot(nhsn_maup)
@@ -459,7 +353,7 @@ hex_labels = hex_map %>%
 hex_borders = hex_map %>%
   crossing(k = c(4, 9), group_type = c('canonical', 'sample', 'zone'))
 
-nhsn_maup %>%
+hex_plot = nhsn_maup %>%
   filter(group_type == 'canonical' | iteration == 1, k %in% c(4, 9)) %>%
   mutate(unit = map(group, ~ nhsn_maup_data$`Ec/q`$unit_data$unit)) %>%
   select(k, group_type, group, unit) %>%
@@ -468,9 +362,15 @@ nhsn_maup %>%
   ggplot(aes(x, y, group = unit)) +
   facet_grid(group_type ~ k) +
   geom_polygon(aes(fill = factor(group)), color = 'black', show.legend = FALSE) +
-  geom_text(data = hex_labels, aes(label = abb)) +
+  geom_text(data = hex_labels, aes(label = abb), size = 1.5) +
   coord_fixed() +
-  theme_void()
+  theme_void() +
+  theme(
+    text = element_text(size = 12)
+  )
+
+ggsave('fig/hex_plot.pdf', plot = hex_plot,
+       width = 120, height = 100, units = 'mm')
 ```
 
 ## Europe
@@ -502,24 +402,170 @@ europe_maup = maup_sim(
 )
 ```
 
-### Canonical
-
-```{r europe_canonical}
-canonical_grouping_plot(europe_maup)
-canonical_grouping_table(europe_maup)
-```
-
 ### MAUP
-
-```{r europe_maup_table}
-maup_table(europe_maup, canonical_base = 'eu_country')
-```
 
 ```{r europe_maup_plot}
 maup_plot(europe_maup, canonical_base = 'eu_country')
 ```
 
+## MAUP unified
+
+```{r maup_slope_table}
+maup = bind_rows(
+  mutate(marketscan_maup, dataset = 'marketscan'),
+  mutate(nhsn_maup, dataset = 'nhsn'),
+  mutate(europe_maup, dataset = 'europe')
+) %>%
+  mutate(
+    dataset = map_chr(dataset, ~ switch(., 'europe' = 'ECDC', 'nhsn' = 'IMS/NHSN', 'marketscan' = 'MarketScan')),
+    level = factor(canonical_type, levels = c('us_state', 'us_division', 'us_region', 'eu_country', 'eu_region'))
+  )
+
+slopes = maup %>%
+  select(dataset, bugdrug, k, group_type, canonical_type, starts_with('slope')) %>%
+  gather('metric', 'slope', starts_with('slope'))
+
+obs_slopes = slopes %>%
+  filter(canonical_type %in% c('us_state', 'eu_country')) %>%
+  select(dataset, bugdrug, metric, obs_slope = slope)
+
+myf = function(x, digits) format(round(x, digits = digits), nsmall = digits)
+
+pretty_p = function(x) {
+  sig = case_when(
+    p.adjust(x, 'BH') < 0.05 ~ '*',
+    #x < 0.05 ~ '*',
+    TRUE ~ ''
+  )
+  val = case_when(
+    x < 0.01 ~ '<0.01',
+    TRUE ~ myf(x, 2)
+  )
+  str_c(val, sig)
+}
+
+pretty_iqr = function(x, digits = 2) {
+  quantile(x, c(0.25, 0.50, 0.75)) %>%
+    myf(digits = digits) %>%
+    { sprintf('%s (%s to %s)', .[1], .[2], .[3]) }
+}
+
+slopes %>%
+  filter(group_type != 'canonical') %>%
+  left_join(obs_slopes, by = c('dataset', 'bugdrug', 'metric')) %>%
+  mutate(slope_diff = slope - obs_slope) %>%
+  group_by(dataset, bugdrug, k, group_type, metric) %>%
+  summarize(
+    slope = list(slope),
+    slope_diff = list(slope_diff),
+    obs_slope = unique(obs_slope)
+  ) %>%
+  ungroup() %>%
+  mutate(
+    dbd = str_c(dataset, ', ', bugdrug),
+    metric = str_replace(metric, '^slope_', ''),
+    value = map_chr(slope, pretty_iqr),
+    wilcox = map(slope_diff, ~ wilcox.test(., alternative = 'greater')),
+    wilcox_p = map_dbl(wilcox, ~ .$p.value),
+    p = pretty_p(wilcox_p),
+    obs_slope = myf(obs_slope, 2)
+  ) %>%
+  select(group_type, dbd, dbd, metric, k, obs_slope, value, p) %>%
+  arrange(rev(group_type), dbd, metric, k) %>%
+  kable(caption = 'Comparing base and MAUP slopes')
+```
+
 ## Canonical grouping analysis
+
+### Unified report
+
+```{r}
+clean = function(x) as.character(round(x, 2))
+peci = function(model) {
+  pe = coef(model)['use']
+  cil = confint(model)['use', 1]
+  ciu = confint(model)['use', 2]
+  sprintf('%s (%s to %s)', clean(pe), clean(cil), clean(ciu))
+}
+
+maup %>%
+  filter(group_type == 'canonical') %>%
+  mutate(
+    arru = map_chr(model_arru, peci),
+    loru = map_chr(model_loru, peci)
+  ) %>%
+  mutate(level = factor(
+    canonical_type,
+    levels = c('us_state', 'us_division', 'us_region', 'eu_country', 'eu_region')
+  )) %>%
+  arrange(dataset, bugdrug, level) %>%
+  select(dataset, bugdrug, level, arru, loru) %>%
+  kable(caption = 'Canonical grouping slopes')
+```
+
+### Unified figure
+
+```{r canonical_marketscan}
+marketscan_canonical_plot = maup %>%
+  mutate(bugdrug = case_when(
+    .$bugdrug == 'Ec/q' ~ 'E. coli & quinolones',
+    .$bugdrug == 'Sp/bl' ~ 'S. pneumoniae & beta-lactams',
+    .$bugdrug == 'Sp/m' ~ 'S. pneumoniae & macrolides'
+  )) %>%
+  filter(dataset == 'MarketScan') %>%
+  filter(group_type == 'canonical') %>%
+  select(bugdrug, level, data = group_data) %>%
+  unnest() %>%
+  ggplot(aes(use, res)) +
+  facet_wrap(~ bugdrug, scales = 'free') +
+  geom_smooth(aes(linetype = level), method = 'lm', alpha = 0.1, color = 'black', size = 0.5) +
+  scale_linetype_manual(values = c(1, 3, 5, 1, 5)) +
+  geom_point(aes(shape = level)) +
+  scale_shape_manual(values = c(1, 2, 16, 1, 16)) +
+  xlab('antibiotic use (yearly treatments per capita)') +
+  ylab('antibiotic resistance (proportion of isolates)') +
+  theme_classic() +
+  theme(
+    legend.position = 'none',
+    strip.text = element_text(size = 8),
+    axis.text = element_text(size = 8, color = 'black'),
+    axis.title = element_text(size = 8)
+  )
+
+show(marketscan_canonical_plot)
+
+ggsave('fig/marketscan_canonical.pdf', plot = marketscan_canonical_plot,
+       width = 180, height = 80, units = 'mm')
+```
+
+```{r canonical_nhsn_ecdc}
+other_canonical_plot = maup %>%
+  filter(dataset != 'MarketScan') %>%
+  filter(group_type == 'canonical') %>%
+  mutate(dfd = str_c(dataset, ', ', bugdrug)) %>%
+  select(dfd, level, data = group_data) %>%
+  unnest() %>%
+  ggplot(aes(use, res)) +
+  facet_wrap(~ dfd, scales = 'free') +
+  geom_smooth(aes(linetype = level), method = 'lm', alpha = 0.1, color = 'black', size = 0.5) +
+  scale_linetype_manual(values = c(1, 3, 5, 1, 5)) +
+  geom_point(aes(shape = level)) +
+  scale_shape_manual(values = c(1, 2, 16, 1, 16)) +
+  xlab('antibiotic use (yearly treatments per capita)') +
+  ylab('antibiotic resistance (proportion of isolates)') +
+  theme_classic() +
+  theme(
+    legend.position = 'none',
+    strip.text = element_text(size = 8),
+    axis.text = element_text(size = 8, color = 'black'),
+    axis.title = element_text(size = 8)
+  )
+
+show(other_canonical_plot)
+
+ggsave('fig/other_canonical.pdf', plot = other_canonical_plot,
+       width = 180, height = 150, units = 'mm')
+```
 
 ### Significance test
 
@@ -715,11 +761,11 @@ peci = function(model, term, digits = 2, mult = 1) {
 distance_fit_results %>%
   mutate(
     arru_du = map_chr(model_arru, ~ peci(., 'du')),
-    arru_dud = map_chr(model_arru, ~ peci(., 'du:d', mult = 1e4)),
-    arru_ratio = map_dbl(model_arru, ~ round(coef2(.) * 1e4, 2)),
+    arru_dud = map_chr(model_arru, ~ peci(., 'du:d', mult = 1e3)),
+    arru_ratio = map_dbl(model_arru, ~ round(coef2(.) * 1e3, 2)),
     loru_du = map_chr(model_loru, ~ peci(., 'du')),
-    loru_dud = map_chr(model_loru, ~ peci(., 'du:d', mult = 1e4)),
-    loru_ratio = map_dbl(model_loru, ~ round(coef2(.) * 1e4, 2)),
+    loru_dud = map_chr(model_loru, ~ peci(., 'du:d', mult = 1e3)),
+    loru_ratio = map_dbl(model_loru, ~ round(coef2(.) * 1e3, 2))
   ) %>%
   select(
     dataset, bugdrug,
@@ -729,16 +775,19 @@ distance_fit_results %>%
   kable()
 ```
 
+### Plots
+
 ```{r dist_point_plot}
 library(MASS)
 ycut = 75
 
 dat = distance_fit_results %>%
   filter(dataset == 'europe', bugdrug == 'Ec/q') %$%
-  data[[1]]
+  data[[1]] %>%
+  mutate(loru = lor / du)
 
 dpp = dat %>%
-  ggplot(aes(dist, loru)) +
+  ggplot(aes(d, loru)) +
   geom_point(shape = 1) +
   geom_smooth(method = 'rlm', color = 'black', size = 0.5) +
   coord_cartesian(ylim = ycut * c(-1, 1)) +
@@ -760,14 +809,93 @@ ggsave('fig/distance_plot.pdf', plot = dpp, width = 88, units = 'mm')
 ggsave('fig/distance_plot.png', plot = dpp, width = 88, units = 'mm')
 ```
 
-```{r dist_point_cut}
-distance_fit_results %>%
-  select(dataset, bugdrug, data) %>%
+```{r dist_point_all}
+is_central = function(x, q) {
+  stopifnot(between(q, 0, 1))
+  threshold = ecdf(abs(x)) %>% quantile(q)
+  abs(x) < threshold
+}
+
+dist_point_dat = distance_fit_results %>%
+  mutate(
+    dataset = map_chr(dataset, ~ switch(., 'europe' = 'ECDC', 'nhsn' = 'IMS/NHSN', 'marketscan' = 'MarketScan')),
+    dfd = str_c(dataset, ', ', bugdrug),
+    data = map(data, ~ filter(mutate(., loru = lor / du), is.finite(loru))),
+    model = map(data, ~ bisquare(loru ~ d, data = .)),
+    intercept = map_dbl(model, ~ coef(.)['(Intercept)']),
+    slope = map_dbl(model, ~ coef(.)['d'])
+  )
+
+dist_point_dat %>%
+  select(dfd, data) %>%
   unnest() %>%
-  ggplot(aes(dist, loru)) +
-  facet_wrap(~ dataset + bugdrug, scales = 'free') +
+  # truncate axes
+  group_by(dfd) %>%
+  filter(is_central(loru, 0.95)) %>%
+  ungroup() %>%
+  ggplot(aes(d, loru)) +
+  facet_wrap(~ dfd, scales = 'free') +
   geom_point(shape = 1) +
-  geom_smooth(method = 'rlm') +
-  coord_cartesian(ylim = 50 * c(-1, 1)) +
+  geom_hline(yintercept = 0, color = 'blue') +
+  geom_abline(data = dist_point_dat, aes(intercept = intercept, slope = slope), color = 'red') +
+  xlab('Distance between units (km)') +
+  ylab('use-resistance relationship (LORU)') +
   theme_classic()
+```
+
+# Discussion
+
+```{r concept}
+exp_f = function(x0, b) {
+  function(x) 1 - exp(-(x - x0) / b)
+}
+
+logistic_f = function(x0, b) {
+  function(x) 1 / (1 + exp(-(x - x0) / b))
+}
+
+line1 = exp_f(-1, 0.2)
+line2 = logistic_f(-0.2, 0.2)
+line3 = logistic_f(0.5, 0.2)
+
+known = data_frame(
+  x = c(-1, 1, 1.5),
+  y = c(0, 1, 1),
+  level = c('individual', 'state', 'region')
+)
+
+guess = data_frame(
+  x = c(-0.5, 0.5),
+  y = c(line1(-0.5), line2(0.5)),
+  level = c('daycare', 'city')
+)
+
+concept_plot = ggplot(known, aes(x, y)) +
+  geom_point(shape = 16, size = 3) +
+  geom_point(data = guess, shape = 1, size = 3) +
+  geom_segment(data = guess, aes(xend = x, yend = -0.1), linetype = 3) +
+  stat_function(fun = line1, linetype = 2) +
+  stat_function(fun = line2, linetype = 2) +
+  stat_function(fun = line3, linetype = 2) +
+  scale_y_continuous(
+    'effect size',
+    limits = c(-0.1, 1.1), expand = c(0, 0),
+    breaks = c(0, 1), labels = c('', '')
+  ) +
+  scale_x_continuous(
+    'intervention scale',
+    limits = c(-1.0, 1.6), expand = c(0, 0),
+    breaks = c(-1, -0.5, 0.5, 1.0, 1.5),
+    labels = c('individual', 'daycare', 'city', 'state', 'region')
+  ) +
+  theme_classic() +
+  theme(
+    axis.text = element_text(color = 'black', size = 10),
+    axis.title = element_text(size = 12)
+  )
+
+show(concept_plot)
+
+ggsave('fig/concept.pdf', plot = concept_plot,
+       width = 88, units = 'mm')
 ```
