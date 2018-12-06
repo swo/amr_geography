@@ -897,5 +897,5 @@ concept_plot = ggplot(known, aes(x, y)) +
 show(concept_plot)
 
 ggsave('fig/concept.pdf', plot = concept_plot,
-       width = 88, units = 'mm')
+       width = 88, height = 80, units = 'mm')
 ```
