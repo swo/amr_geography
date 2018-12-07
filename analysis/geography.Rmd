@@ -281,7 +281,7 @@ whn_nest_plot = whn_nest_results %>%
     sec.axis = sec_axis(
       trans = ~ .,
       # \varepsilon_\uparrow
-      name = expression(bold(ε)['' %up% '']),
+      name = expression(epsilon['' %up% '']),
       breaks = NULL
     )
   ) +
@@ -291,7 +291,7 @@ whn_nest_plot = whn_nest_results %>%
     sec.axis = sec_axis(
       trans = ~ .,
       # \varepsilon_\downarrow
-      name = expression(bold(ε)['' %down% '']),
+      name = expression(epsilon['' %down% '']),
       breaks = NULL
     )
   ) +
@@ -314,7 +314,8 @@ whn_nest_plot = whn_nest_results %>%
 
 show(whn_nest_plot)
 
-ggsave('fig/whn_nest.pdf', plot = whn_nest_plot, width = 88, height = 110, units = 'mm')
+ggsave('fig/whn_nest.pdf', plot = whn_nest_plot,
+       width = 88, height = 110, units = 'mm')
 ```
 
 ```{r nested_model_uses}
@@ -657,7 +658,7 @@ dtypes_nest_plot = dtypes_nest_results %>%
     sec.axis = sec_axis(
       trans = ~ .,
       # \varepsilon_\uparrow
-      name = expression(bold(ε)['' %up% '']),
+      name = expression(epsilon['' %up% '']),
       breaks = NULL
     )
   ) +
@@ -667,7 +668,7 @@ dtypes_nest_plot = dtypes_nest_results %>%
     sec.axis = sec_axis(
       trans = ~ .,
       # \varepsilon_\downarrow
-      name = expression(bold(ε)['' %down% '']),
+      name = expression(epsilon['' %down% '']),
       breaks = NULL
     )
   ) +
@@ -690,5 +691,6 @@ dtypes_nest_plot = dtypes_nest_results %>%
 
 show(dtypes_nest_plot)
 
-ggsave('fig/dtypes_nest.pdf', plot = dtypes_nest_plot, width = 88, height = 110, units = 'mm')
+ggsave('fig/dtypes_nest.pdf', plot = dtypes_nest_plot,
+       width = 88, height = 110, units = 'mm')
 ```
