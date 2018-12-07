@@ -6,7 +6,7 @@ author: "Scott Olesen"
 ```{r global_options, include = FALSE}
 knitr::opts_chunk$set(
   fig.width = 7, fig.height = 4, fig.path = 'fig/',
-  dev = c('png', 'pdf'), 
+  dev = c('png', 'pdf'),
   echo = FALSE, warning = FALSE, message = FALSE,
   cache = TRUE, autodep = TRUE)
 
@@ -117,11 +117,11 @@ renumber = function(x) match(x, unique(x))
 random_zones = function(distances, k) {
   stopifnot(nrow(distances) == ncol(distances))
   stopifnot(nrow(distances) >= k)
-  
+
   centers = sample(1:nrow(distances), k)
   zones = distances[, centers] %>%
     apply(1, function(x) centers[which.min(x)])
-  
+
   renumber(zones)
 }
 
@@ -133,7 +133,7 @@ random_zones_nmin = function(distances, k, n_min = 2, max_tries = 1e2) {
     if (min(table(z)) >= n_min) return(z)
     try = try + 1
   }
-  
+
   NULL
 }
 
@@ -153,7 +153,7 @@ unit_distances = function(unit_data) {
 
   units = unit_data$unit
   n_units = length(units)
-  
+
   unit_data %>%
     crossing(., .) %>%
     arrange(unit, unit1) %>%
@@ -256,7 +256,7 @@ maup_sim = function(bugdrug, k, n_iterations, canonical_rows, maup_data) {
       model_arru = map(group_data, ~ lm(res ~ use, data = .)),
       model_loru = map(group_data, ~ lm(lores ~ use, data = .)),
       slope_arru = map_dbl(model_arru, ~ coef(.)['use']),
-      slope_loru = map_dbl(model_loru, ~ coef(.)['use']) 
+      slope_loru = map_dbl(model_loru, ~ coef(.)['use'])
     )
 }
 
@@ -276,16 +276,16 @@ Histogram of slopes over the random aggregates (zonal and sample) for each bug/d
 ```{r marketscan_maup_plot}
 maup_plot = function(maup, canonical_base = 'us_state', metric = 'slope_arru') {
   metric_ = as.symbol(metric)
-  
+
   dat = maup %>%
     filter(group_type != 'canonical') %>%
     select(bugdrug, k, group_type, !!metric_)
-  
+
   slopes = maup %>%
     filter(canonical_type == canonical_base) %>%
     select(bugdrug, base_slope = !!metric_) %>%
     crossing(k = unique(dat$k))
-  
+
   dat %>%
     ggplot(aes(!!metric_, fill = group_type)) +
     facet_grid(k ~ bugdrug, scales = 'free') +
@@ -575,15 +575,15 @@ To see if the observed (canonical) aggregate slope is anything special, compare 
 agg_slope_f = function(df, group, permute = FALSE) {
   expected_names = c(group, 'use', 'population', 'n_resistant', 'n_isolates')
   stopifnot(all(expected_names %in% names(df)))
-  
+
   group_ = as.symbol(group)
-  
+
   permute_f = if (permute) {
     function(x) mutate(x, !!group := sample(!!group_))
   } else {
     identity
   }
-  
+
   dat = df %>%
     permute_f() %>%
     group_by(!!group_) %>%
@@ -593,11 +593,11 @@ agg_slope_f = function(df, group, permute = FALSE) {
     mutate(n_susceptible = n_isolates - n_resistant,
            res = n_resistant / n_isolates,
            lores = log(odds(res)))
-  
+
   f = function(model) unname(coef(model)['use'])
   arru_slope = f(lm(res ~ use, data = dat))
   loru_slope = f(lm(lores ~ use, data = dat))
-  
+
   c('arru' = arru_slope, 'loru' = loru_slope)
 }
 
@@ -605,7 +605,7 @@ agg_slope_f = function(df, group, permute = FALSE) {
 agg_slope_p = function(df, group, n_iter) {
   obs_slope = agg_slope_f(df, group, permute = FALSE)
   perm_slopes = replicate(n_iter, agg_slope_f(df, group, permute = TRUE))
-  
+
   r = rowSums(perm_slopes > obs_slope)
   (r + 1) / (n_iter + 1)
 }
@@ -658,11 +658,11 @@ distance_fit_data = function(bd, permute = FALSE) {
     mutate(res = n_resistant / n_isolates,
            i = 1:n()) %>%
     select(unit, i, use, res, density, income, temperature)
-  
+
   if (permute) {
     df %<>% mutate(i = sample(i))
   }
-  
+
   # get all combinations of units
   units = unique(df$unit)
   crossing(unit1 = units, unit2 = units) %>%
@@ -687,22 +687,22 @@ bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
 regression_p = function(bd, n_iter = 999, method = bisquare) {
   vals = function(permute) {
     dfd = distance_fit_data(bd, permute = permute)
-    
+
     arru = method(dr ~ du + du:d + d_density + d_income + d_temp, data = dfd) %>% coef2()
     loru = method(lor ~ du + du:d + d_density + d_income + d_temp, data = dfd) %>% coef2()
     # unadjusted models
     arru_ua = method(dr ~ du + du:d, data = dfd) %>% coef2()
     loru_ua = method(lor ~ du + du:d, data = dfd) %>% coef2()
-    
+
     c('arru' = arru, 'loru' = loru,
       'arru_ua' = arru_ua, 'loru_ua' = loru_ua)
   }
-  
+
   base_vals = vals(FALSE)
   perm_vals = replicate(n_iter, vals(TRUE))
-  
+
   r = rowSums(perm_vals > base_vals)
-  
+
   (r + 1) / (n_iter + 1)
 }
 
@@ -717,7 +717,7 @@ confint.rlm = function(m) {
   cs = coef(summary(m))
   estimate = cs[, 'Value']
   se = cs[, 'Std. Error']
-  
+
   cbind(estimate - 1.96 * se, estimate + 1.96 * se) %>%
     set_rownames(names(estimate)) %>%
     set_colnames(c('2.5%', '97.5%'))
