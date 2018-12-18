@@ -4,3 +4,8 @@
 .Ruserdata
 *.pdf
 old/
+
+# data files
+*.csv
+*.dta
+*.zip
