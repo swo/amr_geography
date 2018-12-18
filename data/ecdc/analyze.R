@@ -21,7 +21,8 @@ res = read_tsv('ears/ears.tsv') %>%
 
 use = read_tsv('esac/esac.tsv') %>%
   filter(!(country=='Romania' & year==2009)) %>%
-  filter(toc == 'ACHC') %>%
+  # keep only community (outpatient) use
+  filter(toc == 'AC') %>%
   filter(abx_desc %in% names(use_drugs)) %>%
   mutate(drug = unlist(use_drugs[abx_desc])) %>%
   # remove weird data points
