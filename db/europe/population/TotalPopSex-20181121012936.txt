@@ -1,0 +1,59 @@
+Total Population by sex (thousands)									
+ISO 3166-1 numeric code	Location	Sex	Note	2010	2011	2012	2013	2014	2015
+900	World								
+935	   Asia								
+922	      Western Asia								
+196	         Cyprus	Both sexes combined	10	   1 112.607	   1 124.835	   1 135.062	   1 143.896	   1 152.309	   1 160.985
+908	   Europe	Both sexes combined		   737 163.580	   738 177.804	   738 976.542	   739 621.182	   740 210.730	   740 813.959
+923	      Eastern Europe	Both sexes combined		   294 540.681	   294 233.056	   293 987.914	   293 768.982	   293 532.237	   293 243.708
+112	         Belarus	Both sexes combined		   9 473.071	   9 468.500	   9 471.730	   9 478.902	   9 484.851	   9 485.772
+100	         Bulgaria	Both sexes combined		   7 404.590	   7 356.213	   7 310.383	   7 266.141	   7 222.145	   7 177.396
+203	         Czechia	Both sexes combined		   10 536.286	   10 568.715	   10 586.755	   10 594.481	   10 598.526	   10 603.762
+348	         Hungary	Both sexes combined		   9 927.840	   9 898.204	   9 869.684	   9 841.697	   9 813.335	   9 783.925
+616	         Poland	Both sexes combined		   38 323.402	   38 320.947	   38 317.404	   38 309.451	   38 293.060	   38 265.226
+498	         Republic of Moldova	Both sexes combined	13	   4 084.481	   4 077.368	   4 073.703	   4 071.964	   4 069.939	   4 065.980
+642	         Romania	Both sexes combined		   20 440.347	   20 292.967	   20 171.255	   20 068.201	   19 972.736	   19 876.621
+643	         Russian Federation	Both sexes combined		   143 153.869	   143 263.988	   143 420.597	   143 597.230	   143 761.378	   143 888.004
+703	         Slovakia	Both sexes combined		   5 404.294	   5 409.847	   5 417.070	   5 425.130	   5 432.841	   5 439.318
+804	         Ukraine	Both sexes combined	14	   45 792.501	   45 576.307	   45 349.333	   45 115.785	   44 883.426	   44 657.704
+924	      Northern Europe	Both sexes combined	15	   100 313.727	   100 974.168	   101 550.511	   102 069.505	   102 574.541	   103 097.292
+830	         Channel Islands	Both sexes combined	16	    159.581	    160.497	    161.358	    162.180	    162.969	    163.758
+208	         Denmark	Both sexes combined		   5 554.844	   5 582.873	   5 610.660	   5 637.817	   5 663.914	   5 688.695
+233	         Estonia	Both sexes combined		   1 332.102	   1 328.449	   1 324.934	   1 321.560	   1 318.359	   1 315.321
+234	         Faeroe Islands	Both sexes combined		    48.550	    48.608	    48.666	    48.747	    48.842	    48.965
+246	         Finland	Both sexes combined	17	   5 365.782	   5 389.242	   5 412.980	   5 436.616	   5 459.717	   5 481.966
+352	         Iceland	Both sexes combined		    320.328	    323.418	    325.526	    327.029	    328.459	    330.243
+372	         Ireland	Both sexes combined		   4 626.928	   4 662.579	   4 678.117	   4 681.967	   4 686.347	   4 700.107
+833	         Isle of Man	Both sexes combined		    80.072	    80.759	    81.406	    82.013	    82.590	    83.167
+428	         Latvia	Both sexes combined		   2 118.848	   2 092.493	   2 066.374	   2 040.784	   2 016.125	   1 992.663
+440	         Lithuania	Both sexes combined		   3 123.803	   3 079.881	   3 037.246	   2 997.334	   2 961.846	   2 931.926
+578	         Norway	Both sexes combined	18	   4 885.878	   4 947.595	   5 012.007	   5 077.101	   5 140.311	   5 199.836
+752	         Sweden	Both sexes combined		   9 390.168	   9 465.892	   9 540.907	   9 615.247	   9 689.376	   9 763.565
+826	         United Kingdom	Both sexes combined		   63 306.843	   63 811.882	   64 250.330	   64 641.110	   65 015.686	   65 397.080
+925	      Southern Europe	Both sexes combined	19	   153 943.085	   153 958.951	   153 703.438	   153 276.446	   152 820.713	   152 440.653
+8	         Albania	Both sexes combined		   2 940.525	   2 926.659	   2 920.039	   2 918.978	   2 920.775	   2 923.352
+20	         Andorra	Both sexes combined		    84.449	    83.751	    82.431	    80.788	    79.223	    78.014
+70	         Bosnia and Herzegovina	Both sexes combined		   3 722.084	   3 688.865	   3 648.200	   3 604.999	   3 566.002	   3 535.961
+191	         Croatia	Both sexes combined		   4 328.153	   4 313.371	   4 296.526	   4 277.806	   4 257.533	   4 236.016
+292	         Gibraltar	Both sexes combined		    33.189	    33.405	    33.623	    33.831	    34.038	    34.228
+300	         Greece	Both sexes combined		   11 446.005	   11 422.805	   11 378.257	   11 321.300	   11 264.726	   11 217.800
+336	         Holy See	Both sexes combined		    0.794	    0.796	    0.804	    0.801	    0.800	    0.803
+380	         Italy	Both sexes combined		   59 729.807	   59 759.929	   59 733.834	   59 668.000	   59 585.668	   59 504.212
+470	         Malta	Both sexes combined		    416.110	    418.367	    420.789	    423.246	    425.570	    427.616
+499	         Montenegro	Both sexes combined		    624.285	    625.466	    626.386	    627.094	    627.674	    628.178
+620	         Portugal	Both sexes combined		   10 652.321	   10 625.330	   10 581.821	   10 527.674	   10 471.168	   10 418.473
+674	         San Marino	Both sexes combined		    31.110	    31.504	    31.914	    32.303	    32.657	    32.960
+688	         Serbia	Both sexes combined	20	   9 029.716	   8 993.746	   8 956.984	   8 920.215	   8 884.712	   8 851.280
+705	         Slovenia	Both sexes combined		   2 045.168	   2 053.436	   2 060.390	   2 066.119	   2 070.845	   2 074.788
+724	         Spain	Both sexes combined	21	   46 788.630	   46 909.138	   46 857.404	   46 697.553	   46 521.827	   46 397.664
+807	         TFYR Macedonia	Both sexes combined	22	   2 070.739	   2 072.383	   2 074.036	   2 075.739	   2 077.495	   2 079.308
+926	      Western Europe	Both sexes combined	23	   188 366.087	   189 011.629	   189 734.679	   190 506.249	   191 283.239	   192 032.306
+40	         Austria	Both sexes combined		   8 409.949	   8 459.864	   8 517.548	   8 577.782	   8 633.220	   8 678.657
+56	         Belgium	Both sexes combined		   10 938.739	   11 013.083	   11 083.550	   11 151.512	   11 219.161	   11 287.940
+250	         France	Both sexes combined		   63 026.740	   63 343.577	   63 639.873	   63 919.917	   64 190.638	   64 457.201
+276	         Germany	Both sexes combined		   80 894.785	   80 933.980	   81 066.228	   81 265.139	   81 489.660	   81 707.789
+438	         Liechtenstein	Both sexes combined		    36.003	    36.264	    36.545	    36.834	    37.127	    37.403
+442	         Luxembourg	Both sexes combined		    507.889	    519.941	    532.387	    544.721	    556.316	    566.741
+492	         Monaco	Both sexes combined		    37.094	    37.497	    37.783	    37.971	    38.132	    38.307
+528	         Netherlands	Both sexes combined		   16 682.917	   16 737.002	   16 789.095	   16 839.699	   16 889.356	   16 938.499
+756	         Switzerland	Both sexes combined		   7 831.971	   7 930.421	   8 031.670	   8 132.674	   8 229.629	   8 319.769
