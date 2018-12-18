@@ -29,7 +29,9 @@ state_data = read_tsv('../db/state_data.tsv') %>%
 ```
 
 ```{r marketscan_data}
-marketscan_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv') %>%
+marketscan_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv', col_types = cols('n_isolates' = 'n')) %>%
+  # specify n_isolates as "n" to parse things like "5e3"
+  mutate_at('n_isolates', as.integer) %>%
   rename(drug = drug_group) %>%
   mutate(bugdrug = case_when(
     .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
@@ -48,7 +50,11 @@ marketscan = marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
   rename(unit = state) %>%
   left_join(state_data, by = 'unit') %>%
-  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population, density, income, temperature)
+  select(
+    unit_id, unit, bugdrug, use, n_resistant, n_isolates,
+    population, density, income, temperature,
+    us_region, us_division
+  )
 ```
 
 ### NHSN/IMS
@@ -62,7 +68,11 @@ nhsn = read_tsv('../data/nhsn-ims/data.tsv') %>%
          use = rx_1k_year / 1e3) %>%
   arrange(unit_id) %>%
   left_join(state_data, by = 'unit_id') %>%
-  select(unit_id, unit, bugdrug, use, n_resistant, n_isolates, population, density, income, temperature)
+  select(
+    unit_id, unit, bugdrug, use, n_resistant, n_isolates,
+    population, density, income, temperature,
+    us_region, us_division
+  )
 ```
 
 ### ECDC
@@ -83,7 +93,7 @@ did_cpy_map %>%
 ```{r ecdc}
 europe_units = read_tsv('../db/europe_units.tsv') %>%
   mutate(density = population / area) %>%
-  select(unit_id, unit, long = longitude, lat = latitude, population, eu_region = region, density, income, temperature)
+  select(unit_id, unit, population, eu_region = region, density, income, temperature)
 
 europe = read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
@@ -95,7 +105,11 @@ europe = read_tsv('../data/ecdc/data.tsv') %>%
   )) %>%
   rename(unit = country) %>%
   left_join(europe_units, by = 'unit') %>%
-  select(unit_id, unit, bugdrug, use, n_resistant = n_ns, n_isolates, population, density, temperature, income)
+  select(
+    unit_id, unit, bugdrug, use, n_resistant = n_ns, n_isolates,
+    population, density, temperature, income,
+    eu_region
+  )
 
 europe_names = unique(europe$unit)
 ```
@@ -104,88 +118,129 @@ europe_names = unique(europe$unit)
 
 ## MarketScan
 
+```{r}
+
+```
+
 ```{r marketscan_maup_setup}
 # group n items into k groups, with at least n_min items in each group
 sample_nmin = function(n, k, n_min = 2) {
+  # ensure it's possible with these values
   stopifnot(n_min * k <= n)
-  sample(c(rep(1:k, each = n_min), sample(1:k, n - (n_min * k), replace = TRUE)))
-}
-
-renumber = function(x) match(x, unique(x))
-
-# given distances between things, create groups
-random_zones = function(distances, k) {
-  stopifnot(nrow(distances) == ncol(distances))
-  stopifnot(nrow(distances) >= k)
-
-  centers = sample(1:nrow(distances), k)
-  zones = distances[, centers] %>%
-    apply(1, function(x) centers[which.min(x)])
-
-  renumber(zones)
-}
-
-# wrapper around random zones, to ensure group size
-random_zones_nmin = function(distances, k, n_min = 2, max_tries = 1e2) {
-  try = 1
-  while (try < max_tries) {
-    z = random_zones(distances, k)
-    if (min(table(z)) >= n_min) return(z)
-    try = try + 1
-  }
-
-  NULL
-}
-
-deg2rad = function(deg) deg * pi / 180
-
-haversine = function(long1, lat1, long2, lat2, R = 6371) {
-  long1 = deg2rad(long1)
-  lat1 = deg2rad(lat1)
-  long2 = deg2rad(long2)
-  lat2 = deg2rad(lat2)
-  R * acos(pmin(1.0, sin(lat1) * sin(lat2) + cos(lat1) * cos(lat2) * cos(long2 - long1)))
-}
-
-unit_distances = function(unit_data) {
-  stopifnot(all(c('unit', 'long', 'lat') %in% names(unit_data)))
-  if (any(duplicated(unit_data$unit))) stop('duplicated units')
-
-  units = unit_data$unit
-  n_units = length(units)
-
-  unit_data %>%
-    crossing(., .) %>%
-    arrange(unit, unit1) %>%
-    mutate(dist = haversine(long, lat, long1, lat1)) %$%
-    matrix(dist, ncol = n_units, nrow = n_units) %>%
-    set_rownames(units) %>%
-    set_colnames(units)
+  
+  # take each ID, the 1:k, n_min times
+  rep(1:k, each = n_min) %>%
+    # then, take the rest of the n at random from 1:k
+    c(sample(1:k, n - length(.), replace = TRUE)) %>%
+    # then, mix them all up
+    sample()
 }
 ```
 
 ```{r maup_helper_functions}
-odds = function(p) p / (1 - p)
+logodds = function(p) log(p / (1 - p))
+inv_logodds = function(q) 1 / (exp(-q) + 1)
 
-aggregate = function(df, group) {
-  mutate(df, group = group) %>%
-    group_by(group) %>%
-    summarize(use = weighted.mean(use, w = population),
-              n_resistant = sum(n_resistant),
-              n_isolates = sum(n_isolates)) %>%
-    mutate(n_susceptible = n_isolates - n_resistant,
-           res = n_resistant / n_isolates,
-           lores = log(odds(res)))
+aggregate = function(df, group_chr) {
+  stopifnot(class(group_chr) == 'character')
+  group = as.symbol(group_chr)
+  
+  group_by_at(df, c(group_chr, 'bugdrug')) %>%
+    summarize(
+      group = unique(!!group),
+      use = weighted.mean(use, w = population),
+      n_resistant = sum(n_resistant),
+      n_isolates = sum(n_isolates)
+    ) %>%
+    ungroup() %>%
+    mutate(
+      group_type = group_chr,
+      n_susceptible = n_isolates - n_resistant,
+      res = n_resistant / n_isolates,
+      lores = logodds(res)
+    )
 }
 
-try_load = function(fn, expr, force_run = FALSE) {
-  if (!force_run && file.exists(fn)) {
-    read_rds(fn)
-  } else {
-    value = expr
-    write_rds(value, fn)
-  }
+shuffle_slopes = function(df, group_chr, n_trials = 99) {
+  map_dbl(1:n_trials, function(i) {
+    df %>%
+      mutate_at(group_chr, sample) %>%
+      aggregate(group_chr) %>%
+      glm(cbind(n_resistant, n_susceptible) ~ use, family = 'binomial', data = .) %>%
+      { coef(.)['use'] }
+  })
 }
+
+shuffle_slopes(marketscan, 'us_region')
+
+m1 = map_dfr(c('unit', 'us_region', 'us_division'), ~ aggregate(marketscan, .)) %>%
+  nest(-bugdrug, -group_type) %>%
+  mutate(
+    # run the models for each aggregate type
+    model = map(data, ~ glm(cbind(n_resistant, n_susceptible) ~ use, family = 'binomial', data = .)),
+    # extract "slope" and CIs around that value
+    slope = map_dbl(model, ~ coef(.)['use']),
+    ci = map(model, confint.default),
+    slope_cil = map_dbl(ci, ~ .['use', 1]),
+    slope_ciu = map_dbl(ci, ~ .['use', 2]),
+    # get data needed to plot the 95% CI fit line
+    pred_x = map(data, ~ seq(from = min(.$use), to = max(.$use), length.out = 100)),
+    pred = map2(
+      model, pred_x,
+      ~ predict(.x, newdata = data_frame(use = .y), type = 'response', se.fit = TRUE)
+    ),
+    pred_data = map2(pred_x, pred, ~ data_frame(
+      use = .x,
+      res = .y$fit,
+      ymax = .y$fit + 1.96 * .y$se.fit,
+      ymin = .y$fit - 1.96 * .y$se.fit
+    ))
+  ) %>%
+  arrange(bugdrug)
+
+# do p-value calculations
+base_slopes = m1 %>%
+  filter(group_type == 'unit') %>%
+  select(bugdrug, slope)
+
+null_slopes = m1 %>%
+  select(bugdrug, group_type) %>%
+  filter(group_type != 'unit') %>%
+  left_join(base_slopes, by = 'bugdrug') %>%
+  rename(base_slope = slope) %>%
+  mutate(
+    null_slopes = map2(bugdrug, group_type, ~ shuffle_slopes(filter(marketscan, bugdrug == .x), .y)),
+    p_value = map2_dbl(null_slopes, base_slope, ~ (sum(.x > .y) + 1) / (length(.x) + 1))
+  )
+
+# combine actual data, "prediction" data, and p-values
+mm = m1 %>%
+  left_join(null_slopes, by = c('bugdrug', 'group_type')) %>%
+  select(
+    bugdrug, group_type,
+    data, model, slope, slope_cil, slope_ciu, p_value,
+    pred_data
+  )
+
+# get the data
+m2 = m1 %>%
+  select(bugdrug, group_type, data) %>%
+  unnest()
+
+# "data" from the predictions
+m3 = m1 %>%
+  select(bugdrug, group_type, pred_data) %>%
+  unnest()
+
+ggplot(data = NULL, aes(use, res)) +
+  facet_wrap(~ bugdrug) +
+  geom_ribbon(data = m3, aes(fill = group_type, ymin = ymin, ymax = ymax), color = NA) +
+  geom_point(data = m2, aes(shape = group_type)) +
+  geom_line(data = m3, aes(linetype = group_type))
+```
+
+```{r}
+# put p-values around all that
 ```
 
 ```{r marketscan_maup_compute}
