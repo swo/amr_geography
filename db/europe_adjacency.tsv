@@ -1,0 +1,3167 @@
+year	country1	country2
+2011	United States of America	Canada
+2012	United States of America	Canada
+2013	United States of America	Canada
+2014	United States of America	Canada
+2015	United States of America	Canada
+2011	United States of America	Mexico
+2012	United States of America	Mexico
+2013	United States of America	Mexico
+2014	United States of America	Mexico
+2015	United States of America	Mexico
+2011	Canada	United States of America
+2012	Canada	United States of America
+2013	Canada	United States of America
+2014	Canada	United States of America
+2015	Canada	United States of America
+2011	Haiti	Dominican Republic
+2012	Haiti	Dominican Republic
+2013	Haiti	Dominican Republic
+2014	Haiti	Dominican Republic
+2015	Haiti	Dominican Republic
+2011	Dominican Republic	Haiti
+2012	Dominican Republic	Haiti
+2013	Dominican Republic	Haiti
+2014	Dominican Republic	Haiti
+2015	Dominican Republic	Haiti
+2011	Mexico	United States of America
+2012	Mexico	United States of America
+2013	Mexico	United States of America
+2014	Mexico	United States of America
+2015	Mexico	United States of America
+2011	Mexico	Belize
+2012	Mexico	Belize
+2013	Mexico	Belize
+2014	Mexico	Belize
+2015	Mexico	Belize
+2011	Mexico	Guatemala
+2012	Mexico	Guatemala
+2013	Mexico	Guatemala
+2014	Mexico	Guatemala
+2015	Mexico	Guatemala
+2011	Belize	Mexico
+2012	Belize	Mexico
+2013	Belize	Mexico
+2014	Belize	Mexico
+2015	Belize	Mexico
+2011	Belize	Guatemala
+2012	Belize	Guatemala
+2013	Belize	Guatemala
+2014	Belize	Guatemala
+2015	Belize	Guatemala
+2011	Guatemala	Mexico
+2012	Guatemala	Mexico
+2013	Guatemala	Mexico
+2014	Guatemala	Mexico
+2015	Guatemala	Mexico
+2011	Guatemala	Belize
+2012	Guatemala	Belize
+2013	Guatemala	Belize
+2014	Guatemala	Belize
+2015	Guatemala	Belize
+2011	Guatemala	Honduras
+2012	Guatemala	Honduras
+2013	Guatemala	Honduras
+2014	Guatemala	Honduras
+2015	Guatemala	Honduras
+2011	Guatemala	El Salvador
+2012	Guatemala	El Salvador
+2013	Guatemala	El Salvador
+2014	Guatemala	El Salvador
+2015	Guatemala	El Salvador
+2011	Honduras	Guatemala
+2012	Honduras	Guatemala
+2013	Honduras	Guatemala
+2014	Honduras	Guatemala
+2015	Honduras	Guatemala
+2011	Honduras	El Salvador
+2012	Honduras	El Salvador
+2013	Honduras	El Salvador
+2014	Honduras	El Salvador
+2015	Honduras	El Salvador
+2011	Honduras	Nicaragua
+2012	Honduras	Nicaragua
+2013	Honduras	Nicaragua
+2014	Honduras	Nicaragua
+2015	Honduras	Nicaragua
+2011	El Salvador	Guatemala
+2012	El Salvador	Guatemala
+2013	El Salvador	Guatemala
+2014	El Salvador	Guatemala
+2015	El Salvador	Guatemala
+2011	El Salvador	Honduras
+2012	El Salvador	Honduras
+2013	El Salvador	Honduras
+2014	El Salvador	Honduras
+2015	El Salvador	Honduras
+2011	Nicaragua	Honduras
+2012	Nicaragua	Honduras
+2013	Nicaragua	Honduras
+2014	Nicaragua	Honduras
+2015	Nicaragua	Honduras
+2011	Nicaragua	Costa Rica
+2012	Nicaragua	Costa Rica
+2013	Nicaragua	Costa Rica
+2014	Nicaragua	Costa Rica
+2015	Nicaragua	Costa Rica
+2011	Costa Rica	Nicaragua
+2012	Costa Rica	Nicaragua
+2013	Costa Rica	Nicaragua
+2014	Costa Rica	Nicaragua
+2015	Costa Rica	Nicaragua
+2011	Costa Rica	Panama
+2012	Costa Rica	Panama
+2013	Costa Rica	Panama
+2014	Costa Rica	Panama
+2015	Costa Rica	Panama
+2011	Panama	Costa Rica
+2012	Panama	Costa Rica
+2013	Panama	Costa Rica
+2014	Panama	Costa Rica
+2015	Panama	Costa Rica
+2011	Panama	Colombia
+2012	Panama	Colombia
+2013	Panama	Colombia
+2014	Panama	Colombia
+2015	Panama	Colombia
+2011	Colombia	Panama
+2012	Colombia	Panama
+2013	Colombia	Panama
+2014	Colombia	Panama
+2015	Colombia	Panama
+2011	Colombia	Venezuela
+2012	Colombia	Venezuela
+2013	Colombia	Venezuela
+2014	Colombia	Venezuela
+2015	Colombia	Venezuela
+2011	Colombia	Ecuador
+2012	Colombia	Ecuador
+2013	Colombia	Ecuador
+2014	Colombia	Ecuador
+2015	Colombia	Ecuador
+2011	Colombia	Peru
+2012	Colombia	Peru
+2013	Colombia	Peru
+2014	Colombia	Peru
+2015	Colombia	Peru
+2011	Colombia	Brazil
+2012	Colombia	Brazil
+2013	Colombia	Brazil
+2014	Colombia	Brazil
+2015	Colombia	Brazil
+2011	Venezuela	Colombia
+2012	Venezuela	Colombia
+2013	Venezuela	Colombia
+2014	Venezuela	Colombia
+2015	Venezuela	Colombia
+2011	Venezuela	Guyana
+2012	Venezuela	Guyana
+2013	Venezuela	Guyana
+2014	Venezuela	Guyana
+2015	Venezuela	Guyana
+2011	Venezuela	Brazil
+2012	Venezuela	Brazil
+2013	Venezuela	Brazil
+2014	Venezuela	Brazil
+2015	Venezuela	Brazil
+2011	Guyana	Venezuela
+2012	Guyana	Venezuela
+2013	Guyana	Venezuela
+2014	Guyana	Venezuela
+2015	Guyana	Venezuela
+2011	Guyana	Suriname
+2012	Guyana	Suriname
+2013	Guyana	Suriname
+2014	Guyana	Suriname
+2015	Guyana	Suriname
+2011	Guyana	Brazil
+2012	Guyana	Brazil
+2013	Guyana	Brazil
+2014	Guyana	Brazil
+2015	Guyana	Brazil
+2011	Suriname	Guyana
+2012	Suriname	Guyana
+2013	Suriname	Guyana
+2014	Suriname	Guyana
+2015	Suriname	Guyana
+2011	Suriname	Brazil
+2012	Suriname	Brazil
+2013	Suriname	Brazil
+2014	Suriname	Brazil
+2015	Suriname	Brazil
+2011	Ecuador	Colombia
+2012	Ecuador	Colombia
+2013	Ecuador	Colombia
+2014	Ecuador	Colombia
+2015	Ecuador	Colombia
+2011	Ecuador	Peru
+2012	Ecuador	Peru
+2013	Ecuador	Peru
+2014	Ecuador	Peru
+2015	Ecuador	Peru
+2011	Peru	Colombia
+2012	Peru	Colombia
+2013	Peru	Colombia
+2014	Peru	Colombia
+2015	Peru	Colombia
+2011	Peru	Ecuador
+2012	Peru	Ecuador
+2013	Peru	Ecuador
+2014	Peru	Ecuador
+2015	Peru	Ecuador
+2011	Peru	Brazil
+2012	Peru	Brazil
+2013	Peru	Brazil
+2014	Peru	Brazil
+2015	Peru	Brazil
+2011	Peru	Bolivia
+2012	Peru	Bolivia
+2013	Peru	Bolivia
+2014	Peru	Bolivia
+2015	Peru	Bolivia
+2011	Peru	Chile
+2012	Peru	Chile
+2013	Peru	Chile
+2014	Peru	Chile
+2015	Peru	Chile
+2011	Brazil	Colombia
+2012	Brazil	Colombia
+2013	Brazil	Colombia
+2014	Brazil	Colombia
+2015	Brazil	Colombia
+2011	Brazil	Venezuela
+2012	Brazil	Venezuela
+2013	Brazil	Venezuela
+2014	Brazil	Venezuela
+2015	Brazil	Venezuela
+2011	Brazil	Guyana
+2012	Brazil	Guyana
+2013	Brazil	Guyana
+2014	Brazil	Guyana
+2015	Brazil	Guyana
+2011	Brazil	Suriname
+2012	Brazil	Suriname
+2013	Brazil	Suriname
+2014	Brazil	Suriname
+2015	Brazil	Suriname
+2011	Brazil	Peru
+2012	Brazil	Peru
+2013	Brazil	Peru
+2014	Brazil	Peru
+2015	Brazil	Peru
+2011	Brazil	Bolivia
+2012	Brazil	Bolivia
+2013	Brazil	Bolivia
+2014	Brazil	Bolivia
+2015	Brazil	Bolivia
+2011	Brazil	Paraguay
+2012	Brazil	Paraguay
+2013	Brazil	Paraguay
+2014	Brazil	Paraguay
+2015	Brazil	Paraguay
+2011	Brazil	Argentina
+2012	Brazil	Argentina
+2013	Brazil	Argentina
+2014	Brazil	Argentina
+2015	Brazil	Argentina
+2011	Brazil	Uruguay
+2012	Brazil	Uruguay
+2013	Brazil	Uruguay
+2014	Brazil	Uruguay
+2015	Brazil	Uruguay
+2011	Bolivia	Peru
+2012	Bolivia	Peru
+2013	Bolivia	Peru
+2014	Bolivia	Peru
+2015	Bolivia	Peru
+2011	Bolivia	Brazil
+2012	Bolivia	Brazil
+2013	Bolivia	Brazil
+2014	Bolivia	Brazil
+2015	Bolivia	Brazil
+2011	Bolivia	Paraguay
+2012	Bolivia	Paraguay
+2013	Bolivia	Paraguay
+2014	Bolivia	Paraguay
+2015	Bolivia	Paraguay
+2011	Bolivia	Chile
+2012	Bolivia	Chile
+2013	Bolivia	Chile
+2014	Bolivia	Chile
+2015	Bolivia	Chile
+2011	Bolivia	Argentina
+2012	Bolivia	Argentina
+2013	Bolivia	Argentina
+2014	Bolivia	Argentina
+2015	Bolivia	Argentina
+2011	Paraguay	Brazil
+2012	Paraguay	Brazil
+2013	Paraguay	Brazil
+2014	Paraguay	Brazil
+2015	Paraguay	Brazil
+2011	Paraguay	Bolivia
+2012	Paraguay	Bolivia
+2013	Paraguay	Bolivia
+2014	Paraguay	Bolivia
+2015	Paraguay	Bolivia
+2011	Paraguay	Argentina
+2012	Paraguay	Argentina
+2013	Paraguay	Argentina
+2014	Paraguay	Argentina
+2015	Paraguay	Argentina
+2011	Chile	Peru
+2012	Chile	Peru
+2013	Chile	Peru
+2014	Chile	Peru
+2015	Chile	Peru
+2011	Chile	Bolivia
+2012	Chile	Bolivia
+2013	Chile	Bolivia
+2014	Chile	Bolivia
+2015	Chile	Bolivia
+2011	Chile	Argentina
+2012	Chile	Argentina
+2013	Chile	Argentina
+2014	Chile	Argentina
+2015	Chile	Argentina
+2011	Argentina	Brazil
+2012	Argentina	Brazil
+2013	Argentina	Brazil
+2014	Argentina	Brazil
+2015	Argentina	Brazil
+2011	Argentina	Bolivia
+2012	Argentina	Bolivia
+2013	Argentina	Bolivia
+2014	Argentina	Bolivia
+2015	Argentina	Bolivia
+2011	Argentina	Paraguay
+2012	Argentina	Paraguay
+2013	Argentina	Paraguay
+2014	Argentina	Paraguay
+2015	Argentina	Paraguay
+2011	Argentina	Chile
+2012	Argentina	Chile
+2013	Argentina	Chile
+2014	Argentina	Chile
+2015	Argentina	Chile
+2011	Argentina	Uruguay
+2012	Argentina	Uruguay
+2013	Argentina	Uruguay
+2014	Argentina	Uruguay
+2015	Argentina	Uruguay
+2011	Uruguay	Brazil
+2012	Uruguay	Brazil
+2013	Uruguay	Brazil
+2014	Uruguay	Brazil
+2015	Uruguay	Brazil
+2011	Uruguay	Argentina
+2012	Uruguay	Argentina
+2013	Uruguay	Argentina
+2014	Uruguay	Argentina
+2015	Uruguay	Argentina
+2011	United Kingdom	Ireland
+2012	United Kingdom	Ireland
+2013	United Kingdom	Ireland
+2014	United Kingdom	Ireland
+2015	United Kingdom	Ireland
+2011	Ireland	United Kingdom
+2012	Ireland	United Kingdom
+2013	Ireland	United Kingdom
+2014	Ireland	United Kingdom
+2015	Ireland	United Kingdom
+2011	Netherlands	Belgium
+2012	Netherlands	Belgium
+2013	Netherlands	Belgium
+2014	Netherlands	Belgium
+2015	Netherlands	Belgium
+2011	Netherlands	Germany
+2012	Netherlands	Germany
+2013	Netherlands	Germany
+2014	Netherlands	Germany
+2015	Netherlands	Germany
+2011	Belgium	Netherlands
+2012	Belgium	Netherlands
+2013	Belgium	Netherlands
+2014	Belgium	Netherlands
+2015	Belgium	Netherlands
+2011	Belgium	Luxembourg
+2012	Belgium	Luxembourg
+2013	Belgium	Luxembourg
+2014	Belgium	Luxembourg
+2015	Belgium	Luxembourg
+2011	Belgium	France
+2012	Belgium	France
+2013	Belgium	France
+2014	Belgium	France
+2015	Belgium	France
+2011	Belgium	Germany
+2012	Belgium	Germany
+2013	Belgium	Germany
+2014	Belgium	Germany
+2015	Belgium	Germany
+2011	Luxembourg	Belgium
+2012	Luxembourg	Belgium
+2013	Luxembourg	Belgium
+2014	Luxembourg	Belgium
+2015	Luxembourg	Belgium
+2011	Luxembourg	France
+2012	Luxembourg	France
+2013	Luxembourg	France
+2014	Luxembourg	France
+2015	Luxembourg	France
+2011	Luxembourg	Germany
+2012	Luxembourg	Germany
+2013	Luxembourg	Germany
+2014	Luxembourg	Germany
+2015	Luxembourg	Germany
+2011	France	Belgium
+2012	France	Belgium
+2013	France	Belgium
+2014	France	Belgium
+2015	France	Belgium
+2011	France	Luxembourg
+2012	France	Luxembourg
+2013	France	Luxembourg
+2014	France	Luxembourg
+2015	France	Luxembourg
+2011	France	Monaco
+2012	France	Monaco
+2013	France	Monaco
+2014	France	Monaco
+2015	France	Monaco
+2011	France	Switzerland
+2012	France	Switzerland
+2013	France	Switzerland
+2014	France	Switzerland
+2015	France	Switzerland
+2011	France	Spain
+2012	France	Spain
+2013	France	Spain
+2014	France	Spain
+2015	France	Spain
+2011	France	Andorra
+2012	France	Andorra
+2013	France	Andorra
+2014	France	Andorra
+2015	France	Andorra
+2011	France	Germany
+2012	France	Germany
+2013	France	Germany
+2014	France	Germany
+2015	France	Germany
+2011	France	Italy
+2012	France	Italy
+2013	France	Italy
+2014	France	Italy
+2015	France	Italy
+2011	Monaco	France
+2012	Monaco	France
+2013	Monaco	France
+2014	Monaco	France
+2015	Monaco	France
+2011	Liechtenstein	Switzerland
+2012	Liechtenstein	Switzerland
+2013	Liechtenstein	Switzerland
+2014	Liechtenstein	Switzerland
+2015	Liechtenstein	Switzerland
+2011	Liechtenstein	Austria
+2012	Liechtenstein	Austria
+2013	Liechtenstein	Austria
+2014	Liechtenstein	Austria
+2015	Liechtenstein	Austria
+2011	Switzerland	France
+2012	Switzerland	France
+2013	Switzerland	France
+2014	Switzerland	France
+2015	Switzerland	France
+2011	Switzerland	Liechtenstein
+2012	Switzerland	Liechtenstein
+2013	Switzerland	Liechtenstein
+2014	Switzerland	Liechtenstein
+2015	Switzerland	Liechtenstein
+2011	Switzerland	Germany
+2012	Switzerland	Germany
+2013	Switzerland	Germany
+2014	Switzerland	Germany
+2015	Switzerland	Germany
+2011	Switzerland	Austria
+2012	Switzerland	Austria
+2013	Switzerland	Austria
+2014	Switzerland	Austria
+2015	Switzerland	Austria
+2011	Switzerland	Italy
+2012	Switzerland	Italy
+2013	Switzerland	Italy
+2014	Switzerland	Italy
+2015	Switzerland	Italy
+2011	Spain	France
+2012	Spain	France
+2013	Spain	France
+2014	Spain	France
+2015	Spain	France
+2011	Spain	Andorra
+2012	Spain	Andorra
+2013	Spain	Andorra
+2014	Spain	Andorra
+2015	Spain	Andorra
+2011	Spain	Portugal
+2012	Spain	Portugal
+2013	Spain	Portugal
+2014	Spain	Portugal
+2015	Spain	Portugal
+2011	Spain	Morocco
+2012	Spain	Morocco
+2013	Spain	Morocco
+2014	Spain	Morocco
+2015	Spain	Morocco
+2011	Andorra	France
+2012	Andorra	France
+2013	Andorra	France
+2014	Andorra	France
+2015	Andorra	France
+2011	Andorra	Spain
+2012	Andorra	Spain
+2013	Andorra	Spain
+2014	Andorra	Spain
+2015	Andorra	Spain
+2011	Portugal	Spain
+2012	Portugal	Spain
+2013	Portugal	Spain
+2014	Portugal	Spain
+2015	Portugal	Spain
+2011	Germany	Netherlands
+2012	Germany	Netherlands
+2013	Germany	Netherlands
+2014	Germany	Netherlands
+2015	Germany	Netherlands
+2011	Germany	Belgium
+2012	Germany	Belgium
+2013	Germany	Belgium
+2014	Germany	Belgium
+2015	Germany	Belgium
+2011	Germany	Luxembourg
+2012	Germany	Luxembourg
+2013	Germany	Luxembourg
+2014	Germany	Luxembourg
+2015	Germany	Luxembourg
+2011	Germany	France
+2012	Germany	France
+2013	Germany	France
+2014	Germany	France
+2015	Germany	France
+2011	Germany	Switzerland
+2012	Germany	Switzerland
+2013	Germany	Switzerland
+2014	Germany	Switzerland
+2015	Germany	Switzerland
+2011	Germany	Poland
+2012	Germany	Poland
+2013	Germany	Poland
+2014	Germany	Poland
+2015	Germany	Poland
+2011	Germany	Austria
+2012	Germany	Austria
+2013	Germany	Austria
+2014	Germany	Austria
+2015	Germany	Austria
+2011	Germany	Czech Republic
+2012	Germany	Czech Republic
+2013	Germany	Czech Republic
+2014	Germany	Czech Republic
+2015	Germany	Czech Republic
+2011	Germany	Denmark
+2012	Germany	Denmark
+2013	Germany	Denmark
+2014	Germany	Denmark
+2015	Germany	Denmark
+2011	Poland	Germany
+2012	Poland	Germany
+2013	Poland	Germany
+2014	Poland	Germany
+2015	Poland	Germany
+2011	Poland	Czech Republic
+2012	Poland	Czech Republic
+2013	Poland	Czech Republic
+2014	Poland	Czech Republic
+2015	Poland	Czech Republic
+2011	Poland	Slovakia
+2012	Poland	Slovakia
+2013	Poland	Slovakia
+2014	Poland	Slovakia
+2015	Poland	Slovakia
+2011	Poland	Russia
+2012	Poland	Russia
+2013	Poland	Russia
+2014	Poland	Russia
+2015	Poland	Russia
+2011	Poland	Lithuania
+2012	Poland	Lithuania
+2013	Poland	Lithuania
+2014	Poland	Lithuania
+2015	Poland	Lithuania
+2011	Poland	Ukraine
+2012	Poland	Ukraine
+2013	Poland	Ukraine
+2014	Poland	Ukraine
+2015	Poland	Ukraine
+2011	Poland	Belarus
+2012	Poland	Belarus
+2013	Poland	Belarus
+2014	Poland	Belarus
+2015	Poland	Belarus
+2011	Austria	Liechtenstein
+2012	Austria	Liechtenstein
+2013	Austria	Liechtenstein
+2014	Austria	Liechtenstein
+2015	Austria	Liechtenstein
+2011	Austria	Switzerland
+2012	Austria	Switzerland
+2013	Austria	Switzerland
+2014	Austria	Switzerland
+2015	Austria	Switzerland
+2011	Austria	Germany
+2012	Austria	Germany
+2013	Austria	Germany
+2014	Austria	Germany
+2015	Austria	Germany
+2011	Austria	Hungary
+2012	Austria	Hungary
+2013	Austria	Hungary
+2014	Austria	Hungary
+2015	Austria	Hungary
+2011	Austria	Czech Republic
+2012	Austria	Czech Republic
+2013	Austria	Czech Republic
+2014	Austria	Czech Republic
+2015	Austria	Czech Republic
+2011	Austria	Slovakia
+2012	Austria	Slovakia
+2013	Austria	Slovakia
+2014	Austria	Slovakia
+2015	Austria	Slovakia
+2011	Austria	Italy
+2012	Austria	Italy
+2013	Austria	Italy
+2014	Austria	Italy
+2015	Austria	Italy
+2011	Austria	Slovenia
+2012	Austria	Slovenia
+2013	Austria	Slovenia
+2014	Austria	Slovenia
+2015	Austria	Slovenia
+2011	Hungary	Austria
+2012	Hungary	Austria
+2013	Hungary	Austria
+2014	Hungary	Austria
+2015	Hungary	Austria
+2011	Hungary	Slovakia
+2012	Hungary	Slovakia
+2013	Hungary	Slovakia
+2014	Hungary	Slovakia
+2015	Hungary	Slovakia
+2011	Hungary	Croatia
+2012	Hungary	Croatia
+2013	Hungary	Croatia
+2014	Hungary	Croatia
+2015	Hungary	Croatia
+2011	Hungary	Yugoslavia
+2012	Hungary	Yugoslavia
+2013	Hungary	Yugoslavia
+2014	Hungary	Yugoslavia
+2015	Hungary	Yugoslavia
+2011	Hungary	Slovenia
+2012	Hungary	Slovenia
+2013	Hungary	Slovenia
+2014	Hungary	Slovenia
+2015	Hungary	Slovenia
+2011	Hungary	Romania
+2012	Hungary	Romania
+2013	Hungary	Romania
+2014	Hungary	Romania
+2015	Hungary	Romania
+2011	Hungary	Ukraine
+2012	Hungary	Ukraine
+2013	Hungary	Ukraine
+2014	Hungary	Ukraine
+2015	Hungary	Ukraine
+2011	Czech Republic	Germany
+2012	Czech Republic	Germany
+2013	Czech Republic	Germany
+2014	Czech Republic	Germany
+2015	Czech Republic	Germany
+2011	Czech Republic	Poland
+2012	Czech Republic	Poland
+2013	Czech Republic	Poland
+2014	Czech Republic	Poland
+2015	Czech Republic	Poland
+2011	Czech Republic	Austria
+2012	Czech Republic	Austria
+2013	Czech Republic	Austria
+2014	Czech Republic	Austria
+2015	Czech Republic	Austria
+2011	Czech Republic	Slovakia
+2012	Czech Republic	Slovakia
+2013	Czech Republic	Slovakia
+2014	Czech Republic	Slovakia
+2015	Czech Republic	Slovakia
+2011	Slovakia	Poland
+2012	Slovakia	Poland
+2013	Slovakia	Poland
+2014	Slovakia	Poland
+2015	Slovakia	Poland
+2011	Slovakia	Austria
+2012	Slovakia	Austria
+2013	Slovakia	Austria
+2014	Slovakia	Austria
+2015	Slovakia	Austria
+2011	Slovakia	Hungary
+2012	Slovakia	Hungary
+2013	Slovakia	Hungary
+2014	Slovakia	Hungary
+2015	Slovakia	Hungary
+2011	Slovakia	Czech Republic
+2012	Slovakia	Czech Republic
+2013	Slovakia	Czech Republic
+2014	Slovakia	Czech Republic
+2015	Slovakia	Czech Republic
+2011	Slovakia	Ukraine
+2012	Slovakia	Ukraine
+2013	Slovakia	Ukraine
+2014	Slovakia	Ukraine
+2015	Slovakia	Ukraine
+2011	Italy	France
+2012	Italy	France
+2013	Italy	France
+2014	Italy	France
+2015	Italy	France
+2011	Italy	Switzerland
+2012	Italy	Switzerland
+2013	Italy	Switzerland
+2014	Italy	Switzerland
+2015	Italy	Switzerland
+2011	Italy	Austria
+2012	Italy	Austria
+2013	Italy	Austria
+2014	Italy	Austria
+2015	Italy	Austria
+2011	Italy	San Marino
+2012	Italy	San Marino
+2013	Italy	San Marino
+2014	Italy	San Marino
+2015	Italy	San Marino
+2011	Italy	Slovenia
+2012	Italy	Slovenia
+2013	Italy	Slovenia
+2014	Italy	Slovenia
+2015	Italy	Slovenia
+2011	San Marino	Italy
+2012	San Marino	Italy
+2013	San Marino	Italy
+2014	San Marino	Italy
+2015	San Marino	Italy
+2011	Albania	Montenegro
+2012	Albania	Montenegro
+2013	Albania	Montenegro
+2014	Albania	Montenegro
+2015	Albania	Montenegro
+2011	Albania	Macedonia
+2012	Albania	Macedonia
+2013	Albania	Macedonia
+2014	Albania	Macedonia
+2015	Albania	Macedonia
+2011	Albania	Kosovo
+2012	Albania	Kosovo
+2013	Albania	Kosovo
+2014	Albania	Kosovo
+2015	Albania	Kosovo
+2011	Albania	Greece
+2012	Albania	Greece
+2013	Albania	Greece
+2014	Albania	Greece
+2015	Albania	Greece
+2011	Montenegro	Albania
+2012	Montenegro	Albania
+2013	Montenegro	Albania
+2014	Montenegro	Albania
+2015	Montenegro	Albania
+2011	Montenegro	Croatia
+2012	Montenegro	Croatia
+2013	Montenegro	Croatia
+2014	Montenegro	Croatia
+2015	Montenegro	Croatia
+2011	Montenegro	Yugoslavia
+2012	Montenegro	Yugoslavia
+2013	Montenegro	Yugoslavia
+2014	Montenegro	Yugoslavia
+2015	Montenegro	Yugoslavia
+2011	Montenegro	Bosnia and Herzegovina
+2012	Montenegro	Bosnia and Herzegovina
+2013	Montenegro	Bosnia and Herzegovina
+2014	Montenegro	Bosnia and Herzegovina
+2015	Montenegro	Bosnia and Herzegovina
+2011	Montenegro	Kosovo
+2012	Montenegro	Kosovo
+2013	Montenegro	Kosovo
+2014	Montenegro	Kosovo
+2015	Montenegro	Kosovo
+2011	Macedonia	Albania
+2012	Macedonia	Albania
+2013	Macedonia	Albania
+2014	Macedonia	Albania
+2015	Macedonia	Albania
+2011	Macedonia	Yugoslavia
+2012	Macedonia	Yugoslavia
+2013	Macedonia	Yugoslavia
+2014	Macedonia	Yugoslavia
+2015	Macedonia	Yugoslavia
+2011	Macedonia	Kosovo
+2012	Macedonia	Kosovo
+2013	Macedonia	Kosovo
+2014	Macedonia	Kosovo
+2015	Macedonia	Kosovo
+2011	Macedonia	Greece
+2012	Macedonia	Greece
+2013	Macedonia	Greece
+2014	Macedonia	Greece
+2015	Macedonia	Greece
+2011	Macedonia	Bulgaria
+2012	Macedonia	Bulgaria
+2013	Macedonia	Bulgaria
+2014	Macedonia	Bulgaria
+2015	Macedonia	Bulgaria
+2011	Croatia	Hungary
+2012	Croatia	Hungary
+2013	Croatia	Hungary
+2014	Croatia	Hungary
+2015	Croatia	Hungary
+2011	Croatia	Montenegro
+2012	Croatia	Montenegro
+2013	Croatia	Montenegro
+2014	Croatia	Montenegro
+2015	Croatia	Montenegro
+2011	Croatia	Yugoslavia
+2012	Croatia	Yugoslavia
+2013	Croatia	Yugoslavia
+2014	Croatia	Yugoslavia
+2015	Croatia	Yugoslavia
+2011	Croatia	Bosnia and Herzegovina
+2012	Croatia	Bosnia and Herzegovina
+2013	Croatia	Bosnia and Herzegovina
+2014	Croatia	Bosnia and Herzegovina
+2015	Croatia	Bosnia and Herzegovina
+2011	Croatia	Slovenia
+2012	Croatia	Slovenia
+2013	Croatia	Slovenia
+2014	Croatia	Slovenia
+2015	Croatia	Slovenia
+2011	Yugoslavia	Hungary
+2012	Yugoslavia	Hungary
+2013	Yugoslavia	Hungary
+2014	Yugoslavia	Hungary
+2015	Yugoslavia	Hungary
+2011	Yugoslavia	Montenegro
+2012	Yugoslavia	Montenegro
+2013	Yugoslavia	Montenegro
+2014	Yugoslavia	Montenegro
+2015	Yugoslavia	Montenegro
+2011	Yugoslavia	Macedonia
+2012	Yugoslavia	Macedonia
+2013	Yugoslavia	Macedonia
+2014	Yugoslavia	Macedonia
+2015	Yugoslavia	Macedonia
+2011	Yugoslavia	Croatia
+2012	Yugoslavia	Croatia
+2013	Yugoslavia	Croatia
+2014	Yugoslavia	Croatia
+2015	Yugoslavia	Croatia
+2011	Yugoslavia	Bosnia and Herzegovina
+2012	Yugoslavia	Bosnia and Herzegovina
+2013	Yugoslavia	Bosnia and Herzegovina
+2014	Yugoslavia	Bosnia and Herzegovina
+2015	Yugoslavia	Bosnia and Herzegovina
+2011	Yugoslavia	Kosovo
+2012	Yugoslavia	Kosovo
+2013	Yugoslavia	Kosovo
+2014	Yugoslavia	Kosovo
+2015	Yugoslavia	Kosovo
+2011	Yugoslavia	Bulgaria
+2012	Yugoslavia	Bulgaria
+2013	Yugoslavia	Bulgaria
+2014	Yugoslavia	Bulgaria
+2015	Yugoslavia	Bulgaria
+2011	Yugoslavia	Romania
+2012	Yugoslavia	Romania
+2013	Yugoslavia	Romania
+2014	Yugoslavia	Romania
+2015	Yugoslavia	Romania
+2011	Bosnia and Herzegovina	Montenegro
+2012	Bosnia and Herzegovina	Montenegro
+2013	Bosnia and Herzegovina	Montenegro
+2014	Bosnia and Herzegovina	Montenegro
+2015	Bosnia and Herzegovina	Montenegro
+2011	Bosnia and Herzegovina	Croatia
+2012	Bosnia and Herzegovina	Croatia
+2013	Bosnia and Herzegovina	Croatia
+2014	Bosnia and Herzegovina	Croatia
+2015	Bosnia and Herzegovina	Croatia
+2011	Bosnia and Herzegovina	Yugoslavia
+2012	Bosnia and Herzegovina	Yugoslavia
+2013	Bosnia and Herzegovina	Yugoslavia
+2014	Bosnia and Herzegovina	Yugoslavia
+2015	Bosnia and Herzegovina	Yugoslavia
+2011	Kosovo	Albania
+2012	Kosovo	Albania
+2013	Kosovo	Albania
+2014	Kosovo	Albania
+2015	Kosovo	Albania
+2011	Kosovo	Montenegro
+2012	Kosovo	Montenegro
+2013	Kosovo	Montenegro
+2014	Kosovo	Montenegro
+2015	Kosovo	Montenegro
+2011	Kosovo	Macedonia
+2012	Kosovo	Macedonia
+2013	Kosovo	Macedonia
+2014	Kosovo	Macedonia
+2015	Kosovo	Macedonia
+2011	Kosovo	Yugoslavia
+2012	Kosovo	Yugoslavia
+2013	Kosovo	Yugoslavia
+2014	Kosovo	Yugoslavia
+2015	Kosovo	Yugoslavia
+2011	Slovenia	Austria
+2012	Slovenia	Austria
+2013	Slovenia	Austria
+2014	Slovenia	Austria
+2015	Slovenia	Austria
+2011	Slovenia	Hungary
+2012	Slovenia	Hungary
+2013	Slovenia	Hungary
+2014	Slovenia	Hungary
+2015	Slovenia	Hungary
+2011	Slovenia	Italy
+2012	Slovenia	Italy
+2013	Slovenia	Italy
+2014	Slovenia	Italy
+2015	Slovenia	Italy
+2011	Slovenia	Croatia
+2012	Slovenia	Croatia
+2013	Slovenia	Croatia
+2014	Slovenia	Croatia
+2015	Slovenia	Croatia
+2011	Greece	Albania
+2012	Greece	Albania
+2013	Greece	Albania
+2014	Greece	Albania
+2015	Greece	Albania
+2011	Greece	Macedonia
+2012	Greece	Macedonia
+2013	Greece	Macedonia
+2014	Greece	Macedonia
+2015	Greece	Macedonia
+2011	Greece	Bulgaria
+2012	Greece	Bulgaria
+2013	Greece	Bulgaria
+2014	Greece	Bulgaria
+2015	Greece	Bulgaria
+2011	Greece	Turkey
+2012	Greece	Turkey
+2013	Greece	Turkey
+2014	Greece	Turkey
+2015	Greece	Turkey
+2011	Cyprus	Turkey
+2012	Cyprus	Turkey
+2013	Cyprus	Turkey
+2014	Cyprus	Turkey
+2015	Cyprus	Turkey
+2011	Bulgaria	Macedonia
+2012	Bulgaria	Macedonia
+2013	Bulgaria	Macedonia
+2014	Bulgaria	Macedonia
+2015	Bulgaria	Macedonia
+2011	Bulgaria	Yugoslavia
+2012	Bulgaria	Yugoslavia
+2013	Bulgaria	Yugoslavia
+2014	Bulgaria	Yugoslavia
+2015	Bulgaria	Yugoslavia
+2011	Bulgaria	Greece
+2012	Bulgaria	Greece
+2013	Bulgaria	Greece
+2014	Bulgaria	Greece
+2015	Bulgaria	Greece
+2011	Bulgaria	Romania
+2012	Bulgaria	Romania
+2013	Bulgaria	Romania
+2014	Bulgaria	Romania
+2015	Bulgaria	Romania
+2011	Bulgaria	Turkey
+2012	Bulgaria	Turkey
+2013	Bulgaria	Turkey
+2014	Bulgaria	Turkey
+2015	Bulgaria	Turkey
+2011	Moldova	Romania
+2012	Moldova	Romania
+2013	Moldova	Romania
+2014	Moldova	Romania
+2015	Moldova	Romania
+2011	Moldova	Ukraine
+2012	Moldova	Ukraine
+2013	Moldova	Ukraine
+2014	Moldova	Ukraine
+2015	Moldova	Ukraine
+2011	Romania	Hungary
+2012	Romania	Hungary
+2013	Romania	Hungary
+2014	Romania	Hungary
+2015	Romania	Hungary
+2011	Romania	Yugoslavia
+2012	Romania	Yugoslavia
+2013	Romania	Yugoslavia
+2014	Romania	Yugoslavia
+2015	Romania	Yugoslavia
+2011	Romania	Bulgaria
+2012	Romania	Bulgaria
+2013	Romania	Bulgaria
+2014	Romania	Bulgaria
+2015	Romania	Bulgaria
+2011	Romania	Moldova
+2012	Romania	Moldova
+2013	Romania	Moldova
+2014	Romania	Moldova
+2015	Romania	Moldova
+2011	Romania	Ukraine
+2012	Romania	Ukraine
+2013	Romania	Ukraine
+2014	Romania	Ukraine
+2015	Romania	Ukraine
+2011	Russia	Poland
+2012	Russia	Poland
+2013	Russia	Poland
+2014	Russia	Poland
+2015	Russia	Poland
+2011	Russia	Estonia
+2012	Russia	Estonia
+2013	Russia	Estonia
+2014	Russia	Estonia
+2015	Russia	Estonia
+2011	Russia	Latvia
+2012	Russia	Latvia
+2013	Russia	Latvia
+2014	Russia	Latvia
+2015	Russia	Latvia
+2011	Russia	Lithuania
+2012	Russia	Lithuania
+2013	Russia	Lithuania
+2014	Russia	Lithuania
+2015	Russia	Lithuania
+2011	Russia	Ukraine
+2012	Russia	Ukraine
+2013	Russia	Ukraine
+2014	Russia	Ukraine
+2015	Russia	Ukraine
+2011	Russia	Belarus
+2012	Russia	Belarus
+2013	Russia	Belarus
+2014	Russia	Belarus
+2015	Russia	Belarus
+2011	Russia	Georgia
+2012	Russia	Georgia
+2013	Russia	Georgia
+2014	Russia	Georgia
+2015	Russia	Georgia
+2011	Russia	Azerbaijan
+2012	Russia	Azerbaijan
+2013	Russia	Azerbaijan
+2014	Russia	Azerbaijan
+2015	Russia	Azerbaijan
+2011	Russia	Finland
+2012	Russia	Finland
+2013	Russia	Finland
+2014	Russia	Finland
+2015	Russia	Finland
+2011	Russia	Norway
+2012	Russia	Norway
+2013	Russia	Norway
+2014	Russia	Norway
+2015	Russia	Norway
+2011	Russia	Kazakhstan
+2012	Russia	Kazakhstan
+2013	Russia	Kazakhstan
+2014	Russia	Kazakhstan
+2015	Russia	Kazakhstan
+2011	Russia	China
+2012	Russia	China
+2013	Russia	China
+2014	Russia	China
+2015	Russia	China
+2011	Russia	Mongolia
+2012	Russia	Mongolia
+2013	Russia	Mongolia
+2014	Russia	Mongolia
+2015	Russia	Mongolia
+2011	Russia	North Korea
+2012	Russia	North Korea
+2013	Russia	North Korea
+2014	Russia	North Korea
+2015	Russia	North Korea
+2011	Estonia	Russia
+2012	Estonia	Russia
+2013	Estonia	Russia
+2014	Estonia	Russia
+2015	Estonia	Russia
+2011	Estonia	Latvia
+2012	Estonia	Latvia
+2013	Estonia	Latvia
+2014	Estonia	Latvia
+2015	Estonia	Latvia
+2011	Latvia	Russia
+2012	Latvia	Russia
+2013	Latvia	Russia
+2014	Latvia	Russia
+2015	Latvia	Russia
+2011	Latvia	Estonia
+2012	Latvia	Estonia
+2013	Latvia	Estonia
+2014	Latvia	Estonia
+2015	Latvia	Estonia
+2011	Latvia	Lithuania
+2012	Latvia	Lithuania
+2013	Latvia	Lithuania
+2014	Latvia	Lithuania
+2015	Latvia	Lithuania
+2011	Latvia	Belarus
+2012	Latvia	Belarus
+2013	Latvia	Belarus
+2014	Latvia	Belarus
+2015	Latvia	Belarus
+2011	Lithuania	Poland
+2012	Lithuania	Poland
+2013	Lithuania	Poland
+2014	Lithuania	Poland
+2015	Lithuania	Poland
+2011	Lithuania	Russia
+2012	Lithuania	Russia
+2013	Lithuania	Russia
+2014	Lithuania	Russia
+2015	Lithuania	Russia
+2011	Lithuania	Latvia
+2012	Lithuania	Latvia
+2013	Lithuania	Latvia
+2014	Lithuania	Latvia
+2015	Lithuania	Latvia
+2011	Lithuania	Belarus
+2012	Lithuania	Belarus
+2013	Lithuania	Belarus
+2014	Lithuania	Belarus
+2015	Lithuania	Belarus
+2011	Ukraine	Poland
+2012	Ukraine	Poland
+2013	Ukraine	Poland
+2014	Ukraine	Poland
+2015	Ukraine	Poland
+2011	Ukraine	Hungary
+2012	Ukraine	Hungary
+2013	Ukraine	Hungary
+2014	Ukraine	Hungary
+2015	Ukraine	Hungary
+2011	Ukraine	Slovakia
+2012	Ukraine	Slovakia
+2013	Ukraine	Slovakia
+2014	Ukraine	Slovakia
+2015	Ukraine	Slovakia
+2011	Ukraine	Moldova
+2012	Ukraine	Moldova
+2013	Ukraine	Moldova
+2014	Ukraine	Moldova
+2015	Ukraine	Moldova
+2011	Ukraine	Romania
+2012	Ukraine	Romania
+2013	Ukraine	Romania
+2014	Ukraine	Romania
+2015	Ukraine	Romania
+2011	Ukraine	Russia
+2012	Ukraine	Russia
+2013	Ukraine	Russia
+2014	Ukraine	Russia
+2015	Ukraine	Russia
+2011	Ukraine	Belarus
+2012	Ukraine	Belarus
+2013	Ukraine	Belarus
+2014	Ukraine	Belarus
+2015	Ukraine	Belarus
+2011	Belarus	Poland
+2012	Belarus	Poland
+2013	Belarus	Poland
+2014	Belarus	Poland
+2015	Belarus	Poland
+2011	Belarus	Russia
+2012	Belarus	Russia
+2013	Belarus	Russia
+2014	Belarus	Russia
+2015	Belarus	Russia
+2011	Belarus	Latvia
+2012	Belarus	Latvia
+2013	Belarus	Latvia
+2014	Belarus	Latvia
+2015	Belarus	Latvia
+2011	Belarus	Lithuania
+2012	Belarus	Lithuania
+2013	Belarus	Lithuania
+2014	Belarus	Lithuania
+2015	Belarus	Lithuania
+2011	Belarus	Ukraine
+2012	Belarus	Ukraine
+2013	Belarus	Ukraine
+2014	Belarus	Ukraine
+2015	Belarus	Ukraine
+2011	Armenia	Georgia
+2012	Armenia	Georgia
+2013	Armenia	Georgia
+2014	Armenia	Georgia
+2015	Armenia	Georgia
+2011	Armenia	Azerbaijan
+2012	Armenia	Azerbaijan
+2013	Armenia	Azerbaijan
+2014	Armenia	Azerbaijan
+2015	Armenia	Azerbaijan
+2011	Armenia	Iran
+2012	Armenia	Iran
+2013	Armenia	Iran
+2014	Armenia	Iran
+2015	Armenia	Iran
+2011	Armenia	Turkey
+2012	Armenia	Turkey
+2013	Armenia	Turkey
+2014	Armenia	Turkey
+2015	Armenia	Turkey
+2011	Georgia	Russia
+2012	Georgia	Russia
+2013	Georgia	Russia
+2014	Georgia	Russia
+2015	Georgia	Russia
+2011	Georgia	Armenia
+2012	Georgia	Armenia
+2013	Georgia	Armenia
+2014	Georgia	Armenia
+2015	Georgia	Armenia
+2011	Georgia	Azerbaijan
+2012	Georgia	Azerbaijan
+2013	Georgia	Azerbaijan
+2014	Georgia	Azerbaijan
+2015	Georgia	Azerbaijan
+2011	Georgia	Turkey
+2012	Georgia	Turkey
+2013	Georgia	Turkey
+2014	Georgia	Turkey
+2015	Georgia	Turkey
+2011	Azerbaijan	Russia
+2012	Azerbaijan	Russia
+2013	Azerbaijan	Russia
+2014	Azerbaijan	Russia
+2015	Azerbaijan	Russia
+2011	Azerbaijan	Armenia
+2012	Azerbaijan	Armenia
+2013	Azerbaijan	Armenia
+2014	Azerbaijan	Armenia
+2015	Azerbaijan	Armenia
+2011	Azerbaijan	Georgia
+2012	Azerbaijan	Georgia
+2013	Azerbaijan	Georgia
+2014	Azerbaijan	Georgia
+2015	Azerbaijan	Georgia
+2011	Azerbaijan	Iran
+2012	Azerbaijan	Iran
+2013	Azerbaijan	Iran
+2014	Azerbaijan	Iran
+2015	Azerbaijan	Iran
+2011	Azerbaijan	Turkey
+2012	Azerbaijan	Turkey
+2013	Azerbaijan	Turkey
+2014	Azerbaijan	Turkey
+2015	Azerbaijan	Turkey
+2011	Finland	Russia
+2012	Finland	Russia
+2013	Finland	Russia
+2014	Finland	Russia
+2015	Finland	Russia
+2011	Finland	Sweden
+2012	Finland	Sweden
+2013	Finland	Sweden
+2014	Finland	Sweden
+2015	Finland	Sweden
+2011	Finland	Norway
+2012	Finland	Norway
+2013	Finland	Norway
+2014	Finland	Norway
+2015	Finland	Norway
+2011	Sweden	Finland
+2012	Sweden	Finland
+2013	Sweden	Finland
+2014	Sweden	Finland
+2015	Sweden	Finland
+2011	Sweden	Norway
+2012	Sweden	Norway
+2013	Sweden	Norway
+2014	Sweden	Norway
+2015	Sweden	Norway
+2011	Sweden	Denmark
+2012	Sweden	Denmark
+2013	Sweden	Denmark
+2014	Sweden	Denmark
+2015	Sweden	Denmark
+2011	Norway	Russia
+2012	Norway	Russia
+2013	Norway	Russia
+2014	Norway	Russia
+2015	Norway	Russia
+2011	Norway	Finland
+2012	Norway	Finland
+2013	Norway	Finland
+2014	Norway	Finland
+2015	Norway	Finland
+2011	Norway	Sweden
+2012	Norway	Sweden
+2013	Norway	Sweden
+2014	Norway	Sweden
+2015	Norway	Sweden
+2011	Denmark	Germany
+2012	Denmark	Germany
+2013	Denmark	Germany
+2014	Denmark	Germany
+2015	Denmark	Germany
+2011	Denmark	Sweden
+2012	Denmark	Sweden
+2013	Denmark	Sweden
+2014	Denmark	Sweden
+2015	Denmark	Sweden
+2011	Guinea-Bissau	Senegal
+2012	Guinea-Bissau	Senegal
+2013	Guinea-Bissau	Senegal
+2014	Guinea-Bissau	Senegal
+2015	Guinea-Bissau	Senegal
+2011	Guinea-Bissau	Guinea
+2012	Guinea-Bissau	Guinea
+2013	Guinea-Bissau	Guinea
+2014	Guinea-Bissau	Guinea
+2015	Guinea-Bissau	Guinea
+2011	Equatorial Guinea	Cameroon
+2012	Equatorial Guinea	Cameroon
+2013	Equatorial Guinea	Cameroon
+2014	Equatorial Guinea	Cameroon
+2015	Equatorial Guinea	Cameroon
+2011	Equatorial Guinea	Gabon
+2012	Equatorial Guinea	Gabon
+2013	Equatorial Guinea	Gabon
+2014	Equatorial Guinea	Gabon
+2015	Equatorial Guinea	Gabon
+2011	Gambia	Senegal
+2012	Gambia	Senegal
+2013	Gambia	Senegal
+2014	Gambia	Senegal
+2015	Gambia	Senegal
+2011	Mali	Senegal
+2012	Mali	Senegal
+2013	Mali	Senegal
+2014	Mali	Senegal
+2015	Mali	Senegal
+2011	Mali	Mauritania
+2012	Mali	Mauritania
+2013	Mali	Mauritania
+2014	Mali	Mauritania
+2015	Mali	Mauritania
+2011	Mali	Niger
+2012	Mali	Niger
+2013	Mali	Niger
+2014	Mali	Niger
+2015	Mali	Niger
+2011	Mali	Ivory Coast
+2012	Mali	Ivory Coast
+2013	Mali	Ivory Coast
+2014	Mali	Ivory Coast
+2015	Mali	Ivory Coast
+2011	Mali	Guinea
+2012	Mali	Guinea
+2013	Mali	Guinea
+2014	Mali	Guinea
+2015	Mali	Guinea
+2011	Mali	Burkina Faso
+2012	Mali	Burkina Faso
+2013	Mali	Burkina Faso
+2014	Mali	Burkina Faso
+2015	Mali	Burkina Faso
+2011	Mali	Algeria
+2012	Mali	Algeria
+2013	Mali	Algeria
+2014	Mali	Algeria
+2015	Mali	Algeria
+2011	Senegal	Guinea-Bissau
+2012	Senegal	Guinea-Bissau
+2013	Senegal	Guinea-Bissau
+2014	Senegal	Guinea-Bissau
+2015	Senegal	Guinea-Bissau
+2011	Senegal	Gambia
+2012	Senegal	Gambia
+2013	Senegal	Gambia
+2014	Senegal	Gambia
+2015	Senegal	Gambia
+2011	Senegal	Mali
+2012	Senegal	Mali
+2013	Senegal	Mali
+2014	Senegal	Mali
+2015	Senegal	Mali
+2011	Senegal	Mauritania
+2012	Senegal	Mauritania
+2013	Senegal	Mauritania
+2014	Senegal	Mauritania
+2015	Senegal	Mauritania
+2011	Senegal	Guinea
+2012	Senegal	Guinea
+2013	Senegal	Guinea
+2014	Senegal	Guinea
+2015	Senegal	Guinea
+2011	Benin	Niger
+2012	Benin	Niger
+2013	Benin	Niger
+2014	Benin	Niger
+2015	Benin	Niger
+2011	Benin	Burkina Faso
+2012	Benin	Burkina Faso
+2013	Benin	Burkina Faso
+2014	Benin	Burkina Faso
+2015	Benin	Burkina Faso
+2011	Benin	Togo
+2012	Benin	Togo
+2013	Benin	Togo
+2014	Benin	Togo
+2015	Benin	Togo
+2011	Benin	Nigeria
+2012	Benin	Nigeria
+2013	Benin	Nigeria
+2014	Benin	Nigeria
+2015	Benin	Nigeria
+2011	Mauritania	Mali
+2012	Mauritania	Mali
+2013	Mauritania	Mali
+2014	Mauritania	Mali
+2015	Mauritania	Mali
+2011	Mauritania	Senegal
+2012	Mauritania	Senegal
+2013	Mauritania	Senegal
+2014	Mauritania	Senegal
+2015	Mauritania	Senegal
+2011	Mauritania	Morocco
+2012	Mauritania	Morocco
+2013	Mauritania	Morocco
+2014	Mauritania	Morocco
+2015	Mauritania	Morocco
+2011	Mauritania	Algeria
+2012	Mauritania	Algeria
+2013	Mauritania	Algeria
+2014	Mauritania	Algeria
+2015	Mauritania	Algeria
+2011	Niger	Mali
+2012	Niger	Mali
+2013	Niger	Mali
+2014	Niger	Mali
+2015	Niger	Mali
+2011	Niger	Benin
+2012	Niger	Benin
+2013	Niger	Benin
+2014	Niger	Benin
+2015	Niger	Benin
+2011	Niger	Burkina Faso
+2012	Niger	Burkina Faso
+2013	Niger	Burkina Faso
+2014	Niger	Burkina Faso
+2015	Niger	Burkina Faso
+2011	Niger	Nigeria
+2012	Niger	Nigeria
+2013	Niger	Nigeria
+2014	Niger	Nigeria
+2015	Niger	Nigeria
+2011	Niger	Chad
+2012	Niger	Chad
+2013	Niger	Chad
+2014	Niger	Chad
+2015	Niger	Chad
+2011	Niger	Algeria
+2012	Niger	Algeria
+2013	Niger	Algeria
+2014	Niger	Algeria
+2015	Niger	Algeria
+2011	Niger	Libya
+2012	Niger	Libya
+2013	Niger	Libya
+2014	Niger	Libya
+2015	Niger	Libya
+2011	Ivory Coast	Mali
+2012	Ivory Coast	Mali
+2013	Ivory Coast	Mali
+2014	Ivory Coast	Mali
+2015	Ivory Coast	Mali
+2011	Ivory Coast	Guinea
+2012	Ivory Coast	Guinea
+2013	Ivory Coast	Guinea
+2014	Ivory Coast	Guinea
+2015	Ivory Coast	Guinea
+2011	Ivory Coast	Burkina Faso
+2012	Ivory Coast	Burkina Faso
+2013	Ivory Coast	Burkina Faso
+2014	Ivory Coast	Burkina Faso
+2015	Ivory Coast	Burkina Faso
+2011	Ivory Coast	Liberia
+2012	Ivory Coast	Liberia
+2013	Ivory Coast	Liberia
+2014	Ivory Coast	Liberia
+2015	Ivory Coast	Liberia
+2011	Ivory Coast	Ghana
+2012	Ivory Coast	Ghana
+2013	Ivory Coast	Ghana
+2014	Ivory Coast	Ghana
+2015	Ivory Coast	Ghana
+2011	Guinea	Guinea-Bissau
+2012	Guinea	Guinea-Bissau
+2013	Guinea	Guinea-Bissau
+2014	Guinea	Guinea-Bissau
+2015	Guinea	Guinea-Bissau
+2011	Guinea	Mali
+2012	Guinea	Mali
+2013	Guinea	Mali
+2014	Guinea	Mali
+2015	Guinea	Mali
+2011	Guinea	Senegal
+2012	Guinea	Senegal
+2013	Guinea	Senegal
+2014	Guinea	Senegal
+2015	Guinea	Senegal
+2011	Guinea	Ivory Coast
+2012	Guinea	Ivory Coast
+2013	Guinea	Ivory Coast
+2014	Guinea	Ivory Coast
+2015	Guinea	Ivory Coast
+2011	Guinea	Liberia
+2012	Guinea	Liberia
+2013	Guinea	Liberia
+2014	Guinea	Liberia
+2015	Guinea	Liberia
+2011	Guinea	Sierra Leone
+2012	Guinea	Sierra Leone
+2013	Guinea	Sierra Leone
+2014	Guinea	Sierra Leone
+2015	Guinea	Sierra Leone
+2011	Burkina Faso	Mali
+2012	Burkina Faso	Mali
+2013	Burkina Faso	Mali
+2014	Burkina Faso	Mali
+2015	Burkina Faso	Mali
+2011	Burkina Faso	Benin
+2012	Burkina Faso	Benin
+2013	Burkina Faso	Benin
+2014	Burkina Faso	Benin
+2015	Burkina Faso	Benin
+2011	Burkina Faso	Niger
+2012	Burkina Faso	Niger
+2013	Burkina Faso	Niger
+2014	Burkina Faso	Niger
+2015	Burkina Faso	Niger
+2011	Burkina Faso	Ivory Coast
+2012	Burkina Faso	Ivory Coast
+2013	Burkina Faso	Ivory Coast
+2014	Burkina Faso	Ivory Coast
+2015	Burkina Faso	Ivory Coast
+2011	Burkina Faso	Ghana
+2012	Burkina Faso	Ghana
+2013	Burkina Faso	Ghana
+2014	Burkina Faso	Ghana
+2015	Burkina Faso	Ghana
+2011	Burkina Faso	Togo
+2012	Burkina Faso	Togo
+2013	Burkina Faso	Togo
+2014	Burkina Faso	Togo
+2015	Burkina Faso	Togo
+2011	Liberia	Ivory Coast
+2012	Liberia	Ivory Coast
+2013	Liberia	Ivory Coast
+2014	Liberia	Ivory Coast
+2015	Liberia	Ivory Coast
+2011	Liberia	Guinea
+2012	Liberia	Guinea
+2013	Liberia	Guinea
+2014	Liberia	Guinea
+2015	Liberia	Guinea
+2011	Liberia	Sierra Leone
+2012	Liberia	Sierra Leone
+2013	Liberia	Sierra Leone
+2014	Liberia	Sierra Leone
+2015	Liberia	Sierra Leone
+2011	Sierra Leone	Guinea
+2012	Sierra Leone	Guinea
+2013	Sierra Leone	Guinea
+2014	Sierra Leone	Guinea
+2015	Sierra Leone	Guinea
+2011	Sierra Leone	Liberia
+2012	Sierra Leone	Liberia
+2013	Sierra Leone	Liberia
+2014	Sierra Leone	Liberia
+2015	Sierra Leone	Liberia
+2011	Ghana	Ivory Coast
+2012	Ghana	Ivory Coast
+2013	Ghana	Ivory Coast
+2014	Ghana	Ivory Coast
+2015	Ghana	Ivory Coast
+2011	Ghana	Burkina Faso
+2012	Ghana	Burkina Faso
+2013	Ghana	Burkina Faso
+2014	Ghana	Burkina Faso
+2015	Ghana	Burkina Faso
+2011	Ghana	Togo
+2012	Ghana	Togo
+2013	Ghana	Togo
+2014	Ghana	Togo
+2015	Ghana	Togo
+2011	Togo	Benin
+2012	Togo	Benin
+2013	Togo	Benin
+2014	Togo	Benin
+2015	Togo	Benin
+2011	Togo	Burkina Faso
+2012	Togo	Burkina Faso
+2013	Togo	Burkina Faso
+2014	Togo	Burkina Faso
+2015	Togo	Burkina Faso
+2011	Togo	Ghana
+2012	Togo	Ghana
+2013	Togo	Ghana
+2014	Togo	Ghana
+2015	Togo	Ghana
+2011	Cameroon	Equatorial Guinea
+2012	Cameroon	Equatorial Guinea
+2013	Cameroon	Equatorial Guinea
+2014	Cameroon	Equatorial Guinea
+2015	Cameroon	Equatorial Guinea
+2011	Cameroon	Nigeria
+2012	Cameroon	Nigeria
+2013	Cameroon	Nigeria
+2014	Cameroon	Nigeria
+2015	Cameroon	Nigeria
+2011	Cameroon	Gabon
+2012	Cameroon	Gabon
+2013	Cameroon	Gabon
+2014	Cameroon	Gabon
+2015	Cameroon	Gabon
+2011	Cameroon	Central African Republic
+2012	Cameroon	Central African Republic
+2013	Cameroon	Central African Republic
+2014	Cameroon	Central African Republic
+2015	Cameroon	Central African Republic
+2011	Cameroon	Chad
+2012	Cameroon	Chad
+2013	Cameroon	Chad
+2014	Cameroon	Chad
+2015	Cameroon	Chad
+2011	Cameroon	Congo
+2012	Cameroon	Congo
+2013	Cameroon	Congo
+2014	Cameroon	Congo
+2015	Cameroon	Congo
+2011	Nigeria	Benin
+2012	Nigeria	Benin
+2013	Nigeria	Benin
+2014	Nigeria	Benin
+2015	Nigeria	Benin
+2011	Nigeria	Niger
+2012	Nigeria	Niger
+2013	Nigeria	Niger
+2014	Nigeria	Niger
+2015	Nigeria	Niger
+2011	Nigeria	Cameroon
+2012	Nigeria	Cameroon
+2013	Nigeria	Cameroon
+2014	Nigeria	Cameroon
+2015	Nigeria	Cameroon
+2011	Gabon	Equatorial Guinea
+2012	Gabon	Equatorial Guinea
+2013	Gabon	Equatorial Guinea
+2014	Gabon	Equatorial Guinea
+2015	Gabon	Equatorial Guinea
+2011	Gabon	Cameroon
+2012	Gabon	Cameroon
+2013	Gabon	Cameroon
+2014	Gabon	Cameroon
+2015	Gabon	Cameroon
+2011	Gabon	Congo
+2012	Gabon	Congo
+2013	Gabon	Congo
+2014	Gabon	Congo
+2015	Gabon	Congo
+2011	Central African Republic	Cameroon
+2012	Central African Republic	Cameroon
+2013	Central African Republic	Cameroon
+2014	Central African Republic	Cameroon
+2015	Central African Republic	Cameroon
+2011	Central African Republic	Chad
+2012	Central African Republic	Chad
+2013	Central African Republic	Chad
+2014	Central African Republic	Chad
+2015	Central African Republic	Chad
+2011	Central African Republic	Congo
+2012	Central African Republic	Congo
+2013	Central African Republic	Congo
+2014	Central African Republic	Congo
+2015	Central African Republic	Congo
+2011	Central African Republic	Democratic Republic of the Congo
+2012	Central African Republic	Democratic Republic of the Congo
+2013	Central African Republic	Democratic Republic of the Congo
+2014	Central African Republic	Democratic Republic of the Congo
+2015	Central African Republic	Democratic Republic of the Congo
+2011	Central African Republic	Sudan
+2012	Central African Republic	Sudan
+2013	Central African Republic	Sudan
+2014	Central African Republic	Sudan
+2015	Central African Republic	Sudan
+2011	Central African Republic	South Sudan
+2012	Central African Republic	South Sudan
+2013	Central African Republic	South Sudan
+2014	Central African Republic	South Sudan
+2015	Central African Republic	South Sudan
+2011	Chad	Niger
+2012	Chad	Niger
+2013	Chad	Niger
+2014	Chad	Niger
+2015	Chad	Niger
+2011	Chad	Cameroon
+2012	Chad	Cameroon
+2013	Chad	Cameroon
+2014	Chad	Cameroon
+2015	Chad	Cameroon
+2011	Chad	Central African Republic
+2012	Chad	Central African Republic
+2013	Chad	Central African Republic
+2014	Chad	Central African Republic
+2015	Chad	Central African Republic
+2011	Chad	Libya
+2012	Chad	Libya
+2013	Chad	Libya
+2014	Chad	Libya
+2015	Chad	Libya
+2011	Chad	Sudan
+2012	Chad	Sudan
+2013	Chad	Sudan
+2014	Chad	Sudan
+2015	Chad	Sudan
+2011	Congo	Cameroon
+2012	Congo	Cameroon
+2013	Congo	Cameroon
+2014	Congo	Cameroon
+2015	Congo	Cameroon
+2011	Congo	Gabon
+2012	Congo	Gabon
+2013	Congo	Gabon
+2014	Congo	Gabon
+2015	Congo	Gabon
+2011	Congo	Central African Republic
+2012	Congo	Central African Republic
+2013	Congo	Central African Republic
+2014	Congo	Central African Republic
+2015	Congo	Central African Republic
+2011	Congo	Democratic Republic of the Congo
+2012	Congo	Democratic Republic of the Congo
+2013	Congo	Democratic Republic of the Congo
+2014	Congo	Democratic Republic of the Congo
+2015	Congo	Democratic Republic of the Congo
+2011	Congo	Angola
+2012	Congo	Angola
+2013	Congo	Angola
+2014	Congo	Angola
+2015	Congo	Angola
+2011	Democratic Republic of the Congo	Central African Republic
+2012	Democratic Republic of the Congo	Central African Republic
+2013	Democratic Republic of the Congo	Central African Republic
+2014	Democratic Republic of the Congo	Central African Republic
+2015	Democratic Republic of the Congo	Central African Republic
+2011	Democratic Republic of the Congo	Congo
+2012	Democratic Republic of the Congo	Congo
+2013	Democratic Republic of the Congo	Congo
+2014	Democratic Republic of the Congo	Congo
+2015	Democratic Republic of the Congo	Congo
+2011	Democratic Republic of the Congo	Uganda
+2012	Democratic Republic of the Congo	Uganda
+2013	Democratic Republic of the Congo	Uganda
+2014	Democratic Republic of the Congo	Uganda
+2015	Democratic Republic of the Congo	Uganda
+2011	Democratic Republic of the Congo	Burundi
+2012	Democratic Republic of the Congo	Burundi
+2013	Democratic Republic of the Congo	Burundi
+2014	Democratic Republic of the Congo	Burundi
+2015	Democratic Republic of the Congo	Burundi
+2011	Democratic Republic of the Congo	Rwanda
+2012	Democratic Republic of the Congo	Rwanda
+2013	Democratic Republic of the Congo	Rwanda
+2014	Democratic Republic of the Congo	Rwanda
+2015	Democratic Republic of the Congo	Rwanda
+2011	Democratic Republic of the Congo	Angola
+2012	Democratic Republic of the Congo	Angola
+2013	Democratic Republic of the Congo	Angola
+2014	Democratic Republic of the Congo	Angola
+2015	Democratic Republic of the Congo	Angola
+2011	Democratic Republic of the Congo	Zambia
+2012	Democratic Republic of the Congo	Zambia
+2013	Democratic Republic of the Congo	Zambia
+2014	Democratic Republic of the Congo	Zambia
+2015	Democratic Republic of the Congo	Zambia
+2011	Democratic Republic of the Congo	Sudan
+2011	Democratic Republic of the Congo	South Sudan
+2012	Democratic Republic of the Congo	South Sudan
+2013	Democratic Republic of the Congo	South Sudan
+2014	Democratic Republic of the Congo	South Sudan
+2015	Democratic Republic of the Congo	South Sudan
+2011	Uganda	Democratic Republic of the Congo
+2012	Uganda	Democratic Republic of the Congo
+2013	Uganda	Democratic Republic of the Congo
+2014	Uganda	Democratic Republic of the Congo
+2015	Uganda	Democratic Republic of the Congo
+2011	Uganda	Kenya
+2012	Uganda	Kenya
+2013	Uganda	Kenya
+2014	Uganda	Kenya
+2015	Uganda	Kenya
+2011	Uganda	Tanzania
+2012	Uganda	Tanzania
+2013	Uganda	Tanzania
+2014	Uganda	Tanzania
+2015	Uganda	Tanzania
+2011	Uganda	Rwanda
+2012	Uganda	Rwanda
+2013	Uganda	Rwanda
+2014	Uganda	Rwanda
+2015	Uganda	Rwanda
+2011	Uganda	Sudan
+2011	Uganda	South Sudan
+2012	Uganda	South Sudan
+2013	Uganda	South Sudan
+2014	Uganda	South Sudan
+2015	Uganda	South Sudan
+2011	Kenya	Uganda
+2012	Kenya	Uganda
+2013	Kenya	Uganda
+2014	Kenya	Uganda
+2015	Kenya	Uganda
+2011	Kenya	Tanzania
+2012	Kenya	Tanzania
+2013	Kenya	Tanzania
+2014	Kenya	Tanzania
+2015	Kenya	Tanzania
+2011	Kenya	Somalia
+2012	Kenya	Somalia
+2013	Kenya	Somalia
+2014	Kenya	Somalia
+2015	Kenya	Somalia
+2011	Kenya	Ethiopia
+2012	Kenya	Ethiopia
+2013	Kenya	Ethiopia
+2014	Kenya	Ethiopia
+2015	Kenya	Ethiopia
+2011	Kenya	Sudan
+2011	Kenya	South Sudan
+2012	Kenya	South Sudan
+2013	Kenya	South Sudan
+2014	Kenya	South Sudan
+2015	Kenya	South Sudan
+2011	Tanzania	Uganda
+2012	Tanzania	Uganda
+2013	Tanzania	Uganda
+2014	Tanzania	Uganda
+2015	Tanzania	Uganda
+2011	Tanzania	Kenya
+2012	Tanzania	Kenya
+2013	Tanzania	Kenya
+2014	Tanzania	Kenya
+2015	Tanzania	Kenya
+2011	Tanzania	Burundi
+2012	Tanzania	Burundi
+2013	Tanzania	Burundi
+2014	Tanzania	Burundi
+2015	Tanzania	Burundi
+2011	Tanzania	Rwanda
+2012	Tanzania	Rwanda
+2013	Tanzania	Rwanda
+2014	Tanzania	Rwanda
+2015	Tanzania	Rwanda
+2011	Tanzania	Mozambique
+2012	Tanzania	Mozambique
+2013	Tanzania	Mozambique
+2014	Tanzania	Mozambique
+2015	Tanzania	Mozambique
+2011	Tanzania	Zambia
+2012	Tanzania	Zambia
+2013	Tanzania	Zambia
+2014	Tanzania	Zambia
+2015	Tanzania	Zambia
+2011	Tanzania	Malawi
+2012	Tanzania	Malawi
+2013	Tanzania	Malawi
+2014	Tanzania	Malawi
+2015	Tanzania	Malawi
+2011	Burundi	Democratic Republic of the Congo
+2012	Burundi	Democratic Republic of the Congo
+2013	Burundi	Democratic Republic of the Congo
+2014	Burundi	Democratic Republic of the Congo
+2015	Burundi	Democratic Republic of the Congo
+2011	Burundi	Tanzania
+2012	Burundi	Tanzania
+2013	Burundi	Tanzania
+2014	Burundi	Tanzania
+2015	Burundi	Tanzania
+2011	Burundi	Rwanda
+2012	Burundi	Rwanda
+2013	Burundi	Rwanda
+2014	Burundi	Rwanda
+2015	Burundi	Rwanda
+2011	Rwanda	Democratic Republic of the Congo
+2012	Rwanda	Democratic Republic of the Congo
+2013	Rwanda	Democratic Republic of the Congo
+2014	Rwanda	Democratic Republic of the Congo
+2015	Rwanda	Democratic Republic of the Congo
+2011	Rwanda	Uganda
+2012	Rwanda	Uganda
+2013	Rwanda	Uganda
+2014	Rwanda	Uganda
+2015	Rwanda	Uganda
+2011	Rwanda	Tanzania
+2012	Rwanda	Tanzania
+2013	Rwanda	Tanzania
+2014	Rwanda	Tanzania
+2015	Rwanda	Tanzania
+2011	Rwanda	Burundi
+2012	Rwanda	Burundi
+2013	Rwanda	Burundi
+2014	Rwanda	Burundi
+2015	Rwanda	Burundi
+2011	Somalia	Kenya
+2012	Somalia	Kenya
+2013	Somalia	Kenya
+2014	Somalia	Kenya
+2015	Somalia	Kenya
+2011	Somalia	Djibouti
+2012	Somalia	Djibouti
+2013	Somalia	Djibouti
+2014	Somalia	Djibouti
+2015	Somalia	Djibouti
+2011	Somalia	Ethiopia
+2012	Somalia	Ethiopia
+2013	Somalia	Ethiopia
+2014	Somalia	Ethiopia
+2015	Somalia	Ethiopia
+2011	Djibouti	Somalia
+2012	Djibouti	Somalia
+2013	Djibouti	Somalia
+2014	Djibouti	Somalia
+2015	Djibouti	Somalia
+2011	Djibouti	Ethiopia
+2012	Djibouti	Ethiopia
+2013	Djibouti	Ethiopia
+2014	Djibouti	Ethiopia
+2015	Djibouti	Ethiopia
+2011	Djibouti	Eritrea
+2012	Djibouti	Eritrea
+2013	Djibouti	Eritrea
+2014	Djibouti	Eritrea
+2015	Djibouti	Eritrea
+2011	Ethiopia	Kenya
+2012	Ethiopia	Kenya
+2013	Ethiopia	Kenya
+2014	Ethiopia	Kenya
+2015	Ethiopia	Kenya
+2011	Ethiopia	Somalia
+2012	Ethiopia	Somalia
+2013	Ethiopia	Somalia
+2014	Ethiopia	Somalia
+2015	Ethiopia	Somalia
+2011	Ethiopia	Djibouti
+2012	Ethiopia	Djibouti
+2013	Ethiopia	Djibouti
+2014	Ethiopia	Djibouti
+2015	Ethiopia	Djibouti
+2011	Ethiopia	Eritrea
+2012	Ethiopia	Eritrea
+2013	Ethiopia	Eritrea
+2014	Ethiopia	Eritrea
+2015	Ethiopia	Eritrea
+2011	Ethiopia	Sudan
+2012	Ethiopia	Sudan
+2013	Ethiopia	Sudan
+2014	Ethiopia	Sudan
+2015	Ethiopia	Sudan
+2011	Ethiopia	South Sudan
+2012	Ethiopia	South Sudan
+2013	Ethiopia	South Sudan
+2014	Ethiopia	South Sudan
+2015	Ethiopia	South Sudan
+2011	Eritrea	Djibouti
+2012	Eritrea	Djibouti
+2013	Eritrea	Djibouti
+2014	Eritrea	Djibouti
+2015	Eritrea	Djibouti
+2011	Eritrea	Ethiopia
+2012	Eritrea	Ethiopia
+2013	Eritrea	Ethiopia
+2014	Eritrea	Ethiopia
+2015	Eritrea	Ethiopia
+2011	Eritrea	Sudan
+2012	Eritrea	Sudan
+2013	Eritrea	Sudan
+2014	Eritrea	Sudan
+2015	Eritrea	Sudan
+2011	Angola	Congo
+2012	Angola	Congo
+2013	Angola	Congo
+2014	Angola	Congo
+2015	Angola	Congo
+2011	Angola	Democratic Republic of the Congo
+2012	Angola	Democratic Republic of the Congo
+2013	Angola	Democratic Republic of the Congo
+2014	Angola	Democratic Republic of the Congo
+2015	Angola	Democratic Republic of the Congo
+2011	Angola	Zambia
+2012	Angola	Zambia
+2013	Angola	Zambia
+2014	Angola	Zambia
+2015	Angola	Zambia
+2011	Angola	Namibia
+2012	Angola	Namibia
+2013	Angola	Namibia
+2014	Angola	Namibia
+2015	Angola	Namibia
+2011	Mozambique	Tanzania
+2012	Mozambique	Tanzania
+2013	Mozambique	Tanzania
+2014	Mozambique	Tanzania
+2015	Mozambique	Tanzania
+2011	Mozambique	Zambia
+2012	Mozambique	Zambia
+2013	Mozambique	Zambia
+2014	Mozambique	Zambia
+2015	Mozambique	Zambia
+2011	Mozambique	Zimbabwe
+2012	Mozambique	Zimbabwe
+2013	Mozambique	Zimbabwe
+2014	Mozambique	Zimbabwe
+2015	Mozambique	Zimbabwe
+2011	Mozambique	Malawi
+2012	Mozambique	Malawi
+2013	Mozambique	Malawi
+2014	Mozambique	Malawi
+2015	Mozambique	Malawi
+2011	Mozambique	South Africa
+2012	Mozambique	South Africa
+2013	Mozambique	South Africa
+2014	Mozambique	South Africa
+2015	Mozambique	South Africa
+2011	Mozambique	Swaziland
+2012	Mozambique	Swaziland
+2013	Mozambique	Swaziland
+2014	Mozambique	Swaziland
+2015	Mozambique	Swaziland
+2011	Zambia	Democratic Republic of the Congo
+2012	Zambia	Democratic Republic of the Congo
+2013	Zambia	Democratic Republic of the Congo
+2014	Zambia	Democratic Republic of the Congo
+2015	Zambia	Democratic Republic of the Congo
+2011	Zambia	Tanzania
+2012	Zambia	Tanzania
+2013	Zambia	Tanzania
+2014	Zambia	Tanzania
+2015	Zambia	Tanzania
+2011	Zambia	Angola
+2012	Zambia	Angola
+2013	Zambia	Angola
+2014	Zambia	Angola
+2015	Zambia	Angola
+2011	Zambia	Mozambique
+2012	Zambia	Mozambique
+2013	Zambia	Mozambique
+2014	Zambia	Mozambique
+2015	Zambia	Mozambique
+2011	Zambia	Zimbabwe
+2012	Zambia	Zimbabwe
+2013	Zambia	Zimbabwe
+2014	Zambia	Zimbabwe
+2015	Zambia	Zimbabwe
+2011	Zambia	Malawi
+2012	Zambia	Malawi
+2013	Zambia	Malawi
+2014	Zambia	Malawi
+2015	Zambia	Malawi
+2011	Zambia	Namibia
+2012	Zambia	Namibia
+2013	Zambia	Namibia
+2014	Zambia	Namibia
+2015	Zambia	Namibia
+2011	Zambia	Botswana
+2012	Zambia	Botswana
+2013	Zambia	Botswana
+2014	Zambia	Botswana
+2015	Zambia	Botswana
+2011	Zimbabwe	Mozambique
+2012	Zimbabwe	Mozambique
+2013	Zimbabwe	Mozambique
+2014	Zimbabwe	Mozambique
+2015	Zimbabwe	Mozambique
+2011	Zimbabwe	Zambia
+2012	Zimbabwe	Zambia
+2013	Zimbabwe	Zambia
+2014	Zimbabwe	Zambia
+2015	Zimbabwe	Zambia
+2011	Zimbabwe	South Africa
+2012	Zimbabwe	South Africa
+2013	Zimbabwe	South Africa
+2014	Zimbabwe	South Africa
+2015	Zimbabwe	South Africa
+2011	Zimbabwe	Botswana
+2012	Zimbabwe	Botswana
+2013	Zimbabwe	Botswana
+2014	Zimbabwe	Botswana
+2015	Zimbabwe	Botswana
+2011	Malawi	Tanzania
+2012	Malawi	Tanzania
+2013	Malawi	Tanzania
+2014	Malawi	Tanzania
+2015	Malawi	Tanzania
+2011	Malawi	Mozambique
+2012	Malawi	Mozambique
+2013	Malawi	Mozambique
+2014	Malawi	Mozambique
+2015	Malawi	Mozambique
+2011	Malawi	Zambia
+2012	Malawi	Zambia
+2013	Malawi	Zambia
+2014	Malawi	Zambia
+2015	Malawi	Zambia
+2011	South Africa	Mozambique
+2012	South Africa	Mozambique
+2013	South Africa	Mozambique
+2014	South Africa	Mozambique
+2015	South Africa	Mozambique
+2011	South Africa	Zimbabwe
+2012	South Africa	Zimbabwe
+2013	South Africa	Zimbabwe
+2014	South Africa	Zimbabwe
+2015	South Africa	Zimbabwe
+2011	South Africa	Namibia
+2012	South Africa	Namibia
+2013	South Africa	Namibia
+2014	South Africa	Namibia
+2015	South Africa	Namibia
+2011	South Africa	Lesotho
+2012	South Africa	Lesotho
+2013	South Africa	Lesotho
+2014	South Africa	Lesotho
+2015	South Africa	Lesotho
+2011	South Africa	Botswana
+2012	South Africa	Botswana
+2013	South Africa	Botswana
+2014	South Africa	Botswana
+2015	South Africa	Botswana
+2011	South Africa	Swaziland
+2012	South Africa	Swaziland
+2013	South Africa	Swaziland
+2014	South Africa	Swaziland
+2015	South Africa	Swaziland
+2011	Namibia	Angola
+2012	Namibia	Angola
+2013	Namibia	Angola
+2014	Namibia	Angola
+2015	Namibia	Angola
+2011	Namibia	Zambia
+2012	Namibia	Zambia
+2013	Namibia	Zambia
+2014	Namibia	Zambia
+2015	Namibia	Zambia
+2011	Namibia	South Africa
+2012	Namibia	South Africa
+2013	Namibia	South Africa
+2014	Namibia	South Africa
+2015	Namibia	South Africa
+2011	Namibia	Botswana
+2012	Namibia	Botswana
+2013	Namibia	Botswana
+2014	Namibia	Botswana
+2015	Namibia	Botswana
+2011	Lesotho	South Africa
+2012	Lesotho	South Africa
+2013	Lesotho	South Africa
+2014	Lesotho	South Africa
+2015	Lesotho	South Africa
+2011	Botswana	Zambia
+2012	Botswana	Zambia
+2013	Botswana	Zambia
+2014	Botswana	Zambia
+2015	Botswana	Zambia
+2011	Botswana	Zimbabwe
+2012	Botswana	Zimbabwe
+2013	Botswana	Zimbabwe
+2014	Botswana	Zimbabwe
+2015	Botswana	Zimbabwe
+2011	Botswana	South Africa
+2012	Botswana	South Africa
+2013	Botswana	South Africa
+2014	Botswana	South Africa
+2015	Botswana	South Africa
+2011	Botswana	Namibia
+2012	Botswana	Namibia
+2013	Botswana	Namibia
+2014	Botswana	Namibia
+2015	Botswana	Namibia
+2011	Swaziland	Mozambique
+2012	Swaziland	Mozambique
+2013	Swaziland	Mozambique
+2014	Swaziland	Mozambique
+2015	Swaziland	Mozambique
+2011	Swaziland	South Africa
+2012	Swaziland	South Africa
+2013	Swaziland	South Africa
+2014	Swaziland	South Africa
+2015	Swaziland	South Africa
+2011	Morocco	Spain
+2012	Morocco	Spain
+2013	Morocco	Spain
+2014	Morocco	Spain
+2015	Morocco	Spain
+2011	Morocco	Mauritania
+2012	Morocco	Mauritania
+2013	Morocco	Mauritania
+2014	Morocco	Mauritania
+2015	Morocco	Mauritania
+2011	Morocco	Algeria
+2012	Morocco	Algeria
+2013	Morocco	Algeria
+2014	Morocco	Algeria
+2015	Morocco	Algeria
+2011	Algeria	Mali
+2012	Algeria	Mali
+2013	Algeria	Mali
+2014	Algeria	Mali
+2015	Algeria	Mali
+2011	Algeria	Mauritania
+2012	Algeria	Mauritania
+2013	Algeria	Mauritania
+2014	Algeria	Mauritania
+2015	Algeria	Mauritania
+2011	Algeria	Niger
+2012	Algeria	Niger
+2013	Algeria	Niger
+2014	Algeria	Niger
+2015	Algeria	Niger
+2011	Algeria	Morocco
+2012	Algeria	Morocco
+2013	Algeria	Morocco
+2014	Algeria	Morocco
+2015	Algeria	Morocco
+2011	Algeria	Tunisia
+2012	Algeria	Tunisia
+2013	Algeria	Tunisia
+2014	Algeria	Tunisia
+2015	Algeria	Tunisia
+2011	Algeria	Libya
+2012	Algeria	Libya
+2013	Algeria	Libya
+2014	Algeria	Libya
+2015	Algeria	Libya
+2011	Tunisia	Algeria
+2012	Tunisia	Algeria
+2013	Tunisia	Algeria
+2014	Tunisia	Algeria
+2015	Tunisia	Algeria
+2011	Tunisia	Libya
+2012	Tunisia	Libya
+2013	Tunisia	Libya
+2014	Tunisia	Libya
+2015	Tunisia	Libya
+2011	Libya	Niger
+2012	Libya	Niger
+2013	Libya	Niger
+2014	Libya	Niger
+2015	Libya	Niger
+2011	Libya	Chad
+2012	Libya	Chad
+2013	Libya	Chad
+2014	Libya	Chad
+2015	Libya	Chad
+2011	Libya	Algeria
+2012	Libya	Algeria
+2013	Libya	Algeria
+2014	Libya	Algeria
+2015	Libya	Algeria
+2011	Libya	Tunisia
+2012	Libya	Tunisia
+2013	Libya	Tunisia
+2014	Libya	Tunisia
+2015	Libya	Tunisia
+2011	Libya	Sudan
+2012	Libya	Sudan
+2013	Libya	Sudan
+2014	Libya	Sudan
+2015	Libya	Sudan
+2011	Libya	Egypt
+2012	Libya	Egypt
+2013	Libya	Egypt
+2014	Libya	Egypt
+2015	Libya	Egypt
+2011	Sudan	Central African Republic
+2012	Sudan	Central African Republic
+2013	Sudan	Central African Republic
+2014	Sudan	Central African Republic
+2015	Sudan	Central African Republic
+2011	Sudan	Chad
+2012	Sudan	Chad
+2013	Sudan	Chad
+2014	Sudan	Chad
+2015	Sudan	Chad
+2011	Sudan	Democratic Republic of the Congo
+2011	Sudan	Uganda
+2011	Sudan	Kenya
+2011	Sudan	Ethiopia
+2012	Sudan	Ethiopia
+2013	Sudan	Ethiopia
+2014	Sudan	Ethiopia
+2015	Sudan	Ethiopia
+2011	Sudan	Eritrea
+2012	Sudan	Eritrea
+2013	Sudan	Eritrea
+2014	Sudan	Eritrea
+2015	Sudan	Eritrea
+2011	Sudan	Libya
+2012	Sudan	Libya
+2013	Sudan	Libya
+2014	Sudan	Libya
+2015	Sudan	Libya
+2011	Sudan	South Sudan
+2012	Sudan	South Sudan
+2013	Sudan	South Sudan
+2014	Sudan	South Sudan
+2015	Sudan	South Sudan
+2011	Sudan	Egypt
+2012	Sudan	Egypt
+2013	Sudan	Egypt
+2014	Sudan	Egypt
+2015	Sudan	Egypt
+2011	South Sudan	Central African Republic
+2012	South Sudan	Central African Republic
+2013	South Sudan	Central African Republic
+2014	South Sudan	Central African Republic
+2015	South Sudan	Central African Republic
+2011	South Sudan	Democratic Republic of the Congo
+2012	South Sudan	Democratic Republic of the Congo
+2013	South Sudan	Democratic Republic of the Congo
+2014	South Sudan	Democratic Republic of the Congo
+2015	South Sudan	Democratic Republic of the Congo
+2011	South Sudan	Uganda
+2012	South Sudan	Uganda
+2013	South Sudan	Uganda
+2014	South Sudan	Uganda
+2015	South Sudan	Uganda
+2011	South Sudan	Kenya
+2012	South Sudan	Kenya
+2013	South Sudan	Kenya
+2014	South Sudan	Kenya
+2015	South Sudan	Kenya
+2011	South Sudan	Ethiopia
+2012	South Sudan	Ethiopia
+2013	South Sudan	Ethiopia
+2014	South Sudan	Ethiopia
+2015	South Sudan	Ethiopia
+2011	South Sudan	Sudan
+2012	South Sudan	Sudan
+2013	South Sudan	Sudan
+2014	South Sudan	Sudan
+2015	South Sudan	Sudan
+2011	Iran	Armenia
+2012	Iran	Armenia
+2013	Iran	Armenia
+2014	Iran	Armenia
+2015	Iran	Armenia
+2011	Iran	Azerbaijan
+2012	Iran	Azerbaijan
+2013	Iran	Azerbaijan
+2014	Iran	Azerbaijan
+2015	Iran	Azerbaijan
+2011	Iran	Turkey
+2012	Iran	Turkey
+2013	Iran	Turkey
+2014	Iran	Turkey
+2015	Iran	Turkey
+2011	Iran	Iraq
+2012	Iran	Iraq
+2013	Iran	Iraq
+2014	Iran	Iraq
+2015	Iran	Iraq
+2011	Iran	Afghanistan
+2012	Iran	Afghanistan
+2013	Iran	Afghanistan
+2014	Iran	Afghanistan
+2015	Iran	Afghanistan
+2011	Iran	Turkmenistan
+2012	Iran	Turkmenistan
+2013	Iran	Turkmenistan
+2014	Iran	Turkmenistan
+2015	Iran	Turkmenistan
+2011	Iran	Pakistan
+2012	Iran	Pakistan
+2013	Iran	Pakistan
+2014	Iran	Pakistan
+2015	Iran	Pakistan
+2011	Turkey	Greece
+2012	Turkey	Greece
+2013	Turkey	Greece
+2014	Turkey	Greece
+2015	Turkey	Greece
+2011	Turkey	Cyprus
+2012	Turkey	Cyprus
+2013	Turkey	Cyprus
+2014	Turkey	Cyprus
+2015	Turkey	Cyprus
+2011	Turkey	Bulgaria
+2012	Turkey	Bulgaria
+2013	Turkey	Bulgaria
+2014	Turkey	Bulgaria
+2015	Turkey	Bulgaria
+2011	Turkey	Armenia
+2012	Turkey	Armenia
+2013	Turkey	Armenia
+2014	Turkey	Armenia
+2015	Turkey	Armenia
+2011	Turkey	Georgia
+2012	Turkey	Georgia
+2013	Turkey	Georgia
+2014	Turkey	Georgia
+2015	Turkey	Georgia
+2011	Turkey	Azerbaijan
+2012	Turkey	Azerbaijan
+2013	Turkey	Azerbaijan
+2014	Turkey	Azerbaijan
+2015	Turkey	Azerbaijan
+2011	Turkey	Iran
+2012	Turkey	Iran
+2013	Turkey	Iran
+2014	Turkey	Iran
+2015	Turkey	Iran
+2011	Turkey	Iraq
+2012	Turkey	Iraq
+2013	Turkey	Iraq
+2014	Turkey	Iraq
+2015	Turkey	Iraq
+2011	Turkey	Syria
+2012	Turkey	Syria
+2013	Turkey	Syria
+2014	Turkey	Syria
+2015	Turkey	Syria
+2011	Iraq	Iran
+2012	Iraq	Iran
+2013	Iraq	Iran
+2014	Iraq	Iran
+2015	Iraq	Iran
+2011	Iraq	Turkey
+2012	Iraq	Turkey
+2013	Iraq	Turkey
+2014	Iraq	Turkey
+2015	Iraq	Turkey
+2011	Iraq	Syria
+2012	Iraq	Syria
+2013	Iraq	Syria
+2014	Iraq	Syria
+2015	Iraq	Syria
+2011	Iraq	Jordan
+2012	Iraq	Jordan
+2013	Iraq	Jordan
+2014	Iraq	Jordan
+2015	Iraq	Jordan
+2011	Iraq	Saudi Arabia
+2012	Iraq	Saudi Arabia
+2013	Iraq	Saudi Arabia
+2014	Iraq	Saudi Arabia
+2015	Iraq	Saudi Arabia
+2011	Iraq	Kuwait
+2012	Iraq	Kuwait
+2013	Iraq	Kuwait
+2014	Iraq	Kuwait
+2015	Iraq	Kuwait
+2011	Egypt	Libya
+2012	Egypt	Libya
+2013	Egypt	Libya
+2014	Egypt	Libya
+2015	Egypt	Libya
+2011	Egypt	Sudan
+2012	Egypt	Sudan
+2013	Egypt	Sudan
+2014	Egypt	Sudan
+2015	Egypt	Sudan
+2011	Egypt	Israel
+2012	Egypt	Israel
+2013	Egypt	Israel
+2014	Egypt	Israel
+2015	Egypt	Israel
+2011	Syria	Turkey
+2012	Syria	Turkey
+2013	Syria	Turkey
+2014	Syria	Turkey
+2015	Syria	Turkey
+2011	Syria	Iraq
+2012	Syria	Iraq
+2013	Syria	Iraq
+2014	Syria	Iraq
+2015	Syria	Iraq
+2011	Syria	Lebanon
+2012	Syria	Lebanon
+2013	Syria	Lebanon
+2014	Syria	Lebanon
+2015	Syria	Lebanon
+2011	Syria	Jordan
+2012	Syria	Jordan
+2013	Syria	Jordan
+2014	Syria	Jordan
+2015	Syria	Jordan
+2011	Syria	Israel
+2012	Syria	Israel
+2013	Syria	Israel
+2014	Syria	Israel
+2015	Syria	Israel
+2011	Lebanon	Syria
+2012	Lebanon	Syria
+2013	Lebanon	Syria
+2014	Lebanon	Syria
+2015	Lebanon	Syria
+2011	Lebanon	Israel
+2012	Lebanon	Israel
+2013	Lebanon	Israel
+2014	Lebanon	Israel
+2015	Lebanon	Israel
+2011	Jordan	Iraq
+2012	Jordan	Iraq
+2013	Jordan	Iraq
+2014	Jordan	Iraq
+2015	Jordan	Iraq
+2011	Jordan	Syria
+2012	Jordan	Syria
+2013	Jordan	Syria
+2014	Jordan	Syria
+2015	Jordan	Syria
+2011	Jordan	Israel
+2012	Jordan	Israel
+2013	Jordan	Israel
+2014	Jordan	Israel
+2015	Jordan	Israel
+2011	Jordan	Saudi Arabia
+2012	Jordan	Saudi Arabia
+2013	Jordan	Saudi Arabia
+2014	Jordan	Saudi Arabia
+2015	Jordan	Saudi Arabia
+2011	Israel	Egypt
+2012	Israel	Egypt
+2013	Israel	Egypt
+2014	Israel	Egypt
+2015	Israel	Egypt
+2011	Israel	Syria
+2012	Israel	Syria
+2013	Israel	Syria
+2014	Israel	Syria
+2015	Israel	Syria
+2011	Israel	Lebanon
+2012	Israel	Lebanon
+2013	Israel	Lebanon
+2014	Israel	Lebanon
+2015	Israel	Lebanon
+2011	Israel	Jordan
+2012	Israel	Jordan
+2013	Israel	Jordan
+2014	Israel	Jordan
+2015	Israel	Jordan
+2011	Saudi Arabia	Iraq
+2012	Saudi Arabia	Iraq
+2013	Saudi Arabia	Iraq
+2014	Saudi Arabia	Iraq
+2015	Saudi Arabia	Iraq
+2011	Saudi Arabia	Jordan
+2012	Saudi Arabia	Jordan
+2013	Saudi Arabia	Jordan
+2014	Saudi Arabia	Jordan
+2015	Saudi Arabia	Jordan
+2011	Saudi Arabia	Yemen
+2012	Saudi Arabia	Yemen
+2013	Saudi Arabia	Yemen
+2014	Saudi Arabia	Yemen
+2015	Saudi Arabia	Yemen
+2011	Saudi Arabia	Kuwait
+2012	Saudi Arabia	Kuwait
+2013	Saudi Arabia	Kuwait
+2014	Saudi Arabia	Kuwait
+2015	Saudi Arabia	Kuwait
+2011	Saudi Arabia	Bahrain
+2012	Saudi Arabia	Bahrain
+2013	Saudi Arabia	Bahrain
+2014	Saudi Arabia	Bahrain
+2015	Saudi Arabia	Bahrain
+2011	Saudi Arabia	Qatar
+2012	Saudi Arabia	Qatar
+2013	Saudi Arabia	Qatar
+2014	Saudi Arabia	Qatar
+2015	Saudi Arabia	Qatar
+2011	Saudi Arabia	United Arab Emirates
+2012	Saudi Arabia	United Arab Emirates
+2013	Saudi Arabia	United Arab Emirates
+2014	Saudi Arabia	United Arab Emirates
+2015	Saudi Arabia	United Arab Emirates
+2011	Saudi Arabia	Oman
+2012	Saudi Arabia	Oman
+2013	Saudi Arabia	Oman
+2014	Saudi Arabia	Oman
+2015	Saudi Arabia	Oman
+2011	Yemen	Saudi Arabia
+2012	Yemen	Saudi Arabia
+2013	Yemen	Saudi Arabia
+2014	Yemen	Saudi Arabia
+2015	Yemen	Saudi Arabia
+2011	Yemen	Oman
+2012	Yemen	Oman
+2013	Yemen	Oman
+2014	Yemen	Oman
+2015	Yemen	Oman
+2011	Kuwait	Iraq
+2012	Kuwait	Iraq
+2013	Kuwait	Iraq
+2014	Kuwait	Iraq
+2015	Kuwait	Iraq
+2011	Kuwait	Saudi Arabia
+2012	Kuwait	Saudi Arabia
+2013	Kuwait	Saudi Arabia
+2014	Kuwait	Saudi Arabia
+2015	Kuwait	Saudi Arabia
+2011	Bahrain	Saudi Arabia
+2012	Bahrain	Saudi Arabia
+2013	Bahrain	Saudi Arabia
+2014	Bahrain	Saudi Arabia
+2015	Bahrain	Saudi Arabia
+2011	Qatar	Saudi Arabia
+2012	Qatar	Saudi Arabia
+2013	Qatar	Saudi Arabia
+2014	Qatar	Saudi Arabia
+2015	Qatar	Saudi Arabia
+2011	Qatar	United Arab Emirates
+2012	Qatar	United Arab Emirates
+2013	Qatar	United Arab Emirates
+2014	Qatar	United Arab Emirates
+2015	Qatar	United Arab Emirates
+2011	United Arab Emirates	Saudi Arabia
+2012	United Arab Emirates	Saudi Arabia
+2013	United Arab Emirates	Saudi Arabia
+2014	United Arab Emirates	Saudi Arabia
+2015	United Arab Emirates	Saudi Arabia
+2011	United Arab Emirates	Qatar
+2012	United Arab Emirates	Qatar
+2013	United Arab Emirates	Qatar
+2014	United Arab Emirates	Qatar
+2015	United Arab Emirates	Qatar
+2011	United Arab Emirates	Oman
+2012	United Arab Emirates	Oman
+2013	United Arab Emirates	Oman
+2014	United Arab Emirates	Oman
+2015	United Arab Emirates	Oman
+2011	Oman	Saudi Arabia
+2012	Oman	Saudi Arabia
+2013	Oman	Saudi Arabia
+2014	Oman	Saudi Arabia
+2015	Oman	Saudi Arabia
+2011	Oman	Yemen
+2012	Oman	Yemen
+2013	Oman	Yemen
+2014	Oman	Yemen
+2015	Oman	Yemen
+2011	Oman	United Arab Emirates
+2012	Oman	United Arab Emirates
+2013	Oman	United Arab Emirates
+2014	Oman	United Arab Emirates
+2015	Oman	United Arab Emirates
+2011	Afghanistan	Iran
+2012	Afghanistan	Iran
+2013	Afghanistan	Iran
+2014	Afghanistan	Iran
+2015	Afghanistan	Iran
+2011	Afghanistan	Turkmenistan
+2012	Afghanistan	Turkmenistan
+2013	Afghanistan	Turkmenistan
+2014	Afghanistan	Turkmenistan
+2015	Afghanistan	Turkmenistan
+2011	Afghanistan	Tajikistan
+2012	Afghanistan	Tajikistan
+2013	Afghanistan	Tajikistan
+2014	Afghanistan	Tajikistan
+2015	Afghanistan	Tajikistan
+2011	Afghanistan	Uzbekistan
+2012	Afghanistan	Uzbekistan
+2013	Afghanistan	Uzbekistan
+2014	Afghanistan	Uzbekistan
+2015	Afghanistan	Uzbekistan
+2011	Afghanistan	China
+2012	Afghanistan	China
+2013	Afghanistan	China
+2014	Afghanistan	China
+2015	Afghanistan	China
+2011	Afghanistan	Pakistan
+2012	Afghanistan	Pakistan
+2013	Afghanistan	Pakistan
+2014	Afghanistan	Pakistan
+2015	Afghanistan	Pakistan
+2011	Turkmenistan	Iran
+2012	Turkmenistan	Iran
+2013	Turkmenistan	Iran
+2014	Turkmenistan	Iran
+2015	Turkmenistan	Iran
+2011	Turkmenistan	Afghanistan
+2012	Turkmenistan	Afghanistan
+2013	Turkmenistan	Afghanistan
+2014	Turkmenistan	Afghanistan
+2015	Turkmenistan	Afghanistan
+2011	Turkmenistan	Uzbekistan
+2012	Turkmenistan	Uzbekistan
+2013	Turkmenistan	Uzbekistan
+2014	Turkmenistan	Uzbekistan
+2015	Turkmenistan	Uzbekistan
+2011	Turkmenistan	Kazakhstan
+2012	Turkmenistan	Kazakhstan
+2013	Turkmenistan	Kazakhstan
+2014	Turkmenistan	Kazakhstan
+2015	Turkmenistan	Kazakhstan
+2011	Tajikistan	Afghanistan
+2012	Tajikistan	Afghanistan
+2013	Tajikistan	Afghanistan
+2014	Tajikistan	Afghanistan
+2015	Tajikistan	Afghanistan
+2011	Tajikistan	Kyrgyzstan
+2012	Tajikistan	Kyrgyzstan
+2013	Tajikistan	Kyrgyzstan
+2014	Tajikistan	Kyrgyzstan
+2015	Tajikistan	Kyrgyzstan
+2011	Tajikistan	Uzbekistan
+2012	Tajikistan	Uzbekistan
+2013	Tajikistan	Uzbekistan
+2014	Tajikistan	Uzbekistan
+2015	Tajikistan	Uzbekistan
+2011	Tajikistan	China
+2012	Tajikistan	China
+2013	Tajikistan	China
+2014	Tajikistan	China
+2015	Tajikistan	China
+2011	Kyrgyzstan	Tajikistan
+2012	Kyrgyzstan	Tajikistan
+2013	Kyrgyzstan	Tajikistan
+2014	Kyrgyzstan	Tajikistan
+2015	Kyrgyzstan	Tajikistan
+2011	Kyrgyzstan	Uzbekistan
+2012	Kyrgyzstan	Uzbekistan
+2013	Kyrgyzstan	Uzbekistan
+2014	Kyrgyzstan	Uzbekistan
+2015	Kyrgyzstan	Uzbekistan
+2011	Kyrgyzstan	Kazakhstan
+2012	Kyrgyzstan	Kazakhstan
+2013	Kyrgyzstan	Kazakhstan
+2014	Kyrgyzstan	Kazakhstan
+2015	Kyrgyzstan	Kazakhstan
+2011	Kyrgyzstan	China
+2012	Kyrgyzstan	China
+2013	Kyrgyzstan	China
+2014	Kyrgyzstan	China
+2015	Kyrgyzstan	China
+2011	Uzbekistan	Afghanistan
+2012	Uzbekistan	Afghanistan
+2013	Uzbekistan	Afghanistan
+2014	Uzbekistan	Afghanistan
+2015	Uzbekistan	Afghanistan
+2011	Uzbekistan	Turkmenistan
+2012	Uzbekistan	Turkmenistan
+2013	Uzbekistan	Turkmenistan
+2014	Uzbekistan	Turkmenistan
+2015	Uzbekistan	Turkmenistan
+2011	Uzbekistan	Tajikistan
+2012	Uzbekistan	Tajikistan
+2013	Uzbekistan	Tajikistan
+2014	Uzbekistan	Tajikistan
+2015	Uzbekistan	Tajikistan
+2011	Uzbekistan	Kyrgyzstan
+2012	Uzbekistan	Kyrgyzstan
+2013	Uzbekistan	Kyrgyzstan
+2014	Uzbekistan	Kyrgyzstan
+2015	Uzbekistan	Kyrgyzstan
+2011	Uzbekistan	Kazakhstan
+2012	Uzbekistan	Kazakhstan
+2013	Uzbekistan	Kazakhstan
+2014	Uzbekistan	Kazakhstan
+2015	Uzbekistan	Kazakhstan
+2011	Kazakhstan	Russia
+2012	Kazakhstan	Russia
+2013	Kazakhstan	Russia
+2014	Kazakhstan	Russia
+2015	Kazakhstan	Russia
+2011	Kazakhstan	Turkmenistan
+2012	Kazakhstan	Turkmenistan
+2013	Kazakhstan	Turkmenistan
+2014	Kazakhstan	Turkmenistan
+2015	Kazakhstan	Turkmenistan
+2011	Kazakhstan	Kyrgyzstan
+2012	Kazakhstan	Kyrgyzstan
+2013	Kazakhstan	Kyrgyzstan
+2014	Kazakhstan	Kyrgyzstan
+2015	Kazakhstan	Kyrgyzstan
+2011	Kazakhstan	Uzbekistan
+2012	Kazakhstan	Uzbekistan
+2013	Kazakhstan	Uzbekistan
+2014	Kazakhstan	Uzbekistan
+2015	Kazakhstan	Uzbekistan
+2011	Kazakhstan	China
+2012	Kazakhstan	China
+2013	Kazakhstan	China
+2014	Kazakhstan	China
+2015	Kazakhstan	China
+2011	China	Russia
+2012	China	Russia
+2013	China	Russia
+2014	China	Russia
+2015	China	Russia
+2011	China	Afghanistan
+2012	China	Afghanistan
+2013	China	Afghanistan
+2014	China	Afghanistan
+2015	China	Afghanistan
+2011	China	Tajikistan
+2012	China	Tajikistan
+2013	China	Tajikistan
+2014	China	Tajikistan
+2015	China	Tajikistan
+2011	China	Kyrgyzstan
+2012	China	Kyrgyzstan
+2013	China	Kyrgyzstan
+2014	China	Kyrgyzstan
+2015	China	Kyrgyzstan
+2011	China	Kazakhstan
+2012	China	Kazakhstan
+2013	China	Kazakhstan
+2014	China	Kazakhstan
+2015	China	Kazakhstan
+2011	China	Mongolia
+2012	China	Mongolia
+2013	China	Mongolia
+2014	China	Mongolia
+2015	China	Mongolia
+2011	China	North Korea
+2012	China	North Korea
+2013	China	North Korea
+2014	China	North Korea
+2015	China	North Korea
+2011	China	India
+2012	China	India
+2013	China	India
+2014	China	India
+2015	China	India
+2011	China	Bhutan
+2012	China	Bhutan
+2013	China	Bhutan
+2014	China	Bhutan
+2015	China	Bhutan
+2011	China	Pakistan
+2012	China	Pakistan
+2013	China	Pakistan
+2014	China	Pakistan
+2015	China	Pakistan
+2011	China	Myanmar
+2012	China	Myanmar
+2013	China	Myanmar
+2014	China	Myanmar
+2015	China	Myanmar
+2011	China	Nepal
+2012	China	Nepal
+2013	China	Nepal
+2014	China	Nepal
+2015	China	Nepal
+2011	China	Laos
+2012	China	Laos
+2013	China	Laos
+2014	China	Laos
+2015	China	Laos
+2011	China	Vietnam
+2012	China	Vietnam
+2013	China	Vietnam
+2014	China	Vietnam
+2015	China	Vietnam
+2011	Mongolia	Russia
+2012	Mongolia	Russia
+2013	Mongolia	Russia
+2014	Mongolia	Russia
+2015	Mongolia	Russia
+2011	Mongolia	China
+2012	Mongolia	China
+2013	Mongolia	China
+2014	Mongolia	China
+2015	Mongolia	China
+2011	North Korea	Russia
+2012	North Korea	Russia
+2013	North Korea	Russia
+2014	North Korea	Russia
+2015	North Korea	Russia
+2011	North Korea	China
+2012	North Korea	China
+2013	North Korea	China
+2014	North Korea	China
+2015	North Korea	China
+2011	North Korea	South Korea
+2012	North Korea	South Korea
+2013	North Korea	South Korea
+2014	North Korea	South Korea
+2015	North Korea	South Korea
+2011	South Korea	North Korea
+2012	South Korea	North Korea
+2013	South Korea	North Korea
+2014	South Korea	North Korea
+2015	South Korea	North Korea
+2011	India	China
+2012	India	China
+2013	India	China
+2014	India	China
+2015	India	China
+2011	India	Bhutan
+2012	India	Bhutan
+2013	India	Bhutan
+2014	India	Bhutan
+2015	India	Bhutan
+2011	India	Pakistan
+2012	India	Pakistan
+2013	India	Pakistan
+2014	India	Pakistan
+2015	India	Pakistan
+2011	India	Bangladesh
+2012	India	Bangladesh
+2013	India	Bangladesh
+2014	India	Bangladesh
+2015	India	Bangladesh
+2011	India	Myanmar
+2012	India	Myanmar
+2013	India	Myanmar
+2014	India	Myanmar
+2015	India	Myanmar
+2011	India	Nepal
+2012	India	Nepal
+2013	India	Nepal
+2014	India	Nepal
+2015	India	Nepal
+2011	Bhutan	China
+2012	Bhutan	China
+2013	Bhutan	China
+2014	Bhutan	China
+2015	Bhutan	China
+2011	Bhutan	India
+2012	Bhutan	India
+2013	Bhutan	India
+2014	Bhutan	India
+2015	Bhutan	India
+2011	Pakistan	Iran
+2012	Pakistan	Iran
+2013	Pakistan	Iran
+2014	Pakistan	Iran
+2015	Pakistan	Iran
+2011	Pakistan	Afghanistan
+2012	Pakistan	Afghanistan
+2013	Pakistan	Afghanistan
+2014	Pakistan	Afghanistan
+2015	Pakistan	Afghanistan
+2011	Pakistan	China
+2012	Pakistan	China
+2013	Pakistan	China
+2014	Pakistan	China
+2015	Pakistan	China
+2011	Pakistan	India
+2012	Pakistan	India
+2013	Pakistan	India
+2014	Pakistan	India
+2015	Pakistan	India
+2011	Pakistan	Myanmar
+2012	Pakistan	Myanmar
+2013	Pakistan	Myanmar
+2014	Pakistan	Myanmar
+2015	Pakistan	Myanmar
+2011	Bangladesh	India
+2012	Bangladesh	India
+2013	Bangladesh	India
+2014	Bangladesh	India
+2015	Bangladesh	India
+2011	Bangladesh	Myanmar
+2012	Bangladesh	Myanmar
+2013	Bangladesh	Myanmar
+2014	Bangladesh	Myanmar
+2015	Bangladesh	Myanmar
+2011	Myanmar	China
+2012	Myanmar	China
+2013	Myanmar	China
+2014	Myanmar	China
+2015	Myanmar	China
+2011	Myanmar	India
+2012	Myanmar	India
+2013	Myanmar	India
+2014	Myanmar	India
+2015	Myanmar	India
+2011	Myanmar	Pakistan
+2012	Myanmar	Pakistan
+2013	Myanmar	Pakistan
+2014	Myanmar	Pakistan
+2015	Myanmar	Pakistan
+2011	Myanmar	Bangladesh
+2012	Myanmar	Bangladesh
+2013	Myanmar	Bangladesh
+2014	Myanmar	Bangladesh
+2015	Myanmar	Bangladesh
+2011	Myanmar	Thailand
+2012	Myanmar	Thailand
+2013	Myanmar	Thailand
+2014	Myanmar	Thailand
+2015	Myanmar	Thailand
+2011	Myanmar	Laos
+2012	Myanmar	Laos
+2013	Myanmar	Laos
+2014	Myanmar	Laos
+2015	Myanmar	Laos
+2011	Nepal	China
+2012	Nepal	China
+2013	Nepal	China
+2014	Nepal	China
+2015	Nepal	China
+2011	Nepal	India
+2012	Nepal	India
+2013	Nepal	India
+2014	Nepal	India
+2015	Nepal	India
+2011	Thailand	Myanmar
+2012	Thailand	Myanmar
+2013	Thailand	Myanmar
+2014	Thailand	Myanmar
+2015	Thailand	Myanmar
+2011	Thailand	Cambodia
+2012	Thailand	Cambodia
+2013	Thailand	Cambodia
+2014	Thailand	Cambodia
+2015	Thailand	Cambodia
+2011	Thailand	Laos
+2012	Thailand	Laos
+2013	Thailand	Laos
+2014	Thailand	Laos
+2015	Thailand	Laos
+2011	Thailand	Malaysia
+2012	Thailand	Malaysia
+2013	Thailand	Malaysia
+2014	Thailand	Malaysia
+2015	Thailand	Malaysia
+2011	Cambodia	Thailand
+2012	Cambodia	Thailand
+2013	Cambodia	Thailand
+2014	Cambodia	Thailand
+2015	Cambodia	Thailand
+2011	Cambodia	Laos
+2012	Cambodia	Laos
+2013	Cambodia	Laos
+2014	Cambodia	Laos
+2015	Cambodia	Laos
+2011	Cambodia	Vietnam
+2012	Cambodia	Vietnam
+2013	Cambodia	Vietnam
+2014	Cambodia	Vietnam
+2015	Cambodia	Vietnam
+2011	Laos	China
+2012	Laos	China
+2013	Laos	China
+2014	Laos	China
+2015	Laos	China
+2011	Laos	Myanmar
+2012	Laos	Myanmar
+2013	Laos	Myanmar
+2014	Laos	Myanmar
+2015	Laos	Myanmar
+2011	Laos	Thailand
+2012	Laos	Thailand
+2013	Laos	Thailand
+2014	Laos	Thailand
+2015	Laos	Thailand
+2011	Laos	Cambodia
+2012	Laos	Cambodia
+2013	Laos	Cambodia
+2014	Laos	Cambodia
+2015	Laos	Cambodia
+2011	Laos	Vietnam
+2012	Laos	Vietnam
+2013	Laos	Vietnam
+2014	Laos	Vietnam
+2015	Laos	Vietnam
+2011	Vietnam	China
+2012	Vietnam	China
+2013	Vietnam	China
+2014	Vietnam	China
+2015	Vietnam	China
+2011	Vietnam	Cambodia
+2012	Vietnam	Cambodia
+2013	Vietnam	Cambodia
+2014	Vietnam	Cambodia
+2015	Vietnam	Cambodia
+2011	Vietnam	Laos
+2012	Vietnam	Laos
+2013	Vietnam	Laos
+2014	Vietnam	Laos
+2015	Vietnam	Laos
+2011	Malaysia	Thailand
+2012	Malaysia	Thailand
+2013	Malaysia	Thailand
+2014	Malaysia	Thailand
+2015	Malaysia	Thailand
+2011	Malaysia	Singapore
+2012	Malaysia	Singapore
+2013	Malaysia	Singapore
+2014	Malaysia	Singapore
+2015	Malaysia	Singapore
+2011	Malaysia	Brunei
+2012	Malaysia	Brunei
+2013	Malaysia	Brunei
+2014	Malaysia	Brunei
+2015	Malaysia	Brunei
+2011	Malaysia	Indonesia
+2012	Malaysia	Indonesia
+2013	Malaysia	Indonesia
+2014	Malaysia	Indonesia
+2015	Malaysia	Indonesia
+2011	Singapore	Malaysia
+2012	Singapore	Malaysia
+2013	Singapore	Malaysia
+2014	Singapore	Malaysia
+2015	Singapore	Malaysia
+2011	Brunei	Malaysia
+2012	Brunei	Malaysia
+2013	Brunei	Malaysia
+2014	Brunei	Malaysia
+2015	Brunei	Malaysia
+2011	Indonesia	Malaysia
+2012	Indonesia	Malaysia
+2013	Indonesia	Malaysia
+2014	Indonesia	Malaysia
+2015	Indonesia	Malaysia
+2011	Indonesia	East Timor
+2012	Indonesia	East Timor
+2013	Indonesia	East Timor
+2014	Indonesia	East Timor
+2015	Indonesia	East Timor
+2011	Indonesia	Papua New Guinea
+2012	Indonesia	Papua New Guinea
+2013	Indonesia	Papua New Guinea
+2014	Indonesia	Papua New Guinea
+2015	Indonesia	Papua New Guinea
+2011	East Timor	Indonesia
+2012	East Timor	Indonesia
+2013	East Timor	Indonesia
+2014	East Timor	Indonesia
+2015	East Timor	Indonesia
+2011	Papua New Guinea	Indonesia
+2012	Papua New Guinea	Indonesia
+2013	Papua New Guinea	Indonesia
+2014	Papua New Guinea	Indonesia
+2015	Papua New Guinea	Indonesia
