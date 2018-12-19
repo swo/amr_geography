@@ -365,13 +365,13 @@ ggsave(
 
 ## Distance analysis
 
-If local tranmission "washes out" the use/resistance relationship, then we expect that pairs of states that are closer to one another will have a greater difference in resistance for the same difference in use. That is:
+If local transmission "washes out" the use/resistance relationship, then we expect that adjacent geographic units will have a *smaller* difference in resistance for the same difference in use. (Consider the extreme: two perfectly-interacting populations should have almost no difference in resistance, regardless of their difference in use.) That is, in a regression
 $$
-\Delta \rho \sim \Delta \tau + \Delta \tau \times d + \Delta \mathrm{income} + \ldots
+\Delta \rho \sim \Delta \tau + \Delta \tau \times a + \Delta \mathrm{income} + \ldots
 $$
-where $d$ is the distance between the two units.
+where $a$ is a flag for adjacency, we expect the interaction term $\beta_{\tau a}$ will be negative.
 
-```{r}
+```{r distance_analysis}
 # because no US states and European countries share names, it's OK to combine this list
 adjacency_db = bind_rows(us_adjacency, eu_adjacency) %>%
   mutate(adjacent = 1)
@@ -426,7 +426,8 @@ distance_results = unit_data %>%
     coef_d_use_adjacent = map_dbl(model, ~ coef(.)['d_use:adjacent']),
     coef_ratio = coef_d_use_adjacent / coef_d_use,
     null_interactions = map(data, null_interactions_f),
-    p_value = map2_dbl(null_interactions, coef_d_use_adjacent, ~ (sum(.x > .y) + 1) / (length(.x) + 1))
+    # the inequality is <, because actual is -1 and nulls are all around 0, we get strong (0) p value
+    p_value = map2_dbl(null_interactions, coef_d_use_adjacent, ~ (sum(.x < .y) + 1) / (length(.x) + 1))
   )
 ```
 
@@ -439,8 +440,8 @@ distance_results %>%
 ### Plots
 
 ```{r distance_plots}
-eu_ecq_distance_plot = distance_results %>%
-  filter(dataset == 'europe', bugdrug == 'Ec/q') %$%
+main_distance_plot = distance_results %>%
+  filter(dataset == 'marketscan', bugdrug == 'Sp/m') %$%
   pair_data[[1]] %>%
   mutate(adjacent = adjacent == 1) %>%
   ggplot(aes(d_use, d_resistant)) +
@@ -461,7 +462,7 @@ eu_ecq_distance_plot = distance_results %>%
 show(eu_ecq_distance_plot)
 
 other_distance_plot = distance_results %>%
-  filter(!(dataset == 'europe' & bugdrug == 'Ec/q')) %>%
+  filter(!(dataset == 'marketscan' & bugdrug == 'Sp/m')) %>%
   select(dataset, bugdrug, pair_data) %>%
   unnest() %>%
   mutate(
@@ -487,8 +488,8 @@ other_distance_plot = distance_results %>%
 show(other_distance_plot)
 
 ggsave(
-  'fig/eu_ecq_distance_plot.pdf',
-  plot = eu_ecq_distance_plot,
+  'fig/main_distance_plot.pdf',
+  plot = main_distance_plot,
   width = 88, height = 80, units = 'mm'
 )
 
