@@ -384,9 +384,9 @@ log_odds_ratio = function(p, q) log(odds(p)) - log(odds(q))
 cross_units = function(df) {
   df %$%
     crossing(unit1 = unit, unit2 = unit) %>%
-    filter(unit1 < unit2) %>%
     left_join(rename_all(df, ~ str_c(., '1')), by = 'unit1') %>%
     left_join(rename_all(df, ~ str_c(., '2')), by = 'unit2') %>%
+    filter(use1 > use2) %>%
     mutate(
       d_resistant = f_resistant1 - f_resistant2,
       d_use = log_odds_ratio(use1, use2),

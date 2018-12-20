@@ -293,7 +293,6 @@ whn_nest_contrast = whn_nest_subset %>%
     adjacent = superpop1 == superpop2
   )
 
-#my_palette = c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 my_palette = c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
 panel1 = whn_nest_subset %>%
@@ -348,7 +347,7 @@ panel2 = whn_nest_region %>%
   )
 
 panel3_text = data_frame(
-  label = c('not adjacent', 'adjacent'),
+  label = c('different super-pop.', 'same super-pop.'),
   adjacent = c(FALSE, TRUE),
   panel = 'list(epsilon[super] == 0.0, epsilon[sub] == 0.5)',
   x = c(0.12,  0.06),
@@ -833,10 +832,10 @@ panel2 = dtypes_nest_region %>%
   )
 
 panel3_text = data_frame(
-  label = c('not adjacent', 'adjacent'),
+  label = c('different super-pop.', 'same super-pop.'),
   adjacent = c(FALSE, TRUE),
   panel = 'list(epsilon[super] == 0.0, epsilon[sub] == 0.5)',
-  x = c(0.12,  0.04),
+  x = c(0.10,  0.05),
   y = c(0.33, -0.06)
 )
 
@@ -845,17 +844,13 @@ panel3 = dtypes_nest_contrast %>%
   facet_grid(cols = vars(panel)) +
   geom_point(shape = 1, size = 2) +
   geom_smooth(method = 'lm', se = FALSE) +
-  scale_color_manual(
-    name = '',
-    values = c('black', 'red'),
-    labels = c('not adjacent', 'adjacent')
-  ) +
+  scale_color_manual(values = c('black', 'red')) +
+  guides(color = 'none') +
   xlab('difference in antibiotic use') +
   scale_y_continuous(
     'resistance difference (%)    ',
     labels = scales::percent_format(accuracy = 1, suffix = '')
   ) +
-  guides(color = 'none') +
   geom_text(data = panel3_text, aes(x, y, label = label), size = 8 / ggplot2::.pt) +
   theme_classic() +
   theme(
