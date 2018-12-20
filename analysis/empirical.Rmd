@@ -152,9 +152,6 @@ eu_adjacency = read_tsv('../db/europe_adjacency.tsv')
 Aggregate the data into regions: Census regions and divisions for US data, and UN Geoscheme regions for European data. Aggregate use data by population-weighted means. Aggregate resistance data by adding up the numbers of susceptible and resistant isolates.
 
 ```{r region_data}
-logodds = function(p) log(p / (1 - p))
-inv_logodds = function(q) 1 / (exp(-q) + 1)
-
 aggregate_at = function(df, group_chr) {
   stopifnot(class(group_chr) == 'character')
   group = as.symbol(group_chr)
@@ -213,7 +210,7 @@ pred_data_f = function(data, model) {
 }
 
 # do p-value calculations
-null_slopes_f = function(df, group_chr, n_trials = 99) {
+null_slopes_f = function(df, group_chr, n_trials = 999) {
   if(group_chr == 'unit') return(NA)
   
   map_dbl(1:n_trials, function(i) {
@@ -251,8 +248,13 @@ region_models = region_data %>%
 
 ```{r regional_results_table}
 region_models %>%
-  select(dataset, bugdrug, group_type, slope, slope_cil, slope_ciu, p_value) %>%
-  mutate_if(is.numeric, ~ round(., 2)) %>%
+  mutate(
+    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
+    group_type = factor(group_type, levels = c('unit', 'us_division', 'us_region', 'eu_region')),
+    slope = sprintf('%.2f (%.2f to %.2f)', slope, slope_cil, slope_ciu)
+  ) %>%
+  select(dataset, bugdrug, group_type, slope, p_value) %>%
+  arrange(dataset, bugdrug, group_type) %>%
   kable()
 ```
 
@@ -376,6 +378,9 @@ where $a$ is a flag for adjacency, we expect the interaction term $\beta_{\tau a
 adjacency_db = bind_rows(us_adjacency, eu_adjacency) %>%
   mutate(adjacent = 1)
 
+odds = function(p) p / (1 - p)
+log_odds_ratio = function(p, q) log(odds(p)) - log(odds(q))
+
 cross_units = function(df) {
   df %$%
     crossing(unit1 = unit, unit2 = unit) %>%
@@ -384,7 +389,7 @@ cross_units = function(df) {
     left_join(rename_all(df, ~ str_c(., '2')), by = 'unit2') %>%
     mutate(
       d_resistant = f_resistant1 - f_resistant2,
-      d_use = use1 - use2,
+      d_use = log_odds_ratio(use1, use2),
       d_income = income1 - income2,
       d_density = density1 - density2,
       d_temperature = temperature1 - temperature2
@@ -407,7 +412,7 @@ pair_model_f = function(df) {
   bisquare(d_resistant ~ d_use + d_use:adjacent + d_income + d_density + d_temperature, data = df)
 }
 
-null_interactions_f = function(df, n_trials = 99) {
+null_interactions_f = function(df, n_trials = 999) {
   replicate(n_trials, {
     df %>%
       shuffle_useres %>%
@@ -415,6 +420,16 @@ null_interactions_f = function(df, n_trials = 99) {
       pair_model_f %>%
       { unname(coef(.)['d_use:adjacent']) }
   })
+}
+
+confint.rlm = function(m) {
+  cs = coef(summary(m))
+  estimate = cs[, 'Value']
+  se = cs[, 'Std. Error']
+
+  cbind(estimate - 1.96 * se, estimate + 1.96 * se) %>%
+    set_rownames(names(estimate)) %>%
+    set_colnames(c('2.5%', '97.5%'))
 }
 
 distance_results = unit_data %>%
@@ -425,6 +440,9 @@ distance_results = unit_data %>%
     coef_d_use = map_dbl(model, ~ coef(.)['d_use']),
     coef_d_use_adjacent = map_dbl(model, ~ coef(.)['d_use:adjacent']),
     coef_ratio = coef_d_use_adjacent / coef_d_use,
+    ci = map(model, confint.rlm),
+    dua_cil = map_dbl(ci, ~ .['d_use:adjacent', 1]),
+    dua_ciu = map_dbl(ci, ~ .['d_use:adjacent', 2]),
     null_interactions = map(data, null_interactions_f),
     # the inequality is <, because actual is -1 and nulls are all around 0, we get strong (0) p value
     p_value = map2_dbl(null_interactions, coef_d_use_adjacent, ~ (sum(.x < .y) + 1) / (length(.x) + 1))
@@ -433,24 +451,31 @@ distance_results = unit_data %>%
 
 ```{r distance_results_table}
 distance_results %>%
-  select(dataset, bugdrug, coef_d_use, coef_d_use_adjacent, coef_ratio, p_value) %>%
+  mutate(
+    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
+    interaction = sprintf('%.2f (%.2f to %.2f)', coef_d_use_adjacent, dua_cil, dua_ciu)
+  ) %>%
+  mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
+  select(dataset, bugdrug, interaction, p_value, sig) %>%
+  arrange(dataset, bugdrug) %>%
   kable()
 ```
 
 ### Plots
+
+First plot shows MS/RO and Sp/m.
 
 ```{r distance_plots}
 main_distance_plot = distance_results %>%
   filter(dataset == 'marketscan', bugdrug == 'Sp/m') %$%
   pair_data[[1]] %>%
   mutate(adjacent = adjacent == 1) %>%
-  ggplot(aes(d_use, d_resistant)) +
-  geom_point(aes(shape = adjacent)) +
-  scale_shape_manual(values = c(1, 16)) +
-  stat_smooth(aes(linetype = adjacent), method = 'rlm', color = 'black', size = 0.5) +
-  scale_linetype_manual(values = c(1, 2)) +
+  ggplot(aes(d_use, d_resistant, color = adjacent)) +
+  geom_point(shape = 1) +
+  stat_smooth(method = 'rlm') +
+  scale_color_manual(values = c('black', 'red')) +
   xlab('Difference in antibiotic use (annual treatments per capita)') +
-  ylab('Absolute difference in proportion of isolates resistant') +
+  ylab('Difference in resistance (log odds ratio)') +
   theme_classic() +
   theme(
     legend.position = 'none',
@@ -459,7 +484,7 @@ main_distance_plot = distance_results %>%
     axis.title = element_text(size = 8)
   )
 
-show(eu_ecq_distance_plot)
+show(main_distance_plot)
 
 other_distance_plot = distance_results %>%
   filter(!(dataset == 'marketscan' & bugdrug == 'Sp/m')) %>%
@@ -476,7 +501,7 @@ other_distance_plot = distance_results %>%
   stat_smooth(method = 'rlm') +
   scale_color_manual(values = c('black', 'red')) +
   xlab('Difference in antibiotic use (annual treatments per capita)') +
-  ylab('Absolute difference in proportion of isolates resistant') +
+  ylab('Difference in resistance (log odds ratio)') +
   theme_classic() +
   theme(
     legend.position = 'none',
