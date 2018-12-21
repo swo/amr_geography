@@ -336,7 +336,6 @@ whn_nest_contrast = whn_nest_subset %>%
   mutate(data = map(data, cross_nest)) %>%
   unnest() %>%
   mutate(
-    lor = log_odds_ratio(rho1, rho2),
     d_rho = rho1 - rho2,
     d_tau = tau1 - tau2,
     adjacent = superpop1 == superpop2
@@ -351,7 +350,7 @@ panel1 = whn_nest_subset %>%
   geom_point(shape = 1) +
   guides(color = 'none') +
   scale_x_continuous(
-    'antibiotic use',
+    'antibiotic use (monthly treatments per capita)',
     limits = c(0.05, 0.2)
   ) +
   scale_y_continuous(
@@ -376,7 +375,7 @@ panel2 = whn_nest_region %>%
   geom_point(aes(color = factor(superpop)), size = 2) +
   guides(color = 'none') +
   scale_x_continuous(
-    'antibiotic use',
+    'antibiotic use (monthly treatments per capita)',
     limits = c(0.05, 0.2)
   ) +
   scale_y_continuous(
@@ -413,7 +412,7 @@ panel3 = whn_nest_contrast %>%
     values = c('black', 'red'),
     labels = c('not adjacent', 'adjacent')
   ) +
-  xlab('difference in antibiotic use') +
+  xlab('difference in antibiotic use (monthly treatments per capita)') +
   scale_y_continuous(
     'resistance difference (%)    ',
     labels = scales::percent_format(accuracy = 1, suffix = '')
@@ -453,7 +452,7 @@ whn_nest_plot = whn_nest_results %>%
   geom_point(aes(shape = factor(superpop))) +
   scale_shape_manual(values = c(16, 1, 15, 0)) +
   scale_x_continuous(
-    name = 'antibiotic use (yearly treatments per person)',
+    name = 'antibiotic use (monthly treatments per person)',
     limits = c(0.5, 2.5), breaks = c(0.5, 1.5, 2.5),
     sec.axis = sec_axis(
       trans = ~ .,
@@ -857,7 +856,6 @@ dtypes_nest_contrast = dtypes_nest_subset %>%
   mutate(data = map(data, cross_nest)) %>%
   unnest() %>%
   mutate(
-    lor = log_odds_ratio(rho1, rho2),
     d_rho = rho1 - rho2,
     d_tau = tau1 - tau2,
     adjacent = superpop1 == superpop2
@@ -870,7 +868,7 @@ panel1 = dtypes_nest_subset %>%
   geom_point(shape = 1) +
   guides(color = 'none') +
   scale_x_continuous(
-    'antibiotic use',
+    'antibiotic use (monthly treatments per capita)',
     limits = c(0.05, 0.2)
   ) +
   scale_y_continuous(
@@ -895,7 +893,7 @@ panel2 = dtypes_nest_region %>%
   geom_point(aes(color = factor(superpop)), size = 2) +
   guides(color = 'none') +
   scale_x_continuous(
-    'antibiotic use',
+    'antibiotic use (monthly treatments per capita)',
     limits = c(0.05, 0.2)
   ) +
   scale_y_continuous(
@@ -929,7 +927,7 @@ panel3 = dtypes_nest_contrast %>%
   geom_smooth(method = 'lm', se = FALSE) +
   scale_color_manual(values = c('black', 'red')) +
   guides(color = 'none') +
-  xlab('difference in antibiotic use') +
+  xlab('difference in antibiotic use (monthly treatments per capita)') +
   scale_y_continuous(
     'resistance difference (%)    ',
     labels = scales::percent_format(accuracy = 1, suffix = '')
@@ -975,7 +973,7 @@ dtypes_nest_plot = dtypes_nest_results %>%
   geom_point(aes(shape = factor(superpop))) +
   scale_shape_manual(values = c(16, 1, 15, 0)) +
   scale_x_continuous(
-    name = 'antibiotic use (yearly treatments per person)',
+    name = 'antibiotic use (monthly treatments per person)',
     limits = c(0.5, 2.5), breaks = c(0.5, 1.5, 2.5),
     sec.axis = sec_axis(
       trans = ~ .,
