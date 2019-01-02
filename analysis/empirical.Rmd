@@ -172,7 +172,10 @@ aggregate_at = function(df, group_chr) {
 
 region_data = region_combinations %>%
   mutate(
-    unit_data = map2(dataset, bugdrug, ~ filter(unit_data, dataset == .x, bugdrug == .y)),
+    unit_data = map2(
+      dataset, bugdrug,
+      ~ filter(unit_data, dataset == .x, bugdrug == .y)
+    ),
     region_data = map2(unit_data, group_type, aggregate_at)
   )
 ```
@@ -180,47 +183,42 @@ region_data = region_combinations %>%
 Run logistic regressions predicting resistance from use rates for each dataset, bug/drug, and group type. Group types include baseline "units" (US states or European countries), US Census regions, etc. Get a $p$-value on whether the slopes in the aggregates are different than the ones in the baseline units by shuffling the region labels.
 
 ```{r regional_analysis}
-model_f = function(df) {
-  glm(
-    cbind(n_resistant, n_susceptible) ~ use,
-    family = 'binomial', data = df
-  )
-}
+model_f = function(df) glm(
+  cbind(n_resistant, n_susceptible) ~ use,
+  family = 'binomial', data = df
+)
 
-pred_data_f = function(data, model) {
-  # x-values to make the predictions on
-  pred_use = seq(
-    from = min(data$use), to = max(data$use),
-    length.out = 100
-  )
+# compute indices, models, and predictions
+region_boot_f = function(df, group_chr, n_trials = 1e2, alpha = 0.05, pred_n = 1e4) {
+  pred_use = seq(min(df$use), max(df$use), length.out = pred_n)
+  newdata = data_frame(use = pred_use)
   
-  # prediction object
-  pred = predict(
-    model, newdata = data_frame(use = pred_use),
-    type = 'response', se.fit = TRUE
-  )
+  results = data_frame(i = 1:n_trials) %>%
+    mutate(
+      # get bootstrapped data sets
+      unit_data = map(df, ~ sample_n(., size = nrow(.), replace = TRUE)),
+      data = map(unit_data, ~ aggregate_at(., group_chr)),
+      # run the model and predict the outcomes
+      model = map(data, model_f),
+      slope = map_dbl(model, ~ coef(.)['use']),
+      pred_res = map(model, ~ predict(., newdata = newdata, type = 'response')),
+      pred_df = map(pred_res, ~ data_frame(use = pred_use, res = .))
+    )
   
-  # prediction "data" points
-  data_frame(
-    use = pred_use,
-    res = pred$fit,
-    ymax = pred$fit + 1.96 * pred$se.fit,
-    ymin = pred$fit - 1.96 * pred$se.fit
-  )
-}
-
-# do p-value calculations
-null_slopes_f = function(df, group_chr, n_trials = 999) {
-  if(group_chr == 'unit') return(NA)
+  # at each point pred_use, get the CIs for the predictions
+  pred_data = results %>%
+    select(i, pred_df) %>% unnest() %>%
+    group_by(use) %>%
+    summarize(
+      ymin = quantile(res, alpha / 2),
+      ymax = quantile(res, 1 - alpha / 2)
+    )
   
-  map_dbl(1:n_trials, function(i) {
-    df %>%
-      # shuffle the group variable values
-      mutate_at(group_chr, sample) %>%
-      aggregate_at(group_chr) %>%
-      model_f() %>%
-      { coef(.)['use'] }
-  })
+  list(
+    slope_cil = quantile(results$slope, alpha / 2),
+    slope_ciu = quantile(results$slope, 1 - alpha / 2),
+    pred_data = pred_data
+  )
 }
 
 region_models = region_data %>%
@@ -232,17 +230,16 @@ region_models = region_data %>%
     ci = map(model, confint.default),
     slope_cil = map_dbl(ci, ~ .['use', 1]),
     slope_ciu = map_dbl(ci, ~ .['use', 2]),
-    # get data needed to plot the 95% CI fit line
-    pred_data = map2(region_data, model, pred_data_f),
-    # get range of null slopes
-    null_slopes = map2(unit_data, group_type, null_slopes_f)
+    # bootstrapping
+    boot_results = map2(unit_data, group_type, region_boot_f),
+    boot_cil = map_dbl(boot_results, ~ .$slope_cil),
+    boot_ciu = map_dbl(boot_results, ~ .$slope_ciu),
+    pred_data = map(boot_results, ~ .$pred_data)
   ) %>%
   # the "base" slopes are the cross-unit measurements
   group_by(dataset, bugdrug) %>%
   mutate(base_slope = slope[group_type == 'unit']) %>%
   ungroup() %>%
-  # p-values are empirical, looking at null slopes
-  mutate(p_value = map2_dbl(null_slopes, base_slope, ~ (sum(.x > .y) + 1) / (length(.x) + 1))) %>%
   arrange(dataset, bugdrug, group_type)
 ```
 
@@ -253,9 +250,15 @@ region_models %>%
     group_type = factor(group_type, levels = c('unit', 'us_division', 'us_region', 'eu_region')),
     slope = sprintf('%.2f (%.2f to %.2f)', slope, slope_cil, slope_ciu)
   ) %>%
-  select(dataset, bugdrug, group_type, slope, p_value) %>%
+  select(dataset, bugdrug, group_type, slope) %>%
   arrange(dataset, bugdrug, group_type) %>%
   kable()
+
+region_models %>%
+  ggplot(aes(group_type, slope, ymin = slope_cil, ymax = slope_ciu)) +
+  facet_wrap(~ dataset + bugdrug, scales = 'free') +
+  geom_point() +
+  geom_errorbar()
 ```
 
 ### Plots
@@ -295,27 +298,19 @@ marketscan_region_plot_data = region_plot_data %>%
 marketscan_region_pred_data = region_pred_data %>%
   filter(dataset == 'MarketScan/RO')
 
-# and the other stuff
-other_region_plot_data = region_plot_data %>%
-  filter(dataset != 'MarketScan/RO')
+my_palette = c('black', '#1b9e77', '#d95f02')
 
-other_region_pred_data = region_pred_data %>%
-  filter(dataset != 'MarketScan/RO')
-
-marketscan_regional_plot = ggplot(data = NULL, aes(use, res)) +
+marketscan_regional_plot = ggplot(data = NULL, aes(use, color = group_fct, fill = group_fct)) +
   facet_wrap(~ long_bugdrug, scales = 'free') +
   geom_ribbon(
     data = marketscan_region_pred_data,
-    aes(ymin = ymin, ymax = ymax, fill = group_fct),
-    color = NA, alpha = 0.25
+    aes(ymin = ymin, ymax = ymax),
+    alpha = 0.25
   ) +
-  scale_fill_manual(values = rep('black', 3)) +
-  geom_point(data = marketscan_region_plot_data, aes(shape = group_fct)) +
-  # unit = open circle, division = open triangle, region = filled circle
-  scale_shape_manual(values = c(1, 2, 16)) +
-  geom_line(data = marketscan_region_pred_data, aes(linetype = group_fct)) +
-  # unit = solid line, division = dotted, region = dashed
-  scale_linetype_manual(values = c(1, 3, 5)) +
+  scale_fill_manual(values = my_palette) +
+  scale_color_manual(values = my_palette) +
+  geom_point(data = marketscan_region_plot_data, aes(y = res)) +
+  geom_smooth(data = marketscan_region_plot_data, aes(y = res), method = 'lm', se = FALSE) +
   xlab('antibiotic use (annual treatments per capita)') +
   scale_y_continuous(
     'antibiotic resistance (% of isolates)',
@@ -332,16 +327,28 @@ marketscan_regional_plot = ggplot(data = NULL, aes(use, res)) +
 
 show(marketscan_regional_plot)
 
-other_regional_plot = ggplot(data = NULL, aes(use, res)) +
+ggsave(
+  'fig/marketscan_regional.pdf',
+  plot = marketscan_regional_plot,
+  width = 180, height = 80, units = 'mm'
+)
+```
+
+```{r other_regional_results_plot}
+# and the other stuff
+other_region_plot_data = region_plot_data %>%
+  filter(dataset != 'MarketScan/RO')
+
+other_region_pred_data = region_pred_data %>%
+  filter(dataset != 'MarketScan/RO')
+
+other_regional_plot = ggplot(data = NULL, aes(use, color = group_fct, fill = group_fct)) +
   facet_wrap(~ label, scales = 'free') +
-  geom_ribbon(data = other_region_pred_data, aes(ymin = ymin, ymax = ymax, fill = group_fct), color = NA, alpha = 0.25) +
-  scale_fill_manual(values = rep('black', 3)) +
-  geom_point(data = other_region_plot_data, aes(shape = group_fct)) +
-  # unit = open circle, division = open triangle, region = filled circle
-  scale_shape_manual(values = c(1, 2, 16)) +
-  geom_line(data = other_region_pred_data, aes(linetype = group_fct)) +
-  # unit = solid line, division = dotted, region = dashed
-  scale_linetype_manual(values = c(1, 3, 5)) +
+  geom_ribbon(data = other_region_pred_data, aes(ymin = ymin, ymax = ymax), alpha = 0.25) +
+  scale_fill_manual(values = my_palette) +
+  scale_color_manual(values = my_palette) +
+  geom_point(data = other_region_plot_data, aes(y = res)) +
+  geom_smooth(data = other_region_plot_data, aes(y = res), method = 'lm', se = FALSE) +
   xlab('antibiotic use (annual treatments per capita)') +
   scale_y_continuous(
     'antibiotic resistance (% of isolates)',
@@ -357,12 +364,6 @@ other_regional_plot = ggplot(data = NULL, aes(use, res)) +
   )
 
 show(other_regional_plot)
-
-ggsave(
-  'fig/marketscan_regional.pdf',
-  plot = marketscan_regional_plot,
-  width = 180, height = 80, units = 'mm'
-)
 
 ggsave(
   'fig/other_regional.pdf',
@@ -406,36 +407,48 @@ cross_units = function(df) {
     replace_na(list(adjacent = 0))
 }
 
-# shuffle the use/resistance values, keeping adjacency, income, etc.
-shuffle_useres = function(df) {
-  new_order = sample(nrow(df))
-  df %>%
-    mutate_at(c('f_resistant', 'use'), ~ .[new_order])
-}
-
 bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
-pair_model_f = function(df) {
-  bisquare(d_resistant ~ d_use + d_use:adjacent + d_income + d_density + d_temperature, data = df)
-}
+pair_model_f = function(df) bisquare(d_resistant ~ d_use + d_use:adjacent + d_income + d_density + d_temperature, data = df)
 
-null_interactions_f = function(df, n_trials = 999) {
-  replicate(n_trials, {
-    df %>%
-      shuffle_useres %>%
-      cross_units %>%
-      pair_model_f %>%
-      { unname(coef(.)['d_use:adjacent']) }
-  })
-}
-
-confint.rlm = function(m) {
-  cs = coef(summary(m))
-  estimate = cs[, 'Value']
-  se = cs[, 'Std. Error']
-
-  cbind(estimate - 1.96 * se, estimate + 1.96 * se) %>%
-    set_rownames(names(estimate)) %>%
-    set_colnames(c('2.5%', '97.5%'))
+# compute indices, models, and predictions
+distance_boot_f = function(df, n_trials = 1e2, alpha = 0.05, pred_n = 1e4) {
+  base_x = df %>% cross_units %$% d_use
+  pred_d_use = seq(min(base_x), max(base_x), length.out = pred_n)
+  newdata = crossing(
+    d_use = pred_d_use,
+    adjacent = c(0, 1),
+    d_income = 0,
+    d_density = 0,
+    d_temperature = 0
+  )
+  
+  results = data_frame(i = 1:n_trials) %>%
+    mutate(
+      # get bootstrapped data sets
+      unit_data = map(i, ~ sample_n(df, size = nrow(df), replace = TRUE)),
+      cross_data = map(unit_data, cross_units),
+      # run the model and predict the outcomes
+      model = map(cross_data, pair_model_f),
+      inter = map_dbl(model, ~ coef(.)['d_use:adjacent']),
+      pred_y = map(model, ~ predict(., newdata = newdata, type = 'response')),
+      pred_df = map(pred_y, ~ mutate(newdata, d_res = .))
+    )
+  
+  # at each point pred_use, get the CIs for the predictions
+  pred_data = results %>%
+    select(i, pred_df) %>% unnest() %>%
+    group_by(d_use, adjacent) %>%
+    summarize(
+      ymin = quantile(d_res, alpha / 2),
+      ymax = quantile(d_res, 1 - alpha / 2)
+    ) %>%
+    ungroup()
+  
+  list(
+    inter_cil = quantile(results$inter, alpha / 2),
+    inter_ciu = quantile(results$inter, 1 - alpha / 2),
+    pred_data = pred_data
+  )
 }
 
 distance_results = unit_data %>%
@@ -443,15 +456,12 @@ distance_results = unit_data %>%
   mutate(
     pair_data = map(data, cross_units),
     model = map(pair_data, pair_model_f),
-    coef_d_use = map_dbl(model, ~ coef(.)['d_use']),
-    coef_d_use_adjacent = map_dbl(model, ~ coef(.)['d_use:adjacent']),
-    coef_ratio = coef_d_use_adjacent / coef_d_use,
-    ci = map(model, confint.rlm),
-    dua_cil = map_dbl(ci, ~ .['d_use:adjacent', 1]),
-    dua_ciu = map_dbl(ci, ~ .['d_use:adjacent', 2]),
-    null_interactions = map(data, null_interactions_f),
-    # the inequality is <, because actual is -1 and nulls are all around 0, we get strong (0) p value
-    p_value = map2_dbl(null_interactions, coef_d_use_adjacent, ~ (sum(.x < .y) + 1) / (length(.x) + 1))
+    inter = map_dbl(model, ~ coef(.)['d_use:adjacent']),
+    # bootstrapping
+    boot_results = map(data, distance_boot_f),
+    inter_cil = map_dbl(boot_results, ~ .$inter_cil),
+    inter_ciu = map_dbl(boot_results, ~ .$inter_ciu),
+    pred_data = map(boot_results, ~ .$pred_data)
   )
 ```
 
@@ -459,10 +469,9 @@ distance_results = unit_data %>%
 distance_results %>%
   mutate(
     dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
-    interaction = sprintf('%.2f (%.2f to %.2f)', coef_d_use_adjacent, dua_cil, dua_ciu)
+    interaction = sprintf('%.2f (%.2f to %.2f)', inter, inter_cil, inter_ciu)
   ) %>%
-  mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
-  select(dataset, bugdrug, interaction, p_value, sig) %>%
+  select(dataset, bugdrug, interaction) %>%
   arrange(dataset, bugdrug) %>%
   kable()
 ```
@@ -472,14 +481,22 @@ distance_results %>%
 First plot shows MS/RO and Sp/m.
 
 ```{r distance_plots}
-main_distance_plot = distance_results %>%
+main_distance_plot_data = distance_results %>%
   filter(dataset == 'marketscan', bugdrug == 'Sp/m') %$%
   pair_data[[1]] %>%
-  mutate(adjacent = adjacent == 1) %>%
-  ggplot(aes(d_use, d_resistant, color = adjacent)) +
-  geom_point(shape = 1) +
-  stat_smooth(method = 'rlm') +
+  mutate(adjacent = adjacent == 1)
+
+main_distance_pred_data = distance_results %>%
+  filter(dataset == 'marketscan', bugdrug == 'Sp/m') %$%
+  pred_data[[1]] %>%
+  mutate(adjacent = adjacent == 1)
+
+main_distance_plot = ggplot(data = NULL, aes(d_use, color = adjacent, fill = adjacent)) +
+  geom_point(data = main_distance_plot_data, aes(y = d_resistant), shape = 1) +
+  stat_smooth(data = main_distance_plot_data, aes(y = d_resistant), method = 'rlm', se = FALSE) +
+  geom_ribbon(data = main_distance_pred_data, aes(ymin = ymin, ymax = ymax), alpha = 0.25) + 
   scale_color_manual(values = c('black', 'red')) +
+  scale_fill_manual(values = c('black', 'red')) +
   xlab('Difference in antibiotic use (annual treatments per capita)') +
   ylab('Difference in resistance (log odds ratio)') +
   theme_classic() +
@@ -491,7 +508,7 @@ main_distance_plot = distance_results %>%
 
 show(main_distance_plot)
 
-other_distance_plot = distance_results %>%
+other_distance_plot_data = distance_results %>%
   filter(!(dataset == 'marketscan' & bugdrug == 'Sp/m')) %>%
   select(dataset, bugdrug, pair_data) %>%
   unnest() %>%
@@ -499,12 +516,25 @@ other_distance_plot = distance_results %>%
     adjacent = adjacent == 1,
     dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
     label = str_c(dataset, ' ', bugdrug)
-  ) %>%
-  ggplot(aes(d_use, d_resistant, color = adjacent)) +
+  )
+
+other_distance_pred_data = distance_results %>%
+  filter(!(dataset == 'marketscan' & bugdrug == 'Sp/m')) %>%
+  select(dataset, bugdrug, pred_data) %>%
+  unnest() %>%
+  mutate(
+    adjacent = adjacent == 1,
+    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
+    label = str_c(dataset, ' ', bugdrug)
+  )
+
+other_distance_plot = ggplot(data = NULL, aes(d_use, color = adjacent, fill = adjacent)) +
   facet_wrap(~ label, scales = 'free') +
-  geom_point(shape = 1, size = 0.5) +
-  stat_smooth(method = 'rlm') +
+  geom_point(data = other_distance_plot_data, aes(y = d_resistant), shape = 1, size = 0.5) +
+  stat_smooth(data = other_distance_plot_data, aes(y = d_resistant), method = 'rlm', se = FALSE) +
+  geom_ribbon(data = other_distance_pred_data, aes(ymin = ymin, ymax = ymax), alpha = 0.25) + 
   scale_color_manual(values = c('black', 'red')) +
+  scale_fill_manual(values = c('black', 'red')) +
   xlab('Difference in antibiotic use (annual treatments per capita)') +
   ylab('Difference in resistance (log odds ratio)') +
   theme_classic() +
