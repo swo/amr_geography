@@ -189,14 +189,24 @@ model_f = function(df) glm(
 )
 
 # compute indices, models, and predictions
-region_boot_f = function(df, group_chr, n_trials = 1e2, alpha = 0.05, pred_n = 1e4) {
+region_boot_f = function(df, group_chr, n_trials = 1e3, alpha = 0.05, pred_n = 1e4) {
   pred_use = seq(min(df$use), max(df$use), length.out = pred_n)
   newdata = data_frame(use = pred_use)
+  
+  # get predictions from base model
+  model = df %>%
+    aggregate_at(group_chr) %>%
+    model_f
+
+  model_pred = data_frame(
+    use = pred_use,
+    res = predict(model, newdata = newdata, type = 'response')
+  )
   
   results = data_frame(i = 1:n_trials) %>%
     mutate(
       # get bootstrapped data sets
-      unit_data = map(df, ~ sample_n(., size = nrow(.), replace = TRUE)),
+      unit_data = map(i, ~ sample_n(df, size = nrow(df), replace = TRUE)),
       data = map(unit_data, ~ aggregate_at(., group_chr)),
       # run the model and predict the outcomes
       model = map(data, model_f),
@@ -212,7 +222,8 @@ region_boot_f = function(df, group_chr, n_trials = 1e2, alpha = 0.05, pred_n = 1
     summarize(
       ymin = quantile(res, alpha / 2),
       ymax = quantile(res, 1 - alpha / 2)
-    )
+    ) %>%
+    left_join(model_pred, by = 'use')
   
   list(
     slope_cil = quantile(results$slope, alpha / 2),
@@ -225,15 +236,12 @@ region_models = region_data %>%
   mutate(
     # fit models to each dataset, bugdrug, & aggregate type
     model = map(region_data, model_f),
-    # extract "slope" and CIs around that value
+    # extract "slope" from base model
     slope = map_dbl(model, ~ coef(.)['use']),
-    ci = map(model, confint.default),
-    slope_cil = map_dbl(ci, ~ .['use', 1]),
-    slope_ciu = map_dbl(ci, ~ .['use', 2]),
     # bootstrapping
     boot_results = map2(unit_data, group_type, region_boot_f),
-    boot_cil = map_dbl(boot_results, ~ .$slope_cil),
-    boot_ciu = map_dbl(boot_results, ~ .$slope_ciu),
+    slope_cil = map_dbl(boot_results, ~ .$slope_cil),
+    slope_ciu = map_dbl(boot_results, ~ .$slope_ciu),
     pred_data = map(boot_results, ~ .$pred_data)
   ) %>%
   # the "base" slopes are the cross-unit measurements
@@ -243,27 +251,11 @@ region_models = region_data %>%
   arrange(dataset, bugdrug, group_type)
 ```
 
-```{r regional_results_table}
-region_models %>%
-  mutate(
-    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
-    group_type = factor(group_type, levels = c('unit', 'us_division', 'us_region', 'eu_region')),
-    slope = sprintf('%.2f (%.2f to %.2f)', slope, slope_cil, slope_ciu)
-  ) %>%
-  select(dataset, bugdrug, group_type, slope) %>%
-  arrange(dataset, bugdrug, group_type) %>%
-  kable()
-
-region_models %>%
-  ggplot(aes(group_type, slope, ymin = slope_cil, ymax = slope_ciu)) +
-  facet_wrap(~ dataset + bugdrug, scales = 'free') +
-  geom_point() +
-  geom_errorbar()
-```
-
 ### Plots
 
 ```{r regional_results_plot}
+my_palette = c('black', '#1b9e77', '#d95f02')
+
 plotify_region_data = function(df) {
   df %>%
     mutate(
@@ -298,19 +290,17 @@ marketscan_region_plot_data = region_plot_data %>%
 marketscan_region_pred_data = region_pred_data %>%
   filter(dataset == 'MarketScan/RO')
 
-my_palette = c('black', '#1b9e77', '#d95f02')
-
-marketscan_regional_plot = ggplot(data = NULL, aes(use, color = group_fct, fill = group_fct)) +
+marketscan_regional_plot = ggplot(data = NULL, aes(use, res, color = group_fct, fill = group_fct)) +
   facet_wrap(~ long_bugdrug, scales = 'free') +
   geom_ribbon(
     data = marketscan_region_pred_data,
     aes(ymin = ymin, ymax = ymax),
     alpha = 0.25
   ) +
+  geom_line(data = marketscan_region_pred_data, size = 1) +
+  geom_point(data = marketscan_region_plot_data) +
   scale_fill_manual(values = my_palette) +
   scale_color_manual(values = my_palette) +
-  geom_point(data = marketscan_region_plot_data, aes(y = res)) +
-  geom_smooth(data = marketscan_region_plot_data, aes(y = res), method = 'lm', se = FALSE) +
   xlab('antibiotic use (annual treatments per capita)') +
   scale_y_continuous(
     'antibiotic resistance (% of isolates)',
@@ -342,13 +332,13 @@ other_region_plot_data = region_plot_data %>%
 other_region_pred_data = region_pred_data %>%
   filter(dataset != 'MarketScan/RO')
 
-other_regional_plot = ggplot(data = NULL, aes(use, color = group_fct, fill = group_fct)) +
+other_regional_plot = ggplot(data = NULL, aes(use, res, color = group_fct, fill = group_fct)) +
   facet_wrap(~ label, scales = 'free') +
   geom_ribbon(data = other_region_pred_data, aes(ymin = ymin, ymax = ymax), alpha = 0.25) +
   scale_fill_manual(values = my_palette) +
   scale_color_manual(values = my_palette) +
-  geom_point(data = other_region_plot_data, aes(y = res)) +
-  geom_smooth(data = other_region_plot_data, aes(y = res), method = 'lm', se = FALSE) +
+  geom_point(data = other_region_plot_data) +
+  geom_line(data = other_region_pred_data) +
   xlab('antibiotic use (annual treatments per capita)') +
   scale_y_continuous(
     'antibiotic resistance (% of isolates)',
@@ -368,6 +358,44 @@ show(other_regional_plot)
 ggsave(
   'fig/other_regional.pdf',
   plot = other_regional_plot,
+  width = 180, height = 120, units = 'mm'
+)
+```
+
+```{r regional_slopes_plot}
+region_slopes_plot = region_models %>%
+  mutate(
+    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
+    group_type = factor(
+      group_type,
+      levels = c('unit', 'us_division', 'us_region', 'eu_region'),
+      labels = c('Unit', 'Division', 'Region', 'Region')
+    ),
+    long_bugdrug = recode(bugdrug, 'Ec/q' = 'E. coli & quinolones', 'Sp/m' = 'S. pneumonia & macrolides', 'Sp/bl' = 'S. pneumoniae & beta-lactams'),
+    label = str_c(dataset, ' ', bugdrug)
+  ) %>%
+  ggplot(aes(group_type, slope, color = group_type, ymin = slope_cil, ymax = slope_ciu)) +
+  facet_wrap(~ label, scales = 'free') +
+  geom_point() +
+  geom_errorbar() +
+  # make US and European regions the same color
+  scale_color_manual(values = my_palette[c(1, 2, 3, 3)]) +
+  xlab('') +
+  ylab('Regression coefficient') +
+  theme_classic() +
+  theme(
+    legend.position = 'none',
+    strip.text = element_text(size = 8),
+    strip.background = element_blank(),
+    axis.text = element_text(size = 8, color = 'black'),
+    axis.title = element_text(size = 8)
+  )
+
+show(region_slopes_plot)
+
+ggsave(
+  'fig/region_slopes.pdf',
+  plot = region_slopes_plot,
   width = 180, height = 120, units = 'mm'
 )
 ```
@@ -411,7 +439,7 @@ bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
 pair_model_f = function(df) bisquare(d_resistant ~ d_use + d_use:adjacent + d_income + d_density + d_temperature, data = df)
 
 # compute indices, models, and predictions
-distance_boot_f = function(df, n_trials = 1e2, alpha = 0.05, pred_n = 1e4) {
+distance_boot_f = function(df, n_trials = 1e3, alpha = 0.05, pred_n = 1e4) {
   base_x = df %>% cross_units %$% d_use
   pred_d_use = seq(min(base_x), max(base_x), length.out = pred_n)
   newdata = crossing(
