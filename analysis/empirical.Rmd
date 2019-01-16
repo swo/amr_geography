@@ -412,7 +412,7 @@ $$
 $$
 where $a$ is a flag for adjacency, we expect the interaction term $\beta_{\tau a}$ will be negative.
 
-```{r distance_analysis}
+```{r distance_analysis_helpers}
 # because no US states and European countries share names, it's OK to combine this list
 adjacency_db = bind_rows(us_adjacency, eu_adjacency) %>%
   mutate(adjacent = 1)
@@ -441,18 +441,27 @@ cross_units = function(df) {
 
 bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
 pair_model_f = function(df) bisquare(d_resistant ~ d_use + d_use:adjacent + d_income + d_density + d_temperature, data = df)
+```
 
+```{r distance_analysis}
 # compute indices, models, and predictions
 distance_boot_f = function(df, n_trials = 1e3, alpha = 0.05, pred_n = 1e4) {
-  base_x = df %>% cross_units %$% d_use
+  base_cross = cross_units(df)
+  
+  base_x = base_cross$d_use
   pred_d_use = seq(min(base_x), max(base_x), length.out = pred_n)
   newdata = crossing(
     d_use = pred_d_use,
     adjacent = c(0, 1),
-    d_income = 0,
-    d_density = 0,
-    d_temperature = 0
+    d_income = mean(base_cross$d_income),
+    d_density = mean(base_cross$d_density),
+    d_temperature = mean(base_cross$d_temperature)
   )
+  
+  base_model = pair_model_f(base_cross)
+  base_pred = newdata %>%
+    mutate(d_resistant = predict(base_model, newdata = newdata, type = 'response')) %>%
+    select(d_use, adjacent, d_resistant)
   
   results = data_frame(i = 1:n_trials) %>%
     mutate(
@@ -474,7 +483,9 @@ distance_boot_f = function(df, n_trials = 1e3, alpha = 0.05, pred_n = 1e4) {
       ymin = quantile(d_res, alpha / 2),
       ymax = quantile(d_res, 1 - alpha / 2)
     ) %>%
-    ungroup()
+    ungroup() %>%
+    # merge back in the base prediction data for the solid line
+    left_join(base_pred, by = c('d_use', 'adjacent'))
   
   list(
     inter_cil = quantile(results$inter, alpha / 2),
@@ -517,20 +528,20 @@ main_distance_plot_data = distance_results %>%
   filter(dataset == 'marketscan', bugdrug == 'Sp/m') %$%
   pair_data[[1]] %>%
   mutate(adjacent = adjacent == 1)
-
+  
 main_distance_pred_data = distance_results %>%
   filter(dataset == 'marketscan', bugdrug == 'Sp/m') %$%
   pred_data[[1]] %>%
   mutate(adjacent = adjacent == 1)
 
-main_distance_plot = ggplot(data = NULL, aes(d_use, color = adjacent, fill = adjacent)) +
-  geom_point(data = main_distance_plot_data, aes(y = d_resistant), shape = 1) +
-  stat_smooth(data = main_distance_plot_data, aes(y = d_resistant), method = 'rlm', se = FALSE) +
+main_distance_plot = ggplot(data = NULL, aes(d_use, d_resistant, color = adjacent, fill = adjacent)) +
   geom_ribbon(
     data = main_distance_pred_data,
     aes(ymin = ymin, ymax = ymax, color = NULL),
     alpha = 0.25
   ) + 
+  geom_line(data = main_distance_pred_data) +
+  geom_point(data = main_distance_plot_data, shape = 1) +
   scale_color_manual(values = c('black', 'red')) +
   scale_fill_manual(values = c('black', 'red')) +
   xlab('Difference in antibiotic use (annual treatments per capita)') +
@@ -565,21 +576,15 @@ other_distance_pred_data = distance_results %>%
   )
 
 other_distance_plot = ggplot(
-  data = NULL, aes(d_use, color = adjacent, fill = adjacent)
+  data = NULL, aes(d_use, d_resistant, color = adjacent, fill = adjacent)
 ) +
   facet_wrap(~ label, scales = 'free') +
-  geom_point(
-    data = other_distance_plot_data, aes(y = d_resistant),
-    shape = 1, size = 0.5
-  ) +
-  stat_smooth(
-    data = other_distance_plot_data,
-    aes(y = d_resistant), method = 'rlm', se = FALSE
-  ) +
   geom_ribbon(
     data = other_distance_pred_data,
     aes(ymin = ymin, ymax = ymax, color = NULL), alpha = 0.25
   ) + 
+  geom_line(data = other_distance_pred_data) +
+  geom_point(data = other_distance_plot_data, shape = 1, size = 0.5) +
   scale_color_manual(values = c('black', 'red')) +
   scale_fill_manual(values = c('black', 'red')) +
   xlab('Difference in antibiotic use (annual treatments per capita)') +
