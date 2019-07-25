@@ -259,8 +259,13 @@ my_palette = c('black', '#1b9e77', '#d95f02')
 plotify_region_data = function(df) {
   df %>%
     mutate(
-      dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
-      long_bugdrug = recode(bugdrug, 'Ec/q' = 'E. coli & quinolones', 'Sp/m' = 'S. pneumonia & macrolides', 'Sp/bl' = 'S. pneumoniae & beta-lactams'),
+      dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'Xponent/NHSN'),
+      long_bugdrug = recode(
+        bugdrug,
+        'Ec/q' = 'italic("E. coli")~"& quinolones"',
+        'Sp/m' = 'italic("S. pneumoniae")~"& macrolides"',
+        'Sp/bl' = 'italic("S. pneumoniae")~"& beta-lactams"'
+      ),
       label = str_c(dataset, ' ', bugdrug),
       group_fct = factor(case_when(
         group_type == 'unit' ~ 'unit',
@@ -291,7 +296,7 @@ marketscan_region_pred_data = region_pred_data %>%
   filter(dataset == 'MarketScan/RO')
 
 marketscan_regional_plot = ggplot(data = NULL, aes(use, res, color = group_fct, fill = group_fct)) +
-  facet_wrap(~ long_bugdrug, scales = 'free') +
+  facet_wrap(~ long_bugdrug, scales = 'free', labeller = label_parsed) +
   geom_ribbon(
     data = marketscan_region_pred_data,
     aes(ymin = ymin, ymax = ymax, color = NULL),
@@ -369,7 +374,7 @@ ggsave(
 ```{r regional_slopes_plot}
 region_slopes_plot = region_models %>%
   mutate(
-    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
+    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'Xponent/NHSN'),
     group_type = factor(
       group_type,
       levels = c('unit', 'us_division', 'us_region', 'eu_region'),
@@ -511,7 +516,7 @@ distance_results = unit_data %>%
 ```{r distance_results_table}
 distance_results %>%
   mutate(
-    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
+    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'Xponent/NHSN'),
     interaction = sprintf('%.2f (%.2f to %.2f)', inter, inter_cil, inter_ciu)
   ) %>%
   select(dataset, bugdrug, interaction) %>%
@@ -561,7 +566,7 @@ other_distance_plot_data = distance_results %>%
   unnest() %>%
   mutate(
     adjacent = adjacent == 1,
-    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
+    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'Xponent/NHSN'),
     label = str_c(dataset, ' ', bugdrug)
   )
 
@@ -571,7 +576,7 @@ other_distance_pred_data = distance_results %>%
   unnest() %>%
   mutate(
     adjacent = adjacent == 1,
-    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'IMS/NHSN'),
+    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'Xponent/NHSN'),
     label = str_c(dataset, ' ', bugdrug)
   )
 
