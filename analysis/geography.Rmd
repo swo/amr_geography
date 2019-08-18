@@ -169,21 +169,31 @@ whn_repro %>%
 
 ```{r whn_double}
 whn2 <- tibble(
-  delta_tau = seq(0, 0.1, length.out = 10),
-  taui = map(delta_tau, ~ 0.10 + c(-1, 1) * .)
+  delta_tau = c(0.05, 0.10, 0.15),
+  taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
 ) %>%
-  crossing(epsilon = seq(0, 1, length.out = 20)) %>%
+  crossing(epsilon = c(0.01, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20, 0.3, 0.4, 0.5)) %>%
   mutate(results = map2(taui, epsilon, whn_sim))
 ```
 
 ```{r whn2_results}
+odds <- function(p) p / (1 - p)
+logodds <- function(p) log(odds(p))
+
 whn2 %>%
-  mutate(delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho))) %>%
-  mutate(drdu = delta_rho / delta_tau) %>%
-  filter(is.finite(drdu)) %>%
-  ggplot(aes(epsilon, drdu)) +
+  mutate(
+    max_rho = map_dbl(results, ~ max(.$rho)),
+    min_rho = map_dbl(results, ~ min(.$rho)),
+    delta_rho = max_rho - min_rho,
+    lor_rho = logodds(max_rho) - logodds(min_rho),
+    dr_du = delta_rho / delta_tau
+    #dr_du = lor_rho / delta_tau
+  ) %>%
+  filter(is.finite(dr_du)) %>%
+  ggplot(aes(epsilon, dr_du, color = factor(delta_tau))) +
   geom_point() +
-  geom_blank(data = tibble(epsilon = 0, drdu = 0)) +
+  geom_line() +
+  geom_blank(data = tibble(epsilon = 0, dr_du = 0, delta_tau = 0.15)) +
   xlab('interaction strength') +
   ylab('dr / dr') +
   ggtitle('Two-population model')
@@ -192,14 +202,9 @@ whn2 %>%
 ```{r whn_double_results}
 whn2_plot_f = function(df) {
   df %>%
-  mutate_at('pop', factor) %>%
   ggplot(aes(x = factor(epsilon), y = rho, fill = pop)) +
   geom_col(position = 'dodge', color = 'black') +
-  scale_fill_manual(
-    name = '',
-    labels = c('intervention', 'control'),
-    values = c('white', 'black')
-  ) +
+  scale_fill_manual(values = c('white', 'black')) +
   scale_x_discrete(name = expression('interaction strength ' (epsilon))) +
   scale_y_continuous(
     name = 'resistance (%)',
@@ -221,13 +226,14 @@ whn2_plot_f = function(df) {
 }
 
 whn2_plot_data = whn2 %>%
+  mutate(
+    pop = rerun(n(), c('intervention', 'control')),
+    delta_tau = round(delta_tau, 3)
+  ) %>%
   unnest() %>%
-  filter(epsilon %in% c(0.01, 0.10, 0.50)) %>%
-  group_by(epsilon, size) %>%
-  mutate(delta_tau = round(max(tau) - min(tau), 2)) %>%
-  ungroup()
+  filter(epsilon %in% c(0.05, 0.10, 0.50))
 
-whn2_plot1 = whn2_plot_data %>%
+whn2_plot1 <- whn2_plot_data %>%
   filter(delta_tau == 0.05) %>%
   whn2_plot_f()
 

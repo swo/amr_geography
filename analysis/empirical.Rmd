@@ -143,270 +143,187 @@ region_combinations = unit_data %>%
 ```{r adjacency_db}
 us_adjacency = read_tsv('../db/state_adjacency.tsv')
 eu_adjacency = read_tsv('../db/europe_adjacency.tsv')
+
+# swo: need to mirror this, based on how the crossing function is written
+commuting_db <- read_tsv('../db/us/commuting/commuting.tsv') %>%
+  rename_all(~ str_replace(., '^state', 'unit'))
 ```
 
 # Results
 
-## Regional analysis
+## Adjacency analysis
 
-Aggregate the data into regions: Census regions and divisions for US data, and UN Geoscheme regions for European data. Aggregate use data by population-weighted means. Aggregate resistance data by adding up the numbers of susceptible and resistant isolates.
+A state is too small a unit if resistance/susceptibility seems to be spilling over between states. As a first step, ask if use/relationships are weaker (more "spilled over") in physically adjacent pairs of states.
 
-```{r region_data}
-aggregate_at = function(df, group_chr) {
-  stopifnot(class(group_chr) == 'character')
-  group = as.symbol(group_chr)
-  
-  group_by_at(df, group_chr, .add = TRUE) %>%
-    summarize(
-      use = weighted.mean(use, w = population),
-      n_resistant = sum(n_resistant),
-      n_isolates = sum(n_isolates)
-    ) %>%
-    ungroup() %>%
-    rename(group := !!group) %>%
+```{r distance_analysis_helpers}
+# because no US states and European countries share names, it's OK to combine this list
+adjacency_db <- bind_rows(us_adjacency, eu_adjacency) %>%
+  mutate(adjacent = 1)
+
+odds <- function(p) p / (1 - p)
+log_odds_ratio <- function(p, q) log(odds(p)) - log(odds(q))
+
+cross_units <- function(df) {
+  df %$%
+    crossing(unit1 = unit, unit2 = unit) %>%
+    left_join(rename_all(df, ~ str_c(., '1')), by = 'unit1') %>%
+    left_join(rename_all(df, ~ str_c(., '2')), by = 'unit2') %>%
+    filter(unit1 < unit2) %>%
     mutate(
-      group_type = group_chr,
-      n_susceptible = n_isolates - n_resistant
-    )
+      d_resistant = f_resistant1 - f_resistant2,
+      d_use = use1 - use2,
+      d_income = income1 - income2,
+      d_density = density1 - density2,
+      d_temperature = temperature1 - temperature2,
+      dr_du = d_resistant / d_use,
+      lor_resistant = log_odds_ratio(f_resistant1, f_resistant2),
+      lorr_du = lor_resistant / d_use
+    ) %>%
+    select(unit1, unit2, starts_with('d_'), dr_du, starts_with('lor')) %>%
+    # pairs of units not in the adjacency list are not adjacent
+    left_join(adjacency_db, by = c('unit1', 'unit2')) %>%
+    replace_na(list(adjacent = 0)) %>%
+    left_join(commuting_db, by = c('unit1', 'unit2')) %>%
+    replace_na(list(f_commuting = 0))
 }
-
-region_data = region_combinations %>%
-  mutate(
-    unit_data = map2(
-      dataset, bugdrug,
-      ~ filter(unit_data, dataset == .x, bugdrug == .y)
-    ),
-    region_data = map2(unit_data, group_type, aggregate_at)
-  )
 ```
 
-Run logistic regressions predicting resistance from use rates for each dataset, bug/drug, and group type. Group types include baseline "units" (US states or European countries), US Census regions, etc. Get a $p$-value on whether the slopes in the aggregates are different than the ones in the baseline units by shuffling the region labels.
-
-```{r regional_analysis}
-model_f = function(df) glm(
-  cbind(n_resistant, n_susceptible) ~ use,
-  family = 'binomial', data = df
-)
-
+```{r adjacency_analysis}
 # compute indices, models, and predictions
-region_boot_f = function(df, group_chr, n_trials = 1e3, alpha = 0.05, pred_n = 1e4) {
-  pred_use = seq(min(df$use), max(df$use), length.out = pred_n)
-  newdata = data_frame(use = pred_use)
+adjacency_boot_f = function(df, model_f, stat_f, n_trials = 1e2, alpha = 0.05) {
+  base_data <- cross_units(df)
+  base_model <- model_f(base_data)
+  base_statistic <- stat_f(base_model)
   
-  # get predictions from base model
-  model = df %>%
-    aggregate_at(group_chr) %>%
-    model_f
-
-  model_pred = data_frame(
-    use = pred_use,
-    res = predict(model, newdata = newdata, type = 'response')
+  results <- tibble(
+    i = 1:n_trials,
+    # get bootstrapped data sets
+    unit_data = map(i, ~ sample_n(df, size = nrow(df), replace = TRUE)),
+    cross_data = map(unit_data, cross_units),
+    # run the model and predict the outcomes
+    model = map(cross_data, model_f),
+    statistic = map_dbl(model, stat_f)
   )
-  
-  results = data_frame(i = 1:n_trials) %>%
-    mutate(
-      # get bootstrapped data sets
-      unit_data = map(i, ~ sample_n(df, size = nrow(df), replace = TRUE)),
-      data = map(unit_data, ~ aggregate_at(., group_chr)),
-      # run the model and predict the outcomes
-      model = map(data, model_f),
-      slope = map_dbl(model, ~ coef(.)['use']),
-      pred_res = map(model, ~ predict(., newdata = newdata, type = 'response')),
-      pred_df = map(pred_res, ~ data_frame(use = pred_use, res = .))
-    )
-  
-  # at each point pred_use, get the CIs for the predictions
-  pred_data = results %>%
-    select(i, pred_df) %>% unnest() %>%
-    group_by(use) %>%
-    summarize(
-      ymin = quantile(res, alpha / 2),
-      ymax = quantile(res, 1 - alpha / 2)
-    ) %>%
-    left_join(model_pred, by = 'use')
   
   list(
-    slope_cil = quantile(results$slope, alpha / 2),
-    slope_ciu = quantile(results$slope, 1 - alpha / 2),
-    pred_data = pred_data
+    base_data = base_data,
+    base_model = base_model,
+    base_statistic = base_statistic,
+    statistic_cil = quantile(results$statistic, alpha / 2),
+    statistic_ciu = quantile(results$statistic, 1 - alpha / 2),
+    # small stat => group 0 had smaller values
+    p_value = (sum(base_statistic < results$statistic) + 1) / (n_trials + 1)
   )
 }
 
-region_models = region_data %>%
+adjacency_results <- unit_data %>%
+  nest(-dataset, -bugdrug) %>%
   mutate(
-    # fit models to each dataset, bugdrug, & aggregate type
-    model = map(region_data, model_f),
-    # extract "slope" from base model
-    slope = map_dbl(model, ~ coef(.)['use']),
-    # bootstrapping
-    boot_results = map2(unit_data, group_type, region_boot_f),
-    slope_cil = map_dbl(boot_results, ~ .$slope_cil),
-    slope_ciu = map_dbl(boot_results, ~ .$slope_ciu),
-    pred_data = map(boot_results, ~ .$pred_data)
-  ) %>%
-  # the "base" slopes are the cross-unit measurements
-  group_by(dataset, bugdrug) %>%
-  mutate(base_slope = slope[group_type == 'unit']) %>%
-  ungroup() %>%
-  arrange(dataset, bugdrug, group_type)
+    results = map(data, ~ adjacency_boot_f(
+      .,
+      function(data) wilcox.test(dr_du ~ adjacent, data = data),
+      function(model) model$statistic
+    ))
+  )
 ```
 
-### Plots
-
-```{r regional_results_plot}
-my_palette = c('black', '#1b9e77', '#d95f02')
-
-plotify_region_data = function(df) {
-  df %>%
+```{r adjacency_results}
+# table of results
+adjacency_results_table <- function(results) {
+  results %>%
+    select(-data) %>%
     mutate(
-      dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'Xponent/NHSN'),
-      long_bugdrug = recode(
-        bugdrug,
-        'Ec/q' = 'italic("E. coli")~"& quinolones"',
-        'Sp/m' = 'italic("S. pneumoniae")~"& macrolides"',
-        'Sp/bl' = 'italic("S. pneumoniae")~"& beta-lactams"'
-      ),
-      label = str_c(dataset, ' ', bugdrug),
-      group_fct = factor(case_when(
-        group_type == 'unit' ~ 'unit',
-        group_type == 'us_division' ~ 'division',
-        group_type %in% c('us_region', 'eu_region') ~ 'region',
-        TRUE ~ NA_character_
-      ), levels = c('unit', 'division', 'region'))
-    )
+      statistic = map_dbl(results, ~ .$base_statistic),
+      cil = map_dbl(results, ~ .$statistic_cil),
+      ciu = map_dbl(results, ~ .$statistic_ciu),
+      p_value = map_dbl(results, ~ .$p_value)
+    ) %>%
+    select(bugdrug, dataset, statistic, cil, ciu, p_value)
 }
 
-# pull out the data and the predictions separately
-region_plot_data = region_models %>%
-  select(dataset, bugdrug, group_type, region_data) %>%
+adjacency_results %>%
+  adjacency_results_table()
+
+# plot of results
+adjacency_results %>%
+  mutate(data = map(results, ~ .$base_data)) %>%
+  select(-results) %>%
   unnest() %>%
-  mutate(res = n_resistant / n_isolates) %>%
-  plotify_region_data()
-
-region_pred_data = region_models %>%
-  select(dataset, bugdrug, group_type, pred_data) %>%
-  unnest() %>%
-  plotify_region_data()
-
-# and just the marketscan data, for the main text figure
-marketscan_region_plot_data = region_plot_data %>%
-  filter(dataset == 'MarketScan/RO')
-
-marketscan_region_pred_data = region_pred_data %>%
-  filter(dataset == 'MarketScan/RO')
-
-marketscan_regional_plot = ggplot(data = NULL, aes(use, res, color = group_fct, fill = group_fct)) +
-  facet_wrap(~ long_bugdrug, scales = 'free', labeller = label_parsed) +
-  geom_ribbon(
-    data = marketscan_region_pred_data,
-    aes(ymin = ymin, ymax = ymax, color = NULL),
-    alpha = 0.25
+  ggplot(aes(factor(adjacent), dr_du)) +
+  facet_wrap(~ dataset + bugdrug) +
+  geom_boxplot(outlier.shape = NA) +
+  geom_jitter(width = 0.2, size = 0.1) +
+  coord_cartesian(ylim = c(0, 1.0)) +
+  scale_x_discrete(
+    '',
+    labels = c('Not adjacent', 'Adjacent')
   ) +
-  geom_line(data = marketscan_region_pred_data, size = 1) +
-  geom_point(data = marketscan_region_plot_data) +
-  scale_fill_manual(values = my_palette) +
-  scale_color_manual(values = my_palette) +
-  xlab('antibiotic use (annual treatments per capita)') +
-  scale_y_continuous(
-    'antibiotic resistance (% of isolates)',
-    labels = scales::percent_format(accuracy = 1, suffix = '')
-  ) +
-  theme_classic() +
-  theme(
-    legend.position = 'none',
-    strip.text = element_text(size = 8),
-    strip.background = element_blank(),
-    axis.text = element_text(size = 8, color = 'black'),
-    axis.title = element_text(size = 8)
-  )
-
-show(marketscan_regional_plot)
-
-ggsave(
-  'fig/marketscan_regional.pdf',
-  plot = marketscan_regional_plot,
-  width = 180, height = 80, units = 'mm'
-)
+  theme_classic()
 ```
 
-```{r other_regional_results_plot}
-# and the other stuff
-other_region_plot_data = region_plot_data %>%
-  filter(dataset != 'MarketScan/RO')
+## Adjacency with LOR
 
-other_region_pred_data = region_pred_data %>%
-  filter(dataset != 'MarketScan/RO')
-
-other_regional_plot = ggplot(data = NULL, aes(use, res, color = group_fct, fill = group_fct)) +
-  facet_wrap(~ label, scales = 'free') +
-  geom_ribbon(
-    data = other_region_pred_data,
-    aes(ymin = ymin, ymax = ymax, color = NULL),
-    alpha = 0.25
-  ) +
-  scale_fill_manual(values = my_palette) +
-  scale_color_manual(values = my_palette) +
-  geom_point(data = other_region_plot_data) +
-  geom_line(data = other_region_pred_data) +
-  xlab('antibiotic use (annual treatments per capita)') +
-  scale_y_continuous(
-    'antibiotic resistance (% of isolates)',
-    labels = scales::percent_format(accuracy = 1, suffix = '')
-  ) +
-  theme_classic() +
-  theme(
-    legend.position = 'none',
-    strip.text = element_text(size = 8),
-    strip.background = element_blank(),
-    axis.text = element_text(size = 8, color = 'black'),
-    axis.title = element_text(size = 8)
-  )
-
-show(other_regional_plot)
-
-ggsave(
-  'fig/other_regional.pdf',
-  plot = other_regional_plot,
-  width = 180, height = 120, units = 'mm'
-)
-```
-
-```{r regional_slopes_plot}
-region_slopes_plot = region_models %>%
+```{r lor_adjacency_analysis}
+lor_adjacency_results <- unit_data %>%
+  nest(-dataset, -bugdrug) %>%
   mutate(
-    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'Xponent/NHSN'),
-    group_type = factor(
-      group_type,
-      levels = c('unit', 'us_division', 'us_region', 'eu_region'),
-      labels = c('Unit', 'Division', 'Region', 'Region')
-    ),
-    long_bugdrug = recode(bugdrug, 'Ec/q' = 'E. coli & quinolones', 'Sp/m' = 'S. pneumonia & macrolides', 'Sp/bl' = 'S. pneumoniae & beta-lactams'),
-    label = str_c(dataset, ' ', bugdrug)
-  ) %>%
-  ggplot(aes(group_type, slope, color = group_type, ymin = slope_cil, ymax = slope_ciu)) +
-  facet_wrap(~ label, scales = 'free') +
-  geom_point() +
-  geom_errorbar() +
-  # make US and European regions the same color
-  scale_color_manual(values = my_palette[c(1, 2, 3, 3)]) +
-  xlab('') +
-  ylab('Regression coefficient') +
-  theme_classic() +
-  theme(
-    legend.position = 'none',
-    strip.text = element_text(size = 8),
-    strip.background = element_blank(),
-    axis.text = element_text(size = 8, color = 'black'),
-    axis.title = element_text(size = 8)
+    results = map(data, ~ adjacency_boot_f(
+      .,
+      function(data) wilcox.test(lorr_du ~ adjacent, data = data),
+      function(model) model$statistic
+    ))
   )
 
-show(region_slopes_plot)
+lor_adjacency_results %>%
+  adjacency_results_table()
+```
 
-ggsave(
-  'fig/region_slopes.pdf',
-  plot = region_slopes_plot,
-  width = 180, height = 120, units = 'mm'
-)
+## Adjacency with covariates
+
+```{r adjacency_covariates_analysis}
+bisquare <- partial(MASS::rlm, psi = MASS::psi.bisquare)
+
+adjacency_covariates_results <- unit_data %>%
+  nest(-dataset, -bugdrug) %>%
+  mutate(
+    results = map(data, ~ adjacency_boot_f(
+      .,
+      function(data) bisquare(dr_du ~ adjacent + d_income + d_density + d_temperature, data = data),
+      function(model) coef(model)['adjacent']
+    ))
+  )
+
+adjacency_covariates_results %>%
+  adjacency_results_table()
+```
+
+## Commuting analysis
+
+```{r commuting_analysis}
+commute_model_f <- safely(function(data) {
+  bisquare(dr_du ~ f_commuting, data = data)
+})
+      #function(data) bisquare(dr_du ~ f_commuting + d_income + d_density + d_temperature, data = data),
+
+commute_stat_f <- function(model) {
+  if (is.null(model$result)) {
+    NA_real_
+  } else {
+    coef(model$result)['f_commuting']
+  }
+}
+
+commuting_results <- unit_data %>%
+  nest(-dataset, -bugdrug) %>%
+  filter(dataset != 'europe') %>%
+  mutate(
+    results = map(data, ~ adjacency_boot_f(
+      ., commute_model_f, commute_stat_f
+    ))
+  )
+
+commuting_results %>%
+  adjacency_results_table()
 ```
 
 ## Distance analysis
@@ -416,37 +333,6 @@ $$
 \Delta \rho \sim \Delta \tau + \Delta \tau \times a + \Delta \mathrm{income} + \ldots
 $$
 where $a$ is a flag for adjacency, we expect the interaction term $\beta_{\tau a}$ will be negative.
-
-```{r distance_analysis_helpers}
-# because no US states and European countries share names, it's OK to combine this list
-adjacency_db = bind_rows(us_adjacency, eu_adjacency) %>%
-  mutate(adjacent = 1)
-
-odds = function(p) p / (1 - p)
-log_odds_ratio = function(p, q) log(odds(p)) - log(odds(q))
-
-cross_units = function(df) {
-  df %$%
-    crossing(unit1 = unit, unit2 = unit) %>%
-    left_join(rename_all(df, ~ str_c(., '1')), by = 'unit1') %>%
-    left_join(rename_all(df, ~ str_c(., '2')), by = 'unit2') %>%
-    filter(use1 > use2) %>%
-    mutate(
-      d_resistant = f_resistant1 - f_resistant2,
-      d_use = log_odds_ratio(use1, use2),
-      d_income = income1 - income2,
-      d_density = density1 - density2,
-      d_temperature = temperature1 - temperature2
-    ) %>%
-    select(unit1, unit2, starts_with('d_')) %>%
-    left_join(adjacency_db, by = c('unit1', 'unit2')) %>%
-    # pairs of units not in the adjacency list are not adjacent
-    replace_na(list(adjacent = 0))
-}
-
-bisquare = partial(MASS::rlm, psi = MASS::psi.bisquare)
-pair_model_f = function(df) bisquare(d_resistant ~ d_use + d_use:adjacent + d_income + d_density + d_temperature, data = df)
-```
 
 ```{r distance_analysis}
 # compute indices, models, and predictions
