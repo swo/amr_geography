@@ -1,2569 +1,1186 @@
-from_state	to_state	n_workers
-Alabama	Alabama	1885374
-Alabama	Alaska	98
-Alabama	Arizona	86
-Alabama	Arkansas	347
-Alabama	California	510
-Alabama	Canada	70
-Alabama	Colorado	48
-Alabama	Connecticut	14
-Alabama	Delaware	28
-Alabama	District of Columbia	217
-Alabama	Florida	8425
-Alabama	Georgia	43654
-Alabama	Hawaii	71
-Alabama	Idaho	13
-Alabama	Illinois	349
-Alabama	Indiana	201
-Alabama	Iowa	165
-Alabama	Kansas	122
-Alabama	Kentucky	388
-Alabama	Louisiana	2889
-Alabama	Maine	73
-Alabama	Maryland	249
-Alabama	Massachusetts	182
-Alabama	Mexico	54
-Alabama	Michigan	247
-Alabama	Minnesota	178
-Alabama	Mississippi	13913
-Alabama	Missouri	346
-Alabama	Nebraska	41
-Alabama	Nevada	86
-Alabama	New Hampshire	22
-Alabama	New Jersey	212
-Alabama	New Mexico	80
-Alabama	New York	261
-Alabama	North Carolina	677
-Alabama	North Dakota	3
-Alabama	Ohio	553
-Alabama	Oklahoma	176
-Alabama	Oregon	80
-Alabama	Other workplace location outside United States	1100
-Alabama	Pennsylvania	419
-Alabama	South Carolina	432
-Alabama	Tennessee	8046
-Alabama	Texas	1714
-Alabama	Utah	82
-Alabama	Vermont	23
-Alabama	Virginia	745
-Alabama	Washington	268
-Alabama	West Virginia	144
-Alabama	Wisconsin	125
-Alabama	Wyoming	23
-Alaska	Alabama	71
-Alaska	Alaska	347094
-Alaska	Arizona	8
-Alaska	California	108
-Alaska	Colorado	66
-Alaska	Connecticut	1
-Alaska	Delaware	21
-Alaska	District of Columbia	54
-Alaska	Florida	3
-Alaska	Georgia	29
-Alaska	Hawaii	33
-Alaska	Idaho	19
-Alaska	Illinois	14
-Alaska	Indiana	7
-Alaska	Iowa	8
-Alaska	Kentucky	13
-Alaska	Louisiana	42
-Alaska	Maryland	4
-Alaska	Michigan	57
-Alaska	Minnesota	3
-Alaska	Mississippi	16
-Alaska	Montana	2
-Alaska	Nebraska	9
-Alaska	Nevada	50
-Alaska	New Jersey	45
-Alaska	New York	20
-Alaska	North Dakota	35
-Alaska	Oregon	12
-Alaska	Other workplace location outside United States	248
-Alaska	Pennsylvania	20
-Alaska	South Dakota	38
-Alaska	Tennessee	7
-Alaska	Texas	52
-Alaska	Utah	4
-Alaska	Virginia	31
-Alaska	Washington	213
-Arizona	Alabama	123
-Arizona	Alaska	400
-Arizona	Arizona	2637844
-Arizona	Arkansas	118
-Arizona	California	10953
-Arizona	Canada	305
-Arizona	Colorado	1337
-Arizona	Connecticut	106
-Arizona	Delaware	44
-Arizona	District of Columbia	158
-Arizona	Florida	557
-Arizona	Georgia	335
-Arizona	Hawaii	125
-Arizona	Idaho	221
-Arizona	Illinois	891
-Arizona	Indiana	264
-Arizona	Iowa	396
-Arizona	Kansas	229
-Arizona	Kentucky	90
-Arizona	Louisiana	252
-Arizona	Maine	61
-Arizona	Maryland	304
-Arizona	Massachusetts	272
-Arizona	Mexico	1351
-Arizona	Michigan	505
-Arizona	Minnesota	678
-Arizona	Mississippi	96
-Arizona	Missouri	549
-Arizona	Montana	106
-Arizona	Nebraska	437
-Arizona	Nevada	9779
-Arizona	New Hampshire	61
-Arizona	New Jersey	476
-Arizona	New Mexico	3210
-Arizona	New York	668
-Arizona	North Carolina	303
-Arizona	North Dakota	623
-Arizona	Ohio	385
-Arizona	Oklahoma	374
-Arizona	Oregon	435
-Arizona	Other workplace location outside United States	1624
-Arizona	Pennsylvania	501
-Arizona	Rhode Island	40
-Arizona	South Carolina	73
-Arizona	South Dakota	155
-Arizona	Tennessee	187
-Arizona	Texas	2278
-Arizona	Utah	2339
-Arizona	Virginia	296
-Arizona	Washington	815
-Arizona	West Virginia	49
-Arizona	Wisconsin	392
-Arizona	Wyoming	238
-Arkansas	Alabama	232
-Arkansas	Alaska	132
-Arkansas	Arizona	223
-Arkansas	Arkansas	1180969
-Arkansas	California	430
-Arkansas	Canada	14
-Arkansas	Colorado	105
-Arkansas	District of Columbia	40
-Arkansas	Florida	342
-Arkansas	Georgia	216
-Arkansas	Hawaii	8
-Arkansas	Illinois	505
-Arkansas	Indiana	181
-Arkansas	Iowa	126
-Arkansas	Kansas	330
-Arkansas	Kentucky	230
-Arkansas	Louisiana	2757
-Arkansas	Maine	11
-Arkansas	Maryland	10
-Arkansas	Massachusetts	26
-Arkansas	Michigan	133
-Arkansas	Minnesota	112
-Arkansas	Mississippi	2356
-Arkansas	Missouri	6082
-Arkansas	Montana	42
-Arkansas	Nebraska	233
-Arkansas	Nevada	66
-Arkansas	New Jersey	167
-Arkansas	New Mexico	15
-Arkansas	New York	233
-Arkansas	North Carolina	44
-Arkansas	North Dakota	63
-Arkansas	Ohio	323
-Arkansas	Oklahoma	5307
-Arkansas	Oregon	65
-Arkansas	Other workplace location outside United States	537
-Arkansas	Pennsylvania	406
-Arkansas	Rhode Island	29
-Arkansas	South Carolina	31
-Arkansas	South Dakota	48
-Arkansas	Tennessee	8936
-Arkansas	Texas	13152
-Arkansas	Utah	26
-Arkansas	Virginia	262
-Arkansas	Washington	95
-Arkansas	West Virginia	66
-Arkansas	Wisconsin	109
-Arkansas	Wyoming	44
-California	Alabama	246
-California	Alaska	831
-California	Arizona	6662
-California	Arkansas	556
-California	California	16209962
-California	Canada	1086
-California	Colorado	1640
-California	Connecticut	518
-California	Delaware	31
-California	District of Columbia	815
-California	Florida	1652
-California	Georgia	1665
-California	Hawaii	1409
-California	Idaho	151
-California	Illinois	2902
-California	Indiana	470
-California	Iowa	389
-California	Kansas	450
-California	Kentucky	256
-California	Louisiana	732
-California	Maine	189
-California	Maryland	726
-California	Massachusetts	1029
-California	Mexico	3490
-California	Michigan	747
-California	Minnesota	772
-California	Mississippi	274
-California	Missouri	837
-California	Montana	407
-California	Nebraska	417
-California	Nevada	12297
-California	New Hampshire	101
-California	New Jersey	1401
-California	New Mexico	739
-California	New York	4531
-California	North Carolina	567
-California	North Dakota	223
-California	Ohio	984
-California	Oklahoma	484
-California	Oregon	3021
-California	Other workplace location outside United States	8899
-California	Pennsylvania	1834
-California	Puerto Rico	110
-California	Rhode Island	169
-California	South Carolina	279
-California	South Dakota	111
-California	Tennessee	754
-California	Texas	5450
-California	Utah	1244
-California	Vermont	98
-California	Virginia	1222
-California	Washington	4036
-California	West Virginia	134
-California	Wisconsin	706
-California	Wyoming	182
-Colorado	Alabama	161
-Colorado	Alaska	330
-Colorado	Arizona	1336
-Colorado	Arkansas	114
-Colorado	California	3098
-Colorado	Canada	356
-Colorado	Colorado	2461402
-Colorado	Connecticut	84
-Colorado	District of Columbia	165
-Colorado	Florida	725
-Colorado	Georgia	560
-Colorado	Hawaii	178
-Colorado	Idaho	45
-Colorado	Illinois	955
-Colorado	Indiana	221
-Colorado	Iowa	215
-Colorado	Kansas	851
-Colorado	Kentucky	145
-Colorado	Louisiana	276
-Colorado	Maine	37
-Colorado	Maryland	306
-Colorado	Massachusetts	199
-Colorado	Mexico	136
-Colorado	Michigan	376
-Colorado	Minnesota	366
-Colorado	Mississippi	74
-Colorado	Missouri	740
-Colorado	Montana	225
-Colorado	Nebraska	1081
-Colorado	Nevada	397
-Colorado	New Jersey	507
-Colorado	New Mexico	2441
-Colorado	New York	715
-Colorado	North Carolina	350
-Colorado	North Dakota	1265
-Colorado	Ohio	697
-Colorado	Oklahoma	552
-Colorado	Oregon	136
-Colorado	Other workplace location outside United States	1827
-Colorado	Pennsylvania	531
-Colorado	Rhode Island	41
-Colorado	South Carolina	57
-Colorado	South Dakota	349
-Colorado	Tennessee	304
-Colorado	Texas	2649
-Colorado	Utah	1319
-Colorado	Vermont	18
-Colorado	Virginia	585
-Colorado	Washington	583
-Colorado	West Virginia	9
-Colorado	Wisconsin	255
-Colorado	Wyoming	4450
-Connecticut	Alabama	44
-Connecticut	Alaska	62
-Connecticut	Arizona	59
-Connecticut	California	645
-Connecticut	Canada	91
-Connecticut	Colorado	76
-Connecticut	Connecticut	1618775
-Connecticut	Delaware	60
-Connecticut	District of Columbia	261
-Connecticut	Florida	436
-Connecticut	Georgia	219
-Connecticut	Hawaii	36
-Connecticut	Illinois	399
-Connecticut	Indiana	43
-Connecticut	Kansas	15
-Connecticut	Kentucky	100
-Connecticut	Louisiana	42
-Connecticut	Maine	317
-Connecticut	Maryland	358
-Connecticut	Massachusetts	20614
-Connecticut	Mexico	21
-Connecticut	Michigan	170
-Connecticut	Minnesota	52
-Connecticut	Mississippi	14
-Connecticut	Missouri	142
-Connecticut	Montana	17
-Connecticut	Nebraska	13
-Connecticut	Nevada	126
-Connecticut	New Hampshire	508
-Connecticut	New Jersey	3185
-Connecticut	New York	69508
-Connecticut	North Carolina	159
-Connecticut	North Dakota	7
-Connecticut	Ohio	165
-Connecticut	Oklahoma	68
-Connecticut	Oregon	36
-Connecticut	Other workplace location outside United States	594
-Connecticut	Pennsylvania	828
-Connecticut	Rhode Island	7475
-Connecticut	South Carolina	137
-Connecticut	Tennessee	94
-Connecticut	Texas	277
-Connecticut	Utah	68
-Connecticut	Vermont	308
-Connecticut	Virginia	485
-Connecticut	Washington	57
-Connecticut	West Virginia	9
-Connecticut	Wisconsin	84
-Connecticut	Wyoming	27
-Delaware	Arizona	27
-Delaware	Arkansas	17
-Delaware	California	20
-Delaware	Canada	1
-Delaware	Colorado	17
-Delaware	Connecticut	124
-Delaware	Delaware	356140
-Delaware	District of Columbia	870
-Delaware	Florida	95
-Delaware	Georgia	31
-Delaware	Idaho	10
-Delaware	Illinois	88
-Delaware	Indiana	39
-Delaware	Kentucky	57
-Delaware	Louisiana	6
-Delaware	Maryland	20087
-Delaware	Massachusetts	98
-Delaware	Michigan	29
-Delaware	Minnesota	39
-Delaware	Mississippi	18
-Delaware	Missouri	5
-Delaware	Nebraska	11
-Delaware	Nevada	14
-Delaware	New Jersey	6257
-Delaware	New York	1445
-Delaware	North Carolina	43
-Delaware	North Dakota	11
-Delaware	Ohio	92
-Delaware	Oklahoma	18
-Delaware	Other workplace location outside United States	153
-Delaware	Pennsylvania	29210
-Delaware	Rhode Island	16
-Delaware	South Carolina	39
-Delaware	Tennessee	4
-Delaware	Texas	77
-Delaware	Utah	3
-Delaware	Virginia	898
-Delaware	Washington	41
-Delaware	Wyoming	13
-District of Columbia	Alabama	18
-District of Columbia	Arizona	3
-District of Columbia	California	182
-District of Columbia	Colorado	27
-District of Columbia	Connecticut	14
-District of Columbia	Delaware	4
-District of Columbia	District of Columbia	235646
-District of Columbia	Florida	68
-District of Columbia	Georgia	121
-District of Columbia	Illinois	49
-District of Columbia	Indiana	26
-District of Columbia	Iowa	14
-District of Columbia	Kentucky	19
-District of Columbia	Louisiana	9
-District of Columbia	Maryland	40287
-District of Columbia	Massachusetts	104
-District of Columbia	Mexico	35
-District of Columbia	Michigan	46
-District of Columbia	Minnesota	34
-District of Columbia	Missouri	19
-District of Columbia	Nebraska	51
-District of Columbia	Nevada	20
-District of Columbia	New Hampshire	15
-District of Columbia	New Jersey	107
-District of Columbia	New York	637
-District of Columbia	North Carolina	72
-District of Columbia	Ohio	117
-District of Columbia	Oregon	39
-District of Columbia	Other workplace location outside United States	377
-District of Columbia	Pennsylvania	193
-District of Columbia	Rhode Island	38
-District of Columbia	South Carolina	11
-District of Columbia	Tennessee	20
-District of Columbia	Texas	41
-District of Columbia	Virginia	34296
-District of Columbia	Washington	85
-District of Columbia	West Virginia	20
-District of Columbia	Wyoming	11
-Florida	Alabama	9337
-Florida	Alaska	203
-Florida	Arizona	662
-Florida	Arkansas	299
-Florida	California	2402
-Florida	Canada	1350
-Florida	Colorado	661
-Florida	Connecticut	1181
-Florida	Delaware	319
-Florida	District of Columbia	1108
-Florida	Florida	7993452
-Florida	Georgia	13805
-Florida	Hawaii	266
-Florida	Idaho	19
-Florida	Illinois	3408
-Florida	Indiana	1514
-Florida	Iowa	483
-Florida	Kansas	358
-Florida	Kentucky	997
-Florida	Louisiana	3195
-Florida	Maine	291
-Florida	Maryland	2410
-Florida	Massachusetts	2440
-Florida	Mexico	236
-Florida	Michigan	2853
-Florida	Minnesota	1191
-Florida	Mississippi	940
-Florida	Missouri	1499
-Florida	Montana	9
-Florida	Nebraska	539
-Florida	Nevada	516
-Florida	New Hampshire	373
-Florida	New Jersey	3929
-Florida	New Mexico	172
-Florida	New York	8266
-Florida	North Carolina	2938
-Florida	North Dakota	407
-Florida	Ohio	2988
-Florida	Oklahoma	407
-Florida	Oregon	138
-Florida	Other workplace location outside United States	6600
-Florida	Pennsylvania	2970
-Florida	Puerto Rico	1091
-Florida	Rhode Island	591
-Florida	South Carolina	1783
-Florida	South Dakota	80
-Florida	Tennessee	1849
-Florida	Texas	5447
-Florida	Utah	259
-Florida	Vermont	111
-Florida	Virginia	3879
-Florida	Washington	628
-Florida	West Virginia	324
-Florida	Wisconsin	869
-Florida	Wyoming	178
-Georgia	Alabama	12263
-Georgia	Alaska	79
-Georgia	Arizona	266
-Georgia	Arkansas	462
-Georgia	California	1714
-Georgia	Canada	521
-Georgia	Colorado	434
-Georgia	Connecticut	388
-Georgia	Delaware	51
-Georgia	District of Columbia	888
-Georgia	Florida	15066
-Georgia	Georgia	4091461
-Georgia	Hawaii	68
-Georgia	Idaho	16
-Georgia	Illinois	1377
-Georgia	Indiana	607
-Georgia	Iowa	410
-Georgia	Kansas	436
-Georgia	Kentucky	965
-Georgia	Louisiana	889
-Georgia	Maine	29
-Georgia	Maryland	966
-Georgia	Massachusetts	656
-Georgia	Mexico	145
-Georgia	Michigan	881
-Georgia	Minnesota	705
-Georgia	Mississippi	643
-Georgia	Missouri	373
-Georgia	Montana	23
-Georgia	Nebraska	206
-Georgia	Nevada	199
-Georgia	New Hampshire	25
-Georgia	New Jersey	775
-Georgia	New Mexico	85
-Georgia	New York	2408
-Georgia	North Carolina	6057
-Georgia	North Dakota	119
-Georgia	Ohio	1040
-Georgia	Oklahoma	227
-Georgia	Oregon	97
-Georgia	Other workplace location outside United States	2939
-Georgia	Pennsylvania	1110
-Georgia	Puerto Rico	61
-Georgia	Rhode Island	14
-Georgia	South Carolina	20318
-Georgia	South Dakota	52
-Georgia	Tennessee	36215
-Georgia	Texas	2944
-Georgia	Utah	137
-Georgia	Vermont	9
-Georgia	Virginia	2147
-Georgia	Washington	242
-Georgia	West Virginia	127
-Georgia	Wisconsin	402
-Georgia	Wyoming	59
-Hawaii	Alaska	104
-Hawaii	Arizona	61
-Hawaii	California	844
-Hawaii	Canada	32
-Hawaii	Colorado	52
-Hawaii	Connecticut	12
-Hawaii	Delaware	6
-Hawaii	District of Columbia	34
-Hawaii	Florida	51
-Hawaii	Georgia	8
-Hawaii	Hawaii	660206
-Hawaii	Idaho	15
-Hawaii	Illinois	27
-Hawaii	Indiana	5
-Hawaii	Kansas	5
-Hawaii	Kentucky	23
-Hawaii	Maryland	85
-Hawaii	Massachusetts	110
-Hawaii	Mexico	25
-Hawaii	Minnesota	22
-Hawaii	Missouri	52
-Hawaii	Nevada	88
-Hawaii	New Jersey	48
-Hawaii	New Mexico	14
-Hawaii	New York	35
-Hawaii	North Carolina	63
-Hawaii	North Dakota	16
-Hawaii	Ohio	32
-Hawaii	Oregon	137
-Hawaii	Other workplace location outside United States	989
-Hawaii	Pennsylvania	17
-Hawaii	Rhode Island	13
-Hawaii	South Carolina	21
-Hawaii	Tennessee	18
-Hawaii	Texas	118
-Hawaii	Utah	30
-Hawaii	Virginia	66
-Hawaii	Washington	234
-Idaho	Alaska	424
-Idaho	Arizona	226
-Idaho	Arkansas	22
-Idaho	California	720
-Idaho	Canada	61
-Idaho	Colorado	299
-Idaho	District of Columbia	56
-Idaho	Florida	64
-Idaho	Georgia	40
-Idaho	Hawaii	53
-Idaho	Idaho	647401
-Idaho	Illinois	192
-Idaho	Indiana	7
-Idaho	Iowa	162
-Idaho	Kansas	26
-Idaho	Louisiana	108
-Idaho	Massachusetts	52
-Idaho	Mexico	26
-Idaho	Michigan	2
-Idaho	Minnesota	38
-Idaho	Missouri	91
-Idaho	Montana	849
-Idaho	Nebraska	96
-Idaho	Nevada	1010
-Idaho	New Hampshire	3
-Idaho	New Jersey	70
-Idaho	New Mexico	50
-Idaho	New York	70
-Idaho	North Carolina	50
-Idaho	North Dakota	960
-Idaho	Ohio	53
-Idaho	Oklahoma	32
-Idaho	Oregon	5773
-Idaho	Other workplace location outside United States	406
-Idaho	Pennsylvania	126
-Idaho	South Carolina	53
-Idaho	South Dakota	44
-Idaho	Tennessee	131
-Idaho	Texas	217
-Idaho	Utah	3466
-Idaho	Virginia	50
-Idaho	Washington	18013
-Idaho	West Virginia	15
-Idaho	Wisconsin	40
-Idaho	Wyoming	2746
-Illinois	Alabama	228
-Illinois	Alaska	48
-Illinois	Arizona	382
-Illinois	Arkansas	375
-Illinois	California	2338
-Illinois	Canada	236
-Illinois	Colorado	532
-Illinois	Connecticut	349
-Illinois	Delaware	82
-Illinois	District of Columbia	556
-Illinois	Florida	1645
-Illinois	Georgia	1125
-Illinois	Hawaii	67
-Illinois	Idaho	79
-Illinois	Illinois	5692014
-Illinois	Indiana	32161
-Illinois	Iowa	32038
-Illinois	Kansas	407
-Illinois	Kentucky	4105
-Illinois	Louisiana	408
-Illinois	Maine	30
-Illinois	Maryland	311
-Illinois	Massachusetts	601
-Illinois	Mexico	115
-Illinois	Michigan	2195
-Illinois	Minnesota	1353
-Illinois	Mississippi	184
-Illinois	Missouri	81760
-Illinois	Montana	98
-Illinois	Nebraska	639
-Illinois	Nevada	368
-Illinois	New Hampshire	99
-Illinois	New Jersey	878
-Illinois	New Mexico	102
-Illinois	New York	1629
-Illinois	North Carolina	728
-Illinois	North Dakota	79
-Illinois	Ohio	1934
-Illinois	Oklahoma	226
-Illinois	Oregon	182
-Illinois	Other workplace location outside United States	1921
-Illinois	Pennsylvania	1040
-Illinois	Puerto Rico	13
-Illinois	Rhode Island	141
-Illinois	South Carolina	188
-Illinois	South Dakota	68
-Illinois	Tennessee	992
-Illinois	Texas	2035
-Illinois	Utah	111
-Illinois	Vermont	121
-Illinois	Virginia	914
-Illinois	Washington	299
-Illinois	West Virginia	75
-Illinois	Wisconsin	22521
-Illinois	Wyoming	100
-Indiana	Alabama	378
-Indiana	Alaska	141
-Indiana	Arizona	253
-Indiana	Arkansas	235
-Indiana	California	666
-Indiana	Canada	119
-Indiana	Colorado	222
-Indiana	Connecticut	43
-Indiana	Delaware	20
-Indiana	District of Columbia	139
-Indiana	Florida	781
-Indiana	Georgia	359
-Indiana	Hawaii	31
-Indiana	Idaho	52
-Indiana	Illinois	67289
-Indiana	Indiana	2745526
-Indiana	Iowa	485
-Indiana	Kansas	175
-Indiana	Kentucky	51916
-Indiana	Louisiana	319
-Indiana	Maine	90
-Indiana	Maryland	304
-Indiana	Massachusetts	162
-Indiana	Mexico	30
-Indiana	Michigan	9622
-Indiana	Minnesota	342
-Indiana	Mississippi	126
-Indiana	Missouri	696
-Indiana	Montana	12
-Indiana	Nebraska	159
-Indiana	Nevada	26
-Indiana	New Jersey	486
-Indiana	New Mexico	47
-Indiana	New York	490
-Indiana	North Carolina	461
-Indiana	North Dakota	58
-Indiana	Ohio	24177
-Indiana	Oklahoma	127
-Indiana	Oregon	45
-Indiana	Other workplace location outside United States	741
-Indiana	Pennsylvania	849
-Indiana	Puerto Rico	10
-Indiana	Rhode Island	8
-Indiana	South Carolina	264
-Indiana	South Dakota	44
-Indiana	Tennessee	865
-Indiana	Texas	836
-Indiana	Utah	88
-Indiana	Vermont	39
-Indiana	Virginia	363
-Indiana	Washington	106
-Indiana	West Virginia	179
-Indiana	Wisconsin	696
-Indiana	Wyoming	12
-Iowa	Alabama	90
-Iowa	Alaska	20
-Iowa	Arizona	182
-Iowa	Arkansas	67
-Iowa	California	304
-Iowa	Canada	16
-Iowa	Colorado	186
-Iowa	Connecticut	13
-Iowa	District of Columbia	82
-Iowa	Florida	154
-Iowa	Georgia	129
-Iowa	Hawaii	13
-Iowa	Idaho	19
-Iowa	Illinois	21149
-Iowa	Indiana	213
-Iowa	Iowa	1454584
-Iowa	Kansas	279
-Iowa	Kentucky	51
-Iowa	Louisiana	129
-Iowa	Maine	2
-Iowa	Maryland	11
-Iowa	Massachusetts	96
-Iowa	Mexico	27
-Iowa	Michigan	165
-Iowa	Minnesota	5182
-Iowa	Mississippi	26
-Iowa	Missouri	1519
-Iowa	Montana	31
-Iowa	Nebraska	30636
-Iowa	Nevada	30
-Iowa	New Hampshire	16
-Iowa	New Jersey	119
-Iowa	New Mexico	20
-Iowa	New York	130
-Iowa	North Carolina	142
-Iowa	North Dakota	218
-Iowa	Ohio	169
-Iowa	Oklahoma	134
-Iowa	Oregon	37
-Iowa	Other workplace location outside United States	271
-Iowa	Pennsylvania	69
-Iowa	Puerto Rico	16
-Iowa	Rhode Island	11
-Iowa	South Carolina	51
-Iowa	South Dakota	5427
-Iowa	Tennessee	88
-Iowa	Texas	382
-Iowa	Utah	45
-Iowa	Virginia	111
-Iowa	Washington	56
-Iowa	West Virginia	5
-Iowa	Wisconsin	3160
-Iowa	Wyoming	48
-Kansas	Alabama	35
-Kansas	Alaska	48
-Kansas	Arizona	106
-Kansas	Arkansas	294
-Kansas	California	639
-Kansas	Canada	13
-Kansas	Colorado	554
-Kansas	Delaware	33
-Kansas	District of Columbia	15
-Kansas	Florida	166
-Kansas	Georgia	166
-Kansas	Hawaii	16
-Kansas	Idaho	6
-Kansas	Illinois	556
-Kansas	Indiana	171
-Kansas	Iowa	481
-Kansas	Kansas	1274984
-Kansas	Kentucky	74
-Kansas	Louisiana	130
-Kansas	Maryland	181
-Kansas	Massachusetts	18
-Kansas	Mexico	36
-Kansas	Michigan	103
-Kansas	Minnesota	152
-Kansas	Mississippi	52
-Kansas	Missouri	88376
-Kansas	Montana	26
-Kansas	Nebraska	1648
-Kansas	Nevada	54
-Kansas	New Jersey	66
-Kansas	New Mexico	91
-Kansas	New York	122
-Kansas	North Carolina	80
-Kansas	North Dakota	97
-Kansas	Ohio	133
-Kansas	Oklahoma	5163
-Kansas	Oregon	42
-Kansas	Other workplace location outside United States	696
-Kansas	Pennsylvania	96
-Kansas	Rhode Island	21
-Kansas	South Carolina	12
-Kansas	South Dakota	106
-Kansas	Tennessee	179
-Kansas	Texas	1414
-Kansas	Utah	20
-Kansas	Virginia	186
-Kansas	Washington	88
-Kansas	West Virginia	12
-Kansas	Wisconsin	220
-Kansas	Wyoming	48
-Kentucky	Alabama	505
-Kentucky	Alaska	72
-Kentucky	Arizona	56
-Kentucky	Arkansas	349
-Kentucky	California	297
-Kentucky	Canada	67
-Kentucky	Colorado	87
-Kentucky	Connecticut	35
-Kentucky	District of Columbia	102
-Kentucky	Florida	635
-Kentucky	Georgia	964
-Kentucky	Hawaii	8
-Kentucky	Idaho	21
-Kentucky	Illinois	3002
-Kentucky	Indiana	26028
-Kentucky	Iowa	79
-Kentucky	Kansas	43
-Kentucky	Kentucky	1713124
-Kentucky	Louisiana	239
-Kentucky	Maryland	240
-Kentucky	Massachusetts	99
-Kentucky	Mexico	23
-Kentucky	Michigan	448
-Kentucky	Minnesota	208
-Kentucky	Mississippi	199
-Kentucky	Missouri	564
-Kentucky	Montana	16
-Kentucky	Nebraska	102
-Kentucky	Nevada	62
-Kentucky	New Hampshire	60
-Kentucky	New Jersey	228
-Kentucky	New Mexico	36
-Kentucky	New York	277
-Kentucky	North Carolina	366
-Kentucky	North Dakota	47
-Kentucky	Ohio	59784
-Kentucky	Oklahoma	230
-Kentucky	Oregon	28
-Kentucky	Other workplace location outside United States	761
-Kentucky	Pennsylvania	404
-Kentucky	South Carolina	185
-Kentucky	South Dakota	22
-Kentucky	Tennessee	12915
-Kentucky	Texas	663
-Kentucky	Utah	43
-Kentucky	Vermont	25
-Kentucky	Virginia	2027
-Kentucky	Washington	109
-Kentucky	West Virginia	6572
-Kentucky	Wisconsin	192
-Kentucky	Wyoming	9
-Louisiana	Alabama	722
-Louisiana	Alaska	248
-Louisiana	Arizona	89
-Louisiana	Arkansas	2866
-Louisiana	California	704
-Louisiana	Canada	153
-Louisiana	Colorado	170
-Louisiana	Connecticut	46
-Louisiana	District of Columbia	16
-Louisiana	Florida	742
-Louisiana	Georgia	752
-Louisiana	Hawaii	91
-Louisiana	Idaho	121
-Louisiana	Illinois	412
-Louisiana	Indiana	133
-Louisiana	Iowa	92
-Louisiana	Kansas	181
-Louisiana	Kentucky	139
-Louisiana	Louisiana	1920156
-Louisiana	Maryland	54
-Louisiana	Massachusetts	129
-Louisiana	Mexico	335
-Louisiana	Michigan	220
-Louisiana	Minnesota	71
-Louisiana	Mississippi	9868
-Louisiana	Missouri	210
-Louisiana	Montana	125
-Louisiana	Nebraska	33
-Louisiana	Nevada	159
-Louisiana	New Jersey	238
-Louisiana	New Mexico	70
-Louisiana	New York	469
-Louisiana	North Carolina	309
-Louisiana	North Dakota	294
-Louisiana	Ohio	195
-Louisiana	Oklahoma	763
-Louisiana	Oregon	27
-Louisiana	Other workplace location outside United States	2823
-Louisiana	Pennsylvania	618
-Louisiana	Puerto Rico	19
-Louisiana	Rhode Island	50
-Louisiana	South Carolina	159
-Louisiana	South Dakota	7
-Louisiana	Tennessee	491
-Louisiana	Texas	17676
-Louisiana	Utah	87
-Louisiana	Virginia	255
-Louisiana	Washington	42
-Louisiana	West Virginia	46
-Louisiana	Wisconsin	188
-Louisiana	Wyoming	65
-Maine	Alabama	26
-Maine	Alaska	9
-Maine	Arizona	99
-Maine	Arkansas	18
-Maine	California	125
-Maine	Canada	155
-Maine	Colorado	33
-Maine	Connecticut	323
-Maine	Delaware	7
-Maine	District of Columbia	82
-Maine	Florida	241
-Maine	Georgia	63
-Maine	Hawaii	35
-Maine	Illinois	62
-Maine	Indiana	5
-Maine	Iowa	19
-Maine	Kansas	12
-Maine	Louisiana	164
-Maine	Maine	607252
-Maine	Maryland	148
-Maine	Massachusetts	5099
-Maine	Michigan	97
-Maine	Minnesota	67
-Maine	Mississippi	9
-Maine	Missouri	60
-Maine	Montana	3
-Maine	Nebraska	22
-Maine	New Hampshire	16404
-Maine	New Jersey	181
-Maine	New Mexico	4
-Maine	New York	707
-Maine	North Carolina	87
-Maine	North Dakota	21
-Maine	Ohio	51
-Maine	Oklahoma	11
-Maine	Oregon	3
-Maine	Other workplace location outside United States	296
-Maine	Pennsylvania	161
-Maine	Puerto Rico	6
-Maine	Rhode Island	157
-Maine	South Carolina	112
-Maine	South Dakota	11
-Maine	Tennessee	63
-Maine	Texas	161
-Maine	Utah	12
-Maine	Vermont	238
-Maine	Virginia	115
-Maine	Washington	37
-Maine	West Virginia	10
-Maine	Wisconsin	70
-Maryland	Alabama	96
-Maryland	Alaska	41
-Maryland	Arizona	97
-Maryland	Arkansas	6
-Maryland	California	529
-Maryland	Canada	133
-Maryland	Colorado	187
-Maryland	Connecticut	178
-Maryland	Delaware	19505
-Maryland	District of Columbia	322878
-Maryland	Florida	949
-Maryland	Georgia	516
-Maryland	Hawaii	79
-Maryland	Idaho	15
-Maryland	Illinois	460
-Maryland	Indiana	87
-Maryland	Iowa	46
-Maryland	Kansas	75
-Maryland	Kentucky	141
-Maryland	Louisiana	169
-Maryland	Maine	87
-Maryland	Maryland	2390255
-Maryland	Massachusetts	698
-Maryland	Mexico	25
-Maryland	Michigan	327
-Maryland	Minnesota	249
-Maryland	Mississippi	74
-Maryland	Missouri	381
-Maryland	Nebraska	23
-Maryland	Nevada	100
-Maryland	New Hampshire	36
-Maryland	New Jersey	1899
-Maryland	New Mexico	39
-Maryland	New York	2713
-Maryland	North Carolina	947
-Maryland	North Dakota	26
-Maryland	Ohio	414
-Maryland	Oklahoma	21
-Maryland	Oregon	89
-Maryland	Other workplace location outside United States	1653
-Maryland	Pennsylvania	14770
-Maryland	Rhode Island	119
-Maryland	South Carolina	91
-Maryland	Tennessee	219
-Maryland	Texas	750
-Maryland	Utah	28
-Maryland	Vermont	8
-Maryland	Virginia	122688
-Maryland	Washington	284
-Maryland	West Virginia	5981
-Maryland	Wisconsin	158
-Maryland	Wyoming	18
-Massachusetts	Alabama	76
-Massachusetts	Alaska	12
-Massachusetts	Arizona	254
-Massachusetts	Arkansas	40
-Massachusetts	California	1022
-Massachusetts	Canada	200
-Massachusetts	Colorado	142
-Massachusetts	Connecticut	29341
-Massachusetts	Delaware	50
-Massachusetts	District of Columbia	543
-Massachusetts	Florida	979
-Massachusetts	Georgia	310
-Massachusetts	Hawaii	74
-Massachusetts	Idaho	33
-Massachusetts	Illinois	685
-Massachusetts	Indiana	251
-Massachusetts	Iowa	102
-Massachusetts	Kansas	56
-Massachusetts	Kentucky	109
-Massachusetts	Louisiana	137
-Massachusetts	Maine	1785
-Massachusetts	Maryland	744
-Massachusetts	Massachusetts	3111588
-Massachusetts	Mexico	117
-Massachusetts	Michigan	331
-Massachusetts	Minnesota	225
-Massachusetts	Mississippi	45
-Massachusetts	Missouri	215
-Massachusetts	Montana	4
-Massachusetts	Nebraska	41
-Massachusetts	Nevada	72
-Massachusetts	New Hampshire	31425
-Massachusetts	New Jersey	1504
-Massachusetts	New Mexico	41
-Massachusetts	New York	6825
-Massachusetts	North Carolina	289
-Massachusetts	North Dakota	8
-Massachusetts	Ohio	219
-Massachusetts	Oklahoma	54
-Massachusetts	Oregon	14
-Massachusetts	Other workplace location outside United States	1363
-Massachusetts	Pennsylvania	1141
-Massachusetts	Rhode Island	42583
-Massachusetts	South Carolina	100
-Massachusetts	Tennessee	140
-Massachusetts	Texas	715
-Massachusetts	Utah	130
-Massachusetts	Vermont	2308
-Massachusetts	Virginia	788
-Massachusetts	Washington	206
-Massachusetts	West Virginia	23
-Massachusetts	Wisconsin	156
-Massachusetts	Wyoming	8
-Michigan	Alabama	333
-Michigan	Alaska	101
-Michigan	Arizona	346
-Michigan	Arkansas	158
-Michigan	California	1289
-Michigan	Canada	913
-Michigan	Colorado	249
-Michigan	Connecticut	352
-Michigan	Delaware	17
-Michigan	District of Columbia	178
-Michigan	Florida	1330
-Michigan	Georgia	795
-Michigan	Hawaii	53
-Michigan	Idaho	65
-Michigan	Illinois	5385
-Michigan	Indiana	25123
-Michigan	Iowa	448
-Michigan	Kansas	331
-Michigan	Kentucky	614
-Michigan	Louisiana	147
-Michigan	Maine	65
-Michigan	Maryland	450
-Michigan	Massachusetts	336
-Michigan	Mexico	276
-Michigan	Michigan	4065510
-Michigan	Minnesota	925
-Michigan	Mississippi	191
-Michigan	Missouri	541
-Michigan	Montana	61
-Michigan	Nebraska	275
-Michigan	Nevada	158
-Michigan	New Hampshire	40
-Michigan	New Jersey	568
-Michigan	New Mexico	71
-Michigan	New York	1211
-Michigan	North Carolina	428
-Michigan	North Dakota	204
-Michigan	Ohio	23564
-Michigan	Oklahoma	168
-Michigan	Oregon	82
-Michigan	Other workplace location outside United States	1326
-Michigan	Pennsylvania	1242
-Michigan	Puerto Rico	18
-Michigan	Rhode Island	43
-Michigan	South Carolina	288
-Michigan	South Dakota	39
-Michigan	Tennessee	858
-Michigan	Texas	1287
-Michigan	Utah	133
-Michigan	Vermont	45
-Michigan	Virginia	442
-Michigan	Washington	362
-Michigan	West Virginia	91
-Michigan	Wisconsin	7526
-Michigan	Wyoming	80
-Minnesota	Alabama	36
-Minnesota	Alaska	151
-Minnesota	Arizona	250
-Minnesota	Arkansas	65
-Minnesota	California	934
-Minnesota	Canada	275
-Minnesota	Colorado	295
-Minnesota	Connecticut	57
-Minnesota	Delaware	3
-Minnesota	District of Columbia	138
-Minnesota	Florida	536
-Minnesota	Georgia	513
-Minnesota	Hawaii	66
-Minnesota	Idaho	30
-Minnesota	Illinois	1332
-Minnesota	Indiana	313
-Minnesota	Iowa	4597
-Minnesota	Kansas	206
-Minnesota	Kentucky	74
-Minnesota	Louisiana	43
-Minnesota	Maine	50
-Minnesota	Maryland	122
-Minnesota	Massachusetts	233
-Minnesota	Mexico	22
-Minnesota	Michigan	403
-Minnesota	Minnesota	2631579
-Minnesota	Mississippi	19
-Minnesota	Missouri	442
-Minnesota	Montana	146
-Minnesota	Nebraska	282
-Minnesota	Nevada	122
-Minnesota	New Hampshire	41
-Minnesota	New Jersey	271
-Minnesota	New Mexico	49
-Minnesota	New York	538
-Minnesota	North Carolina	167
-Minnesota	North Dakota	29090
-Minnesota	Ohio	229
-Minnesota	Oklahoma	104
-Minnesota	Oregon	101
-Minnesota	Other workplace location outside United States	920
-Minnesota	Pennsylvania	306
-Minnesota	Rhode Island	18
-Minnesota	South Carolina	48
-Minnesota	South Dakota	3628
-Minnesota	Tennessee	216
-Minnesota	Texas	823
-Minnesota	Utah	141
-Minnesota	Virginia	163
-Minnesota	Washington	235
-Minnesota	West Virginia	19
-Minnesota	Wisconsin	19612
-Minnesota	Wyoming	68
-Mississippi	Alabama	7674
-Mississippi	Alaska	82
-Mississippi	Arizona	53
-Mississippi	Arkansas	1893
-Mississippi	California	342
-Mississippi	Canada	60
-Mississippi	Colorado	85
-Mississippi	Connecticut	17
-Mississippi	Delaware	38
-Mississippi	District of Columbia	12
-Mississippi	Florida	632
-Mississippi	Georgia	883
-Mississippi	Illinois	334
-Mississippi	Indiana	157
-Mississippi	Iowa	49
-Mississippi	Kansas	174
-Mississippi	Kentucky	222
-Mississippi	Louisiana	21596
-Mississippi	Maryland	123
-Mississippi	Massachusetts	21
-Mississippi	Mexico	77
-Mississippi	Michigan	124
-Mississippi	Minnesota	226
-Mississippi	Mississippi	1083836
-Mississippi	Missouri	256
-Mississippi	Montana	20
-Mississippi	Nebraska	106
-Mississippi	Nevada	60
-Mississippi	New Hampshire	19
-Mississippi	New Jersey	66
-Mississippi	New Mexico	52
-Mississippi	New York	205
-Mississippi	North Carolina	240
-Mississippi	North Dakota	220
-Mississippi	Ohio	193
-Mississippi	Oklahoma	135
-Mississippi	Oregon	4
-Mississippi	Other workplace location outside United States	1453
-Mississippi	Pennsylvania	168
-Mississippi	South Carolina	425
-Mississippi	Tennessee	52758
-Mississippi	Texas	4274
-Mississippi	Utah	47
-Mississippi	Vermont	27
-Mississippi	Virginia	223
-Mississippi	Washington	65
-Mississippi	West Virginia	52
-Mississippi	Wisconsin	67
-Mississippi	Wyoming	72
-Missouri	Alabama	145
-Missouri	Alaska	61
-Missouri	Arizona	304
-Missouri	Arkansas	9259
-Missouri	California	666
-Missouri	Canada	140
-Missouri	Colorado	389
-Missouri	Connecticut	141
-Missouri	Delaware	15
-Missouri	District of Columbia	237
-Missouri	Florida	562
-Missouri	Georgia	609
-Missouri	Hawaii	25
-Missouri	Idaho	70
-Missouri	Illinois	24923
-Missouri	Indiana	1127
-Missouri	Iowa	4640
-Missouri	Kansas	97835
-Missouri	Kentucky	550
-Missouri	Louisiana	494
-Missouri	Maine	9
-Missouri	Maryland	259
-Missouri	Massachusetts	153
-Missouri	Mexico	8
-Missouri	Michigan	314
-Missouri	Minnesota	742
-Missouri	Mississippi	266
-Missouri	Missouri	2581920
-Missouri	Montana	111
-Missouri	Nebraska	1481
-Missouri	Nevada	114
-Missouri	New Hampshire	33
-Missouri	New Jersey	406
-Missouri	New Mexico	131
-Missouri	New York	554
-Missouri	North Carolina	241
-Missouri	North Dakota	247
-Missouri	Ohio	697
-Missouri	Oklahoma	2653
-Missouri	Oregon	81
-Missouri	Other workplace location outside United States	699
-Missouri	Pennsylvania	617
-Missouri	Rhode Island	16
-Missouri	South Carolina	187
-Missouri	South Dakota	62
-Missouri	Tennessee	973
-Missouri	Texas	1957
-Missouri	Utah	64
-Missouri	Vermont	23
-Missouri	Virginia	474
-Missouri	Washington	192
-Missouri	West Virginia	80
-Missouri	Wisconsin	554
-Missouri	Wyoming	43
-Montana	Alaska	397
-Montana	Arizona	154
-Montana	Arkansas	24
-Montana	California	421
-Montana	Canada	119
-Montana	Colorado	316
-Montana	Connecticut	4
-Montana	District of Columbia	2
-Montana	Florida	52
-Montana	Georgia	41
-Montana	Idaho	506
-Montana	Illinois	6
-Montana	Indiana	16
-Montana	Iowa	4
-Montana	Kansas	56
-Montana	Kentucky	7
-Montana	Louisiana	25
-Montana	Maine	11
-Montana	Maryland	5
-Montana	Massachusetts	41
-Montana	Michigan	43
-Montana	Minnesota	154
-Montana	Mississippi	6
-Montana	Missouri	16
-Montana	Montana	461298
-Montana	Nebraska	32
-Montana	Nevada	127
-Montana	New Jersey	8
-Montana	New Mexico	51
-Montana	New York	101
-Montana	North Carolina	30
-Montana	North Dakota	2572
-Montana	Ohio	133
-Montana	Oklahoma	9
-Montana	Oregon	151
-Montana	Other workplace location outside United States	188
-Montana	Pennsylvania	47
-Montana	South Carolina	21
-Montana	South Dakota	208
-Montana	Tennessee	4
-Montana	Texas	302
-Montana	Utah	242
-Montana	Virginia	14
-Montana	Washington	395
-Montana	West Virginia	17
-Montana	Wisconsin	156
-Montana	Wyoming	787
-Nebraska	Alabama	9
-Nebraska	Alaska	42
-Nebraska	Arizona	93
-Nebraska	Arkansas	60
-Nebraska	California	212
-Nebraska	Canada	9
-Nebraska	Colorado	695
-Nebraska	Connecticut	7
-Nebraska	Delaware	17
-Nebraska	District of Columbia	11
-Nebraska	Florida	94
-Nebraska	Georgia	59
-Nebraska	Idaho	11
-Nebraska	Illinois	274
-Nebraska	Indiana	94
-Nebraska	Iowa	17445
-Nebraska	Kansas	2096
-Nebraska	Kentucky	8
-Nebraska	Louisiana	25
-Nebraska	Maryland	62
-Nebraska	Massachusetts	25
-Nebraska	Michigan	61
-Nebraska	Minnesota	195
-Nebraska	Mississippi	7
-Nebraska	Missouri	648
-Nebraska	Montana	60
-Nebraska	Nebraska	909750
-Nebraska	Nevada	41
-Nebraska	New Jersey	82
-Nebraska	New Mexico	14
-Nebraska	New York	115
-Nebraska	North Carolina	85
-Nebraska	North Dakota	90
-Nebraska	Ohio	44
-Nebraska	Oklahoma	144
-Nebraska	Oregon	8
-Nebraska	Other workplace location outside United States	384
-Nebraska	Pennsylvania	32
-Nebraska	South Carolina	15
-Nebraska	South Dakota	2765
-Nebraska	Tennessee	110
-Nebraska	Texas	277
-Nebraska	Utah	22
-Nebraska	Virginia	41
-Nebraska	Washington	39
-Nebraska	Wisconsin	41
-Nebraska	Wyoming	676
-Nevada	Alabama	27
-Nevada	Alaska	137
-Nevada	Arizona	1609
-Nevada	Arkansas	18
-Nevada	California	13666
-Nevada	Canada	73
-Nevada	Colorado	453
-Nevada	Connecticut	28
-Nevada	Delaware	10
-Nevada	District of Columbia	96
-Nevada	Florida	331
-Nevada	Georgia	136
-Nevada	Hawaii	166
-Nevada	Idaho	288
-Nevada	Illinois	457
-Nevada	Indiana	208
-Nevada	Iowa	73
-Nevada	Kansas	7
-Nevada	Kentucky	61
-Nevada	Louisiana	70
-Nevada	Maryland	85
-Nevada	Massachusetts	131
-Nevada	Mexico	80
-Nevada	Michigan	184
-Nevada	Minnesota	223
-Nevada	Mississippi	35
-Nevada	Missouri	97
-Nevada	Montana	153
-Nevada	Nebraska	315
-Nevada	Nevada	1191239
-Nevada	New Hampshire	34
-Nevada	New Jersey	53
-Nevada	New Mexico	109
-Nevada	New York	475
-Nevada	North Carolina	183
-Nevada	North Dakota	274
-Nevada	Ohio	90
-Nevada	Oklahoma	38
-Nevada	Oregon	164
-Nevada	Other workplace location outside United States	848
-Nevada	Pennsylvania	239
-Nevada	Puerto Rico	21
-Nevada	South Carolina	58
-Nevada	South Dakota	8
-Nevada	Tennessee	154
-Nevada	Texas	590
-Nevada	Utah	1212
-Nevada	Virginia	151
-Nevada	Washington	248
-Nevada	West Virginia	7
-Nevada	Wisconsin	74
-Nevada	Wyoming	104
-New Hampshire	Alabama	39
-New Hampshire	Alaska	23
-New Hampshire	Arizona	38
-New Hampshire	California	211
-New Hampshire	Canada	48
-New Hampshire	Colorado	41
-New Hampshire	Connecticut	754
-New Hampshire	Delaware	26
-New Hampshire	District of Columbia	92
-New Hampshire	Florida	307
-New Hampshire	Georgia	95
-New Hampshire	Hawaii	8
-New Hampshire	Illinois	196
-New Hampshire	Indiana	46
-New Hampshire	Iowa	26
-New Hampshire	Kentucky	21
-New Hampshire	Louisiana	20
-New Hampshire	Maine	6965
-New Hampshire	Maryland	123
-New Hampshire	Massachusetts	82281
-New Hampshire	Mexico	5
-New Hampshire	Michigan	52
-New Hampshire	Minnesota	69
-New Hampshire	Mississippi	17
-New Hampshire	Missouri	45
-New Hampshire	Nebraska	16
-New Hampshire	Nevada	47
-New Hampshire	New Hampshire	570188
-New Hampshire	New Jersey	360
-New Hampshire	New Mexico	3
-New Hampshire	New York	1251
-New Hampshire	North Carolina	71
-New Hampshire	North Dakota	32
-New Hampshire	Ohio	264
-New Hampshire	Oklahoma	45
-New Hampshire	Oregon	26
-New Hampshire	Other workplace location outside United States	188
-New Hampshire	Pennsylvania	297
-New Hampshire	Puerto Rico	3
-New Hampshire	Rhode Island	379
-New Hampshire	South Carolina	34
-New Hampshire	South Dakota	4
-New Hampshire	Tennessee	20
-New Hampshire	Texas	201
-New Hampshire	Utah	16
-New Hampshire	Vermont	9393
-New Hampshire	Virginia	200
-New Hampshire	Washington	39
-New Hampshire	West Virginia	33
-New Hampshire	Wisconsin	24
-New Hampshire	Wyoming	10
-New Jersey	Alabama	57
-New Jersey	Alaska	21
-New Jersey	Arizona	210
-New Jersey	Arkansas	21
-New Jersey	California	1339
-New Jersey	Canada	189
-New Jersey	Colorado	221
-New Jersey	Connecticut	3398
-New Jersey	Delaware	8209
-New Jersey	District of Columbia	998
-New Jersey	Florida	1094
-New Jersey	Georgia	481
-New Jersey	Idaho	5
-New Jersey	Illinois	735
-New Jersey	Indiana	169
-New Jersey	Iowa	12
-New Jersey	Kansas	118
-New Jersey	Kentucky	87
-New Jersey	Louisiana	88
-New Jersey	Maine	95
-New Jersey	Maryland	2443
-New Jersey	Massachusetts	1666
-New Jersey	Mexico	65
-New Jersey	Michigan	391
-New Jersey	Minnesota	211
-New Jersey	Mississippi	28
-New Jersey	Missouri	215
-New Jersey	Montana	32
-New Jersey	Nebraska	45
-New Jersey	Nevada	241
-New Jersey	New Hampshire	97
-New Jersey	New Jersey	3553150
-New Jersey	New Mexico	2
-New Jersey	New York	399961
-New Jersey	North Carolina	672
-New Jersey	North Dakota	102
-New Jersey	Ohio	1010
-New Jersey	Oklahoma	128
-New Jersey	Oregon	98
-New Jersey	Other workplace location outside United States	1514
-New Jersey	Pennsylvania	124426
-New Jersey	Puerto Rico	109
-New Jersey	Rhode Island	177
-New Jersey	South Carolina	199
-New Jersey	Tennessee	178
-New Jersey	Texas	1019
-New Jersey	Utah	136
-New Jersey	Vermont	120
-New Jersey	Virginia	1308
-New Jersey	Washington	144
-New Jersey	West Virginia	99
-New Jersey	Wisconsin	257
-New Jersey	Wyoming	8
-New Mexico	Alabama	12
-New Mexico	Alaska	35
-New Mexico	Arizona	2903
-New Mexico	Arkansas	13
-New Mexico	California	627
-New Mexico	Canada	32
-New Mexico	Colorado	1831
-New Mexico	Connecticut	43
-New Mexico	District of Columbia	59
-New Mexico	Florida	158
-New Mexico	Georgia	71
-New Mexico	Hawaii	7
-New Mexico	Idaho	18
-New Mexico	Illinois	98
-New Mexico	Indiana	27
-New Mexico	Iowa	79
-New Mexico	Kansas	115
-New Mexico	Kentucky	17
-New Mexico	Louisiana	211
-New Mexico	Maryland	48
-New Mexico	Massachusetts	117
-New Mexico	Mexico	218
-New Mexico	Michigan	22
-New Mexico	Minnesota	65
-New Mexico	Mississippi	19
-New Mexico	Missouri	67
-New Mexico	Montana	110
-New Mexico	Nebraska	59
-New Mexico	Nevada	176
-New Mexico	New Hampshire	22
-New Mexico	New Jersey	44
-New Mexico	New Mexico	842525
-New Mexico	New York	138
-New Mexico	North Carolina	62
-New Mexico	North Dakota	57
-New Mexico	Ohio	146
-New Mexico	Oklahoma	139
-New Mexico	Oregon	91
-New Mexico	Other workplace location outside United States	391
-New Mexico	Pennsylvania	90
-New Mexico	South Carolina	33
-New Mexico	Tennessee	76
-New Mexico	Texas	17222
-New Mexico	Utah	296
-New Mexico	Virginia	113
-New Mexico	Washington	101
-New Mexico	West Virginia	5
-New Mexico	Wisconsin	65
-New Mexico	Wyoming	64
-New York	Alabama	196
-New York	Alaska	58
-New York	Arizona	233
-New York	Arkansas	56
-New York	California	2716
-New York	Canada	1338
-New York	Colorado	209
-New York	Connecticut	44070
-New York	Delaware	288
-New York	District of Columbia	1201
-New York	Florida	2018
-New York	Georgia	976
-New York	Hawaii	105
-New York	Idaho	5
-New York	Illinois	1231
-New York	Indiana	495
-New York	Iowa	234
-New York	Kansas	176
-New York	Kentucky	363
-New York	Louisiana	481
-New York	Maine	412
-New York	Maryland	1531
-New York	Massachusetts	6036
-New York	Mexico	73
-New York	Michigan	794
-New York	Minnesota	466
-New York	Mississippi	82
-New York	Missouri	328
-New York	Montana	64
-New York	Nebraska	145
-New York	Nevada	242
-New York	New Hampshire	352
-New York	New Jersey	128583
-New York	New Mexico	28
-New York	New York	8639313
-New York	North Carolina	871
-New York	North Dakota	88
-New York	Ohio	1374
-New York	Oklahoma	189
-New York	Oregon	135
-New York	Other workplace location outside United States	4139
-New York	Pennsylvania	17598
-New York	Puerto Rico	192
-New York	Rhode Island	679
-New York	South Carolina	319
-New York	South Dakota	49
-New York	Tennessee	441
-New York	Texas	1443
-New York	Utah	98
-New York	Vermont	5392
-New York	Virginia	1601
-New York	Washington	391
-New York	West Virginia	231
-New York	Wisconsin	484
-New York	Wyoming	101
-North Carolina	Alabama	691
-North Carolina	Alaska	120
-North Carolina	Arizona	672
-North Carolina	Arkansas	242
-North Carolina	California	1235
-North Carolina	Canada	150
-North Carolina	Colorado	198
-North Carolina	Connecticut	372
-North Carolina	Delaware	160
-North Carolina	District of Columbia	849
-North Carolina	Florida	3005
-North Carolina	Georgia	5730
-North Carolina	Hawaii	84
-North Carolina	Illinois	868
-North Carolina	Indiana	523
-North Carolina	Iowa	279
-North Carolina	Kansas	136
-North Carolina	Kentucky	597
-North Carolina	Louisiana	704
-North Carolina	Maine	181
-North Carolina	Maryland	1872
-North Carolina	Massachusetts	646
-North Carolina	Mexico	125
-North Carolina	Michigan	458
-North Carolina	Minnesota	250
-North Carolina	Mississippi	150
-North Carolina	Missouri	532
-North Carolina	Montana	68
-North Carolina	Nebraska	212
-North Carolina	Nevada	140
-North Carolina	New Hampshire	154
-North Carolina	New Jersey	1522
-North Carolina	New Mexico	223
-North Carolina	New York	2379
-North Carolina	North Carolina	4121984
-North Carolina	North Dakota	172
-North Carolina	Ohio	1095
-North Carolina	Oklahoma	158
-North Carolina	Oregon	96
-North Carolina	Other workplace location outside United States	2701
-North Carolina	Pennsylvania	1866
-North Carolina	Puerto Rico	91
-North Carolina	Rhode Island	15
-North Carolina	South Carolina	38081
-North Carolina	Tennessee	3091
-North Carolina	Texas	1974
-North Carolina	Utah	142
-North Carolina	Vermont	49
-North Carolina	Virginia	29487
-North Carolina	Washington	189
-North Carolina	West Virginia	638
-North Carolina	Wisconsin	616
-North Carolina	Wyoming	14
-North Dakota	Alaska	18
-North Dakota	Arizona	23
-North Dakota	Arkansas	25
-North Dakota	California	15
-North Dakota	Canada	66
-North Dakota	Colorado	42
-North Dakota	Connecticut	16
-North Dakota	District of Columbia	24
-North Dakota	Florida	17
-North Dakota	Georgia	13
-North Dakota	Idaho	1
-North Dakota	Illinois	42
-North Dakota	Indiana	20
-North Dakota	Iowa	48
-North Dakota	Kansas	35
-North Dakota	Maryland	37
-North Dakota	Michigan	15
-North Dakota	Minnesota	11215
-North Dakota	Mississippi	4
-North Dakota	Missouri	16
-North Dakota	Montana	463
-North Dakota	Nebraska	45
-North Dakota	Nevada	7
-North Dakota	New Mexico	1
-North Dakota	North Carolina	43
-North Dakota	North Dakota	356096
-North Dakota	Oklahoma	8
-North Dakota	Oregon	17
-North Dakota	Other workplace location outside United States	96
-North Dakota	Pennsylvania	78
-North Dakota	South Carolina	23
-North Dakota	South Dakota	788
-North Dakota	Tennessee	34
-North Dakota	Texas	122
-North Dakota	Utah	26
-North Dakota	Virginia	28
-North Dakota	Washington	25
-North Dakota	West Virginia	4
-North Dakota	Wisconsin	41
-North Dakota	Wyoming	39
-Ohio	Alabama	410
-Ohio	Alaska	100
-Ohio	Arizona	468
-Ohio	Arkansas	214
-Ohio	California	1042
-Ohio	Canada	262
-Ohio	Colorado	267
-Ohio	Connecticut	248
-Ohio	Delaware	57
-Ohio	District of Columbia	443
-Ohio	Florida	1233
-Ohio	Georgia	957
-Ohio	Hawaii	49
-Ohio	Idaho	10
-Ohio	Illinois	2273
-Ohio	Indiana	14951
-Ohio	Iowa	387
-Ohio	Kansas	140
-Ohio	Kentucky	38129
-Ohio	Louisiana	204
-Ohio	Maine	106
-Ohio	Maryland	782
-Ohio	Massachusetts	480
-Ohio	Mexico	70
-Ohio	Michigan	12629
-Ohio	Minnesota	610
-Ohio	Mississippi	189
-Ohio	Missouri	622
-Ohio	Montana	61
-Ohio	Nebraska	356
-Ohio	Nevada	124
-Ohio	New Hampshire	20
-Ohio	New Jersey	1087
-Ohio	New Mexico	74
-Ohio	New York	1587
-Ohio	North Carolina	736
-Ohio	North Dakota	102
-Ohio	Ohio	5017895
-Ohio	Oklahoma	244
-Ohio	Oregon	76
-Ohio	Other workplace location outside United States	1257
-Ohio	Pennsylvania	21119
-Ohio	Puerto Rico	5
-Ohio	Rhode Island	96
-Ohio	South Carolina	320
-Ohio	South Dakota	24
-Ohio	Tennessee	914
-Ohio	Texas	1962
-Ohio	Utah	65
-Ohio	Vermont	42
-Ohio	Virginia	1222
-Ohio	Washington	194
-Ohio	West Virginia	36317
-Ohio	Wisconsin	802
-Ohio	Wyoming	44
-Oklahoma	Alabama	99
-Oklahoma	Alaska	180
-Oklahoma	Arizona	182
-Oklahoma	Arkansas	14814
-Oklahoma	California	600
-Oklahoma	Canada	21
-Oklahoma	Colorado	475
-Oklahoma	Delaware	17
-Oklahoma	District of Columbia	45
-Oklahoma	Florida	209
-Oklahoma	Georgia	170
-Oklahoma	Hawaii	24
-Oklahoma	Idaho	50
-Oklahoma	Illinois	306
-Oklahoma	Indiana	224
-Oklahoma	Iowa	328
-Oklahoma	Kansas	6054
-Oklahoma	Kentucky	109
-Oklahoma	Louisiana	422
-Oklahoma	Maine	6
-Oklahoma	Maryland	39
-Oklahoma	Massachusetts	50
-Oklahoma	Mexico	30
-Oklahoma	Michigan	75
-Oklahoma	Minnesota	176
-Oklahoma	Mississippi	207
-Oklahoma	Missouri	3163
-Oklahoma	Montana	34
-Oklahoma	Nebraska	237
-Oklahoma	Nevada	58
-Oklahoma	New Hampshire	14
-Oklahoma	New Jersey	191
-Oklahoma	New Mexico	149
-Oklahoma	New York	188
-Oklahoma	North Carolina	62
-Oklahoma	North Dakota	420
-Oklahoma	Ohio	165
-Oklahoma	Oklahoma	1628847
-Oklahoma	Oregon	38
-Oklahoma	Other workplace location outside United States	502
-Oklahoma	Pennsylvania	357
-Oklahoma	Rhode Island	4
-Oklahoma	South Carolina	12
-Oklahoma	South Dakota	43
-Oklahoma	Tennessee	304
-Oklahoma	Texas	12499
-Oklahoma	Utah	77
-Oklahoma	Vermont	4
-Oklahoma	Virginia	174
-Oklahoma	Washington	104
-Oklahoma	West Virginia	109
-Oklahoma	Wisconsin	225
-Oklahoma	Wyoming	134
-Oregon	Alabama	34
-Oregon	Alaska	673
-Oregon	Arizona	512
-Oregon	Arkansas	53
-Oregon	California	4800
-Oregon	Canada	122
-Oregon	Colorado	249
-Oregon	Connecticut	28
-Oregon	Delaware	6
-Oregon	District of Columbia	99
-Oregon	Florida	137
-Oregon	Georgia	73
-Oregon	Hawaii	97
-Oregon	Idaho	2099
-Oregon	Illinois	169
-Oregon	Indiana	47
-Oregon	Iowa	94
-Oregon	Kansas	53
-Oregon	Kentucky	20
-Oregon	Louisiana	110
-Oregon	Maine	28
-Oregon	Maryland	64
-Oregon	Massachusetts	103
-Oregon	Mexico	16
-Oregon	Michigan	88
-Oregon	Minnesota	141
-Oregon	Mississippi	20
-Oregon	Missouri	83
-Oregon	Montana	109
-Oregon	Nebraska	117
-Oregon	Nevada	437
-Oregon	New Hampshire	15
-Oregon	New Jersey	122
-Oregon	New Mexico	85
-Oregon	New York	191
-Oregon	North Carolina	102
-Oregon	North Dakota	249
-Oregon	Ohio	100
-Oregon	Oklahoma	154
-Oregon	Oregon	1661942
-Oregon	Other workplace location outside United States	793
-Oregon	Pennsylvania	126
-Oregon	Rhode Island	16
-Oregon	South Carolina	56
-Oregon	South Dakota	8
-Oregon	Tennessee	72
-Oregon	Texas	418
-Oregon	Utah	244
-Oregon	Virginia	64
-Oregon	Washington	24895
-Oregon	West Virginia	10
-Oregon	Wisconsin	40
-Oregon	Wyoming	68
-Pennsylvania	Alabama	202
-Pennsylvania	Alaska	51
-Pennsylvania	Arizona	335
-Pennsylvania	Arkansas	229
-Pennsylvania	California	1310
-Pennsylvania	Canada	197
-Pennsylvania	Colorado	391
-Pennsylvania	Connecticut	1321
-Pennsylvania	Delaware	30698
-Pennsylvania	District of Columbia	1910
-Pennsylvania	Florida	1530
-Pennsylvania	Georgia	921
-Pennsylvania	Hawaii	99
-Pennsylvania	Idaho	40
-Pennsylvania	Illinois	1183
-Pennsylvania	Indiana	495
-Pennsylvania	Iowa	231
-Pennsylvania	Kansas	129
-Pennsylvania	Kentucky	440
-Pennsylvania	Louisiana	189
-Pennsylvania	Maine	136
-Pennsylvania	Maryland	59078
-Pennsylvania	Massachusetts	1520
-Pennsylvania	Mexico	167
-Pennsylvania	Michigan	898
-Pennsylvania	Minnesota	484
-Pennsylvania	Mississippi	56
-Pennsylvania	Missouri	530
-Pennsylvania	Montana	72
-Pennsylvania	Nebraska	83
-Pennsylvania	Nevada	190
-Pennsylvania	New Hampshire	166
-Pennsylvania	New Jersey	125403
-Pennsylvania	New Mexico	90
-Pennsylvania	New York	42438
-Pennsylvania	North Carolina	1199
-Pennsylvania	North Dakota	29
-Pennsylvania	Ohio	11261
-Pennsylvania	Oklahoma	280
-Pennsylvania	Oregon	110
-Pennsylvania	Other workplace location outside United States	1510
-Pennsylvania	Pennsylvania	5489012
-Pennsylvania	Puerto Rico	35
-Pennsylvania	Rhode Island	136
-Pennsylvania	South Carolina	645
-Pennsylvania	South Dakota	30
-Pennsylvania	Tennessee	612
-Pennsylvania	Texas	1829
-Pennsylvania	Utah	164
-Pennsylvania	Vermont	99
-Pennsylvania	Virginia	4195
-Pennsylvania	Washington	257
-Pennsylvania	West Virginia	9305
-Pennsylvania	Wisconsin	527
-Pennsylvania	Wyoming	45
-Puerto Rico	Arizona	9
-Puerto Rico	Arkansas	45
-Puerto Rico	California	62
-Puerto Rico	Connecticut	42
-Puerto Rico	District of Columbia	9
-Puerto Rico	Florida	269
-Puerto Rico	Georgia	32
-Puerto Rico	Indiana	31
-Puerto Rico	Iowa	27
-Puerto Rico	Kentucky	8
-Puerto Rico	Louisiana	34
-Puerto Rico	Maine	29
-Puerto Rico	Maryland	30
-Puerto Rico	Massachusetts	31
-Puerto Rico	Michigan	16
-Puerto Rico	Missouri	49
-Puerto Rico	New Jersey	105
-Puerto Rico	New York	349
-Puerto Rico	North Carolina	17
-Puerto Rico	Oklahoma	12
-Puerto Rico	Other workplace location outside United States	374
-Puerto Rico	Pennsylvania	91
-Puerto Rico	Puerto Rico	1055214
-Puerto Rico	Texas	108
-Puerto Rico	Utah	11
-Puerto Rico	Washington	16
-Rhode Island	Arizona	57
-Rhode Island	California	117
-Rhode Island	Canada	8
-Rhode Island	Connecticut	10366
-Rhode Island	Delaware	17
-Rhode Island	District of Columbia	50
-Rhode Island	Florida	127
-Rhode Island	Georgia	30
-Rhode Island	Illinois	90
-Rhode Island	Indiana	27
-Rhode Island	Kansas	12
-Rhode Island	Kentucky	13
-Rhode Island	Louisiana	10
-Rhode Island	Maine	137
-Rhode Island	Maryland	80
-Rhode Island	Massachusetts	59388
-Rhode Island	Michigan	23
-Rhode Island	Minnesota	48
-Rhode Island	Missouri	24
-Rhode Island	Nebraska	97
-Rhode Island	Nevada	49
-Rhode Island	New Hampshire	348
-Rhode Island	New Jersey	279
-Rhode Island	New York	1082
-Rhode Island	North Carolina	86
-Rhode Island	Ohio	27
-Rhode Island	Oklahoma	19
-Rhode Island	Other workplace location outside United States	255
-Rhode Island	Pennsylvania	244
-Rhode Island	Puerto Rico	7
-Rhode Island	Rhode Island	426106
-Rhode Island	South Carolina	4
-Rhode Island	South Dakota	12
-Rhode Island	Tennessee	49
-Rhode Island	Texas	138
-Rhode Island	Utah	10
-Rhode Island	Vermont	87
-Rhode Island	Virginia	89
-Rhode Island	Washington	77
-South Carolina	Alabama	552
-South Carolina	Alaska	84
-South Carolina	Arizona	114
-South Carolina	Arkansas	88
-South Carolina	California	501
-South Carolina	Canada	44
-South Carolina	Colorado	74
-South Carolina	Connecticut	107
-South Carolina	Delaware	17
-South Carolina	District of Columbia	266
-South Carolina	Florida	1709
-South Carolina	Georgia	23513
-South Carolina	Illinois	429
-South Carolina	Indiana	390
-South Carolina	Iowa	147
-South Carolina	Kansas	89
-South Carolina	Kentucky	311
-South Carolina	Louisiana	196
-South Carolina	Maine	90
-South Carolina	Maryland	630
-South Carolina	Massachusetts	188
-South Carolina	Mexico	14
-South Carolina	Michigan	214
-South Carolina	Minnesota	67
-South Carolina	Mississippi	110
-South Carolina	Missouri	282
-South Carolina	Montana	8
-South Carolina	Nebraska	110
-South Carolina	Nevada	112
-South Carolina	New Hampshire	43
-South Carolina	New Jersey	522
-South Carolina	New Mexico	20
-South Carolina	New York	814
-South Carolina	North Carolina	64872
-South Carolina	North Dakota	18
-South Carolina	Ohio	687
-South Carolina	Oklahoma	108
-South Carolina	Oregon	49
-South Carolina	Other workplace location outside United States	1233
-South Carolina	Pennsylvania	675
-South Carolina	Puerto Rico	41
-South Carolina	Rhode Island	37
-South Carolina	South Carolina	1890853
-South Carolina	South Dakota	42
-South Carolina	Tennessee	638
-South Carolina	Texas	971
-South Carolina	Utah	51
-South Carolina	Vermont	40
-South Carolina	Virginia	1620
-South Carolina	Washington	44
-South Carolina	West Virginia	170
-South Carolina	Wisconsin	170
-South Carolina	Wyoming	24
-South Dakota	Alabama	22
-South Dakota	Alaska	37
-South Dakota	Arizona	110
-South Dakota	Arkansas	17
-South Dakota	California	87
-South Dakota	Colorado	125
-South Dakota	District of Columbia	65
-South Dakota	Florida	12
-South Dakota	Georgia	57
-South Dakota	Hawaii	13
-South Dakota	Idaho	2
-South Dakota	Illinois	38
-South Dakota	Indiana	6
-South Dakota	Iowa	3561
-South Dakota	Kansas	78
-South Dakota	Kentucky	17
-South Dakota	Louisiana	10
-South Dakota	Maryland	17
-South Dakota	Mexico	34
-South Dakota	Michigan	16
-South Dakota	Minnesota	2258
-South Dakota	Mississippi	7
-South Dakota	Missouri	37
-South Dakota	Montana	149
-South Dakota	Nebraska	1393
-South Dakota	Nevada	7
-South Dakota	New Jersey	19
-South Dakota	New Mexico	19
-South Dakota	New York	36
-South Dakota	North Carolina	6
-South Dakota	North Dakota	1582
-South Dakota	Ohio	26
-South Dakota	Oklahoma	23
-South Dakota	Oregon	10
-South Dakota	Other workplace location outside United States	184
-South Dakota	Pennsylvania	38
-South Dakota	South Carolina	3
-South Dakota	South Dakota	402400
-South Dakota	Tennessee	7
-South Dakota	Texas	221
-South Dakota	Utah	47
-South Dakota	Virginia	40
-South Dakota	Washington	33
-South Dakota	Wisconsin	44
-South Dakota	Wyoming	1388
-Tennessee	Alabama	10347
-Tennessee	Alaska	135
-Tennessee	Arizona	230
-Tennessee	Arkansas	3633
-Tennessee	California	625
-Tennessee	Canada	89
-Tennessee	Colorado	355
-Tennessee	Connecticut	72
-Tennessee	Delaware	65
-Tennessee	District of Columbia	143
-Tennessee	Florida	1562
-Tennessee	Georgia	11389
-Tennessee	Hawaii	74
-Tennessee	Illinois	1407
-Tennessee	Indiana	886
-Tennessee	Iowa	180
-Tennessee	Kansas	284
-Tennessee	Kentucky	31818
-Tennessee	Louisiana	695
-Tennessee	Maine	111
-Tennessee	Maryland	413
-Tennessee	Massachusetts	206
-Tennessee	Mexico	64
-Tennessee	Michigan	856
-Tennessee	Minnesota	309
-Tennessee	Mississippi	17338
-Tennessee	Missouri	888
-Tennessee	Montana	7
-Tennessee	Nebraska	269
-Tennessee	Nevada	59
-Tennessee	New Hampshire	15
-Tennessee	New Jersey	391
-Tennessee	New Mexico	71
-Tennessee	New York	722
-Tennessee	North Carolina	4169
-Tennessee	North Dakota	116
-Tennessee	Ohio	974
-Tennessee	Oklahoma	328
-Tennessee	Oregon	57
-Tennessee	Other workplace location outside United States	1416
-Tennessee	Pennsylvania	501
-Tennessee	Puerto Rico	63
-Tennessee	South Carolina	681
-Tennessee	South Dakota	51
-Tennessee	Tennessee	2648079
-Tennessee	Texas	2350
-Tennessee	Utah	91
-Tennessee	Vermont	46
-Tennessee	Virginia	11539
-Tennessee	Washington	204
-Tennessee	West Virginia	302
-Tennessee	Wisconsin	469
-Tennessee	Wyoming	30
-Texas	Alabama	1058
-Texas	Alaska	803
-Texas	Arizona	1563
-Texas	Arkansas	7708
-Texas	California	5962
-Texas	Canada	616
-Texas	Colorado	2182
-Texas	Connecticut	392
-Texas	Delaware	32
-Texas	District of Columbia	643
-Texas	Florida	3103
-Texas	Georgia	2942
-Texas	Hawaii	213
-Texas	Idaho	141
-Texas	Illinois	3216
-Texas	Indiana	1518
-Texas	Iowa	645
-Texas	Kansas	1505
-Texas	Kentucky	633
-Texas	Louisiana	18003
-Texas	Maine	88
-Texas	Maryland	1368
-Texas	Massachusetts	617
-Texas	Mexico	9068
-Texas	Michigan	1124
-Texas	Minnesota	1231
-Texas	Mississippi	1112
-Texas	Missouri	1989
-Texas	Montana	151
-Texas	Nebraska	945
-Texas	Nevada	503
-Texas	New Hampshire	24
-Texas	New Jersey	1442
-Texas	New Mexico	13953
-Texas	New York	2333
-Texas	North Carolina	1395
-Texas	North Dakota	609
-Texas	Ohio	1504
-Texas	Oklahoma	12732
-Texas	Oregon	404
-Texas	Other workplace location outside United States	9514
-Texas	Pennsylvania	2185
-Texas	Puerto Rico	79
-Texas	Rhode Island	39
-Texas	South Carolina	560
-Texas	South Dakota	103
-Texas	Tennessee	2479
-Texas	Texas	11319672
-Texas	Utah	633
-Texas	Vermont	111
-Texas	Virginia	1647
-Texas	Washington	930
-Texas	West Virginia	268
-Texas	Wisconsin	1014
-Texas	Wyoming	310
-Utah	Alabama	40
-Utah	Alaska	244
-Utah	Arizona	1403
-Utah	Arkansas	14
-Utah	California	1954
-Utah	Canada	93
-Utah	Colorado	997
-Utah	Connecticut	31
-Utah	District of Columbia	59
-Utah	Florida	134
-Utah	Georgia	251
-Utah	Hawaii	48
-Utah	Idaho	1146
-Utah	Illinois	292
-Utah	Indiana	74
-Utah	Iowa	58
-Utah	Kansas	49
-Utah	Kentucky	31
-Utah	Louisiana	131
-Utah	Maine	2
-Utah	Maryland	82
-Utah	Massachusetts	180
-Utah	Mexico	38
-Utah	Michigan	60
-Utah	Minnesota	155
-Utah	Mississippi	77
-Utah	Missouri	78
-Utah	Montana	243
-Utah	Nebraska	75
-Utah	Nevada	2416
-Utah	New Jersey	104
-Utah	New Mexico	214
-Utah	New York	89
-Utah	North Carolina	73
-Utah	North Dakota	444
-Utah	Ohio	136
-Utah	Oklahoma	146
-Utah	Oregon	112
-Utah	Other workplace location outside United States	586
-Utah	Pennsylvania	165
-Utah	South Carolina	30
-Utah	South Dakota	54
-Utah	Tennessee	86
-Utah	Texas	709
-Utah	Utah	1243686
-Utah	Vermont	45
-Utah	Virginia	115
-Utah	Washington	317
-Utah	West Virginia	43
-Utah	Wisconsin	31
-Utah	Wyoming	1643
-Vermont	Alabama	3
-Vermont	Alaska	30
-Vermont	Arizona	30
-Vermont	California	34
-Vermont	Canada	99
-Vermont	Colorado	3
-Vermont	Connecticut	367
-Vermont	Delaware	6
-Vermont	District of Columbia	63
-Vermont	Florida	61
-Vermont	Georgia	56
-Vermont	Illinois	58
-Vermont	Iowa	5
-Vermont	Kentucky	3
-Vermont	Louisiana	3
-Vermont	Maine	134
-Vermont	Maryland	48
-Vermont	Massachusetts	2752
-Vermont	Michigan	33
-Vermont	Minnesota	10
-Vermont	Mississippi	1
-Vermont	Nevada	6
-Vermont	New Hampshire	14049
-Vermont	New Jersey	148
-Vermont	New Mexico	11
-Vermont	New York	2325
-Vermont	North Carolina	18
-Vermont	Ohio	86
-Vermont	Oregon	3
-Vermont	Other workplace location outside United States	183
-Vermont	Pennsylvania	168
-Vermont	Rhode Island	52
-Vermont	South Carolina	6
-Vermont	Tennessee	17
-Vermont	Texas	19
-Vermont	Utah	37
-Vermont	Vermont	295123
-Vermont	Virginia	44
-Vermont	Washington	10
-Vermont	Wisconsin	23
-Virginia	Alabama	268
-Virginia	Alaska	43
-Virginia	Arizona	291
-Virginia	Arkansas	142
-Virginia	California	1395
-Virginia	Canada	108
-Virginia	Colorado	247
-Virginia	Connecticut	345
-Virginia	Delaware	367
-Virginia	District of Columbia	222352
-Virginia	Florida	1368
-Virginia	Georgia	1175
-Virginia	Hawaii	102
-Virginia	Idaho	9
-Virginia	Illinois	730
-Virginia	Indiana	310
-Virginia	Iowa	167
-Virginia	Kansas	135
-Virginia	Kentucky	1877
-Virginia	Louisiana	183
-Virginia	Maine	124
-Virginia	Maryland	68542
-Virginia	Massachusetts	765
-Virginia	Mexico	68
-Virginia	Michigan	411
-Virginia	Minnesota	164
-Virginia	Mississippi	150
-Virginia	Missouri	424
-Virginia	Montana	8
-Virginia	Nebraska	109
-Virginia	Nevada	130
-Virginia	New Hampshire	72
-Virginia	New Jersey	1481
-Virginia	New Mexico	56
-Virginia	New York	2180
-Virginia	North Carolina	16869
-Virginia	North Dakota	70
-Virginia	Ohio	908
-Virginia	Oklahoma	128
-Virginia	Oregon	85
-Virginia	Other workplace location outside United States	3807
-Virginia	Pennsylvania	2116
-Virginia	Puerto Rico	53
-Virginia	Rhode Island	215
-Virginia	South Carolina	577
-Virginia	Tennessee	11082
-Virginia	Texas	947
-Virginia	Utah	100
-Virginia	Vermont	67
-Virginia	Virginia	3567788
-Virginia	Washington	484
-Virginia	West Virginia	7902
-Virginia	Wisconsin	246
-Virginia	Wyoming	29
-Washington	Alabama	100
-Washington	Alaska	2378
-Washington	Arizona	421
-Washington	Arkansas	46
-Washington	California	4969
-Washington	Canada	1324
-Washington	Colorado	227
-Washington	Connecticut	59
-Washington	District of Columbia	460
-Washington	Florida	389
-Washington	Georgia	319
-Washington	Hawaii	419
-Washington	Idaho	11091
-Washington	Illinois	458
-Washington	Indiana	279
-Washington	Iowa	115
-Washington	Kansas	113
-Washington	Kentucky	95
-Washington	Louisiana	136
-Washington	Maine	154
-Washington	Maryland	346
-Washington	Massachusetts	425
-Washington	Mexico	70
-Washington	Michigan	380
-Washington	Minnesota	261
-Washington	Mississippi	135
-Washington	Missouri	259
-Washington	Montana	439
-Washington	Nebraska	115
-Washington	Nevada	510
-Washington	New Hampshire	15
-Washington	New Jersey	339
-Washington	New Mexico	147
-Washington	New York	598
-Washington	North Carolina	212
-Washington	North Dakota	305
-Washington	Ohio	252
-Washington	Oklahoma	88
-Washington	Oregon	70280
-Washington	Other workplace location outside United States	2674
-Washington	Pennsylvania	195
-Washington	Puerto Rico	24
-Washington	Rhode Island	50
-Washington	South Carolina	33
-Washington	South Dakota	36
-Washington	Tennessee	172
-Washington	Texas	1126
-Washington	Utah	577
-Washington	Virginia	419
-Washington	Washington	3022607
-Washington	West Virginia	33
-Washington	Wisconsin	210
-Washington	Wyoming	3
-West Virginia	Alabama	37
-West Virginia	Arizona	100
-West Virginia	Arkansas	10
-West Virginia	California	170
-West Virginia	Colorado	28
-West Virginia	Connecticut	74
-West Virginia	Delaware	24
-West Virginia	District of Columbia	1681
-West Virginia	Florida	145
-West Virginia	Georgia	108
-West Virginia	Illinois	128
-West Virginia	Indiana	87
-West Virginia	Iowa	51
-West Virginia	Kansas	20
-West Virginia	Kentucky	4654
-West Virginia	Louisiana	119
-West Virginia	Maine	14
-West Virginia	Maryland	21002
-West Virginia	Massachusetts	110
-West Virginia	Michigan	87
-West Virginia	Minnesota	49
-West Virginia	Mississippi	15
-West Virginia	Missouri	32
-West Virginia	Montana	18
-West Virginia	Nebraska	19
-West Virginia	Nevada	10
-West Virginia	New Hampshire	19
-West Virginia	New Jersey	270
-West Virginia	New Mexico	27
-West Virginia	New York	192
-West Virginia	North Carolina	465
-West Virginia	North Dakota	15
-West Virginia	Ohio	15125
-West Virginia	Oklahoma	52
-West Virginia	Oregon	6
-West Virginia	Other workplace location outside United States	116
-West Virginia	Pennsylvania	12299
-West Virginia	South Carolina	38
-West Virginia	South Dakota	18
-West Virginia	Tennessee	264
-West Virginia	Texas	240
-West Virginia	Utah	19
-West Virginia	Vermont	15
-West Virginia	Virginia	28902
-West Virginia	Washington	20
-West Virginia	West Virginia	651470
-West Virginia	Wisconsin	17
-West Virginia	Wyoming	5
-Wisconsin	Alabama	64
-Wisconsin	Alaska	25
-Wisconsin	Arizona	210
-Wisconsin	Arkansas	37
-Wisconsin	California	606
-Wisconsin	Canada	136
-Wisconsin	Colorado	270
-Wisconsin	Connecticut	130
-Wisconsin	Delaware	25
-Wisconsin	District of Columbia	126
-Wisconsin	Florida	434
-Wisconsin	Georgia	303
-Wisconsin	Hawaii	41
-Wisconsin	Idaho	31
-Wisconsin	Illinois	43434
-Wisconsin	Indiana	658
-Wisconsin	Iowa	4842
-Wisconsin	Kansas	205
-Wisconsin	Kentucky	171
-Wisconsin	Louisiana	109
-Wisconsin	Maine	16
-Wisconsin	Maryland	103
-Wisconsin	Massachusetts	94
-Wisconsin	Mexico	1
-Wisconsin	Michigan	5117
-Wisconsin	Minnesota	50596
-Wisconsin	Mississippi	123
-Wisconsin	Missouri	369
-Wisconsin	Montana	79
-Wisconsin	Nebraska	138
-Wisconsin	Nevada	85
-Wisconsin	New Hampshire	30
-Wisconsin	New Jersey	172
-Wisconsin	New Mexico	38
-Wisconsin	New York	395
-Wisconsin	North Carolina	266
-Wisconsin	North Dakota	378
-Wisconsin	Ohio	609
-Wisconsin	Oklahoma	100
-Wisconsin	Oregon	16
-Wisconsin	Other workplace location outside United States	707
-Wisconsin	Pennsylvania	297
-Wisconsin	Puerto Rico	10
-Wisconsin	Rhode Island	16
-Wisconsin	South Carolina	162
-Wisconsin	South Dakota	130
-Wisconsin	Tennessee	226
-Wisconsin	Texas	494
-Wisconsin	Utah	66
-Wisconsin	Vermont	22
-Wisconsin	Virginia	168
-Wisconsin	Washington	210
-Wisconsin	West Virginia	53
-Wisconsin	Wisconsin	2678992
-Wisconsin	Wyoming	55
-Wyoming	Alabama	16
-Wyoming	Alaska	133
-Wyoming	Arizona	39
-Wyoming	California	173
-Wyoming	Colorado	1638
-Wyoming	Connecticut	42
-Wyoming	District of Columbia	8
-Wyoming	Idaho	252
-Wyoming	Illinois	52
-Wyoming	Iowa	8
-Wyoming	Kansas	58
-Wyoming	Kentucky	47
-Wyoming	Louisiana	23
-Wyoming	Maine	11
-Wyoming	Massachusetts	23
-Wyoming	Mexico	15
-Wyoming	Michigan	3
-Wyoming	Minnesota	15
-Wyoming	Missouri	29
-Wyoming	Montana	987
-Wyoming	Nebraska	824
-Wyoming	Nevada	32
-Wyoming	New Jersey	17
-Wyoming	New Mexico	44
-Wyoming	New York	83
-Wyoming	North Carolina	4
-Wyoming	North Dakota	946
-Wyoming	Ohio	20
-Wyoming	Oklahoma	146
-Wyoming	Other workplace location outside United States	145
-Wyoming	Pennsylvania	56
-Wyoming	South Carolina	8
-Wyoming	South Dakota	402
-Wyoming	Tennessee	14
-Wyoming	Texas	55
-Wyoming	Utah	458
-Wyoming	Washington	124
-Wyoming	West Virginia	37
-Wyoming	Wyoming	279763
+state1	state2	f_commuting
+Alabama	Alaska	7.569524288991001e-5
+Alabama	Arizona	4.620390690509651e-5
+Alabama	Arkansas	1.8878862912066234e-4
+Alabama	California	4.177697593491457e-5
+Alabama	Colorado	4.8079300940766994e-5
+Alabama	Connecticut	1.6551533628007706e-5
+Alabama	Delaware	1.2491401008769855e-5
+Alabama	Florida	0.0017947599718205912
+Alabama	Georgia	0.009268904141923951
+Alabama	Hawaii	2.789070457812167e-5
+Alabama	Idaho	5.132683825097087e-6
+Alabama	Illinois	7.614181379829545e-5
+Alabama	Indiana	1.2501406138298372e-4
+Alabama	Iowa	7.634243684459643e-5
+Alabama	Kansas	4.967544846330424e-5
+Alabama	Kentucky	2.480975253869335e-4
+Alabama	Louisiana	9.479827604176375e-4
+Alabama	Maine	3.971557231543792e-5
+Alabama	Maryland	8.068337178850947e-5
+Alabama	Massachusetts	5.162870556029152e-5
+Alabama	Michigan	9.745501274980408e-5
+Alabama	Minnesota	4.7374825858773875e-5
+Alabama	Mississippi	0.007217808497199911
+Alabama	Missouri	1.0989785766324924e-4
+Alabama	Nebraska	1.7887974058144503e-5
+Alabama	Nevada	3.672735238692038e-5
+Alabama	New Hampshire	2.484094667626097e-5
+Alabama	New Jersey	4.945950323904587e-5
+Alabama	New Mexico	3.3724451436973216e-5
+Alabama	New York	4.341983349586476e-5
+Alabama	North Carolina	2.2766889353916287e-4
+Alabama	North Dakota	1.3384055931077466e-6
+Alabama	Ohio	1.394796698604566e-4
+Alabama	Oklahoma	7.824735040244747e-5
+Alabama	Oregon	3.2135940666905334e-5
+Alabama	Pennsylvania	8.42033099087228e-5
+Alabama	South Carolina	2.6050967234819553e-4
+Alabama	South Dakota	9.616242007591586e-6
+Alabama	Tennessee	0.004040778180984155
+Alabama	Texas	2.0987569634893516e-4
+Alabama	Utah	3.8987824933161445e-5
+Alabama	Vermont	1.192374489973277e-5
+Alabama	Virginia	1.8572928078031966e-4
+Alabama	Washington	7.497429380021673e-5
+Alabama	West Virginia	7.134340418403445e-5
+Alabama	Wisconsin	4.140600781456243e-5
+Alabama	Wyoming	1.801239252605793e-5
+Alaska	Arizona	1.366675755507067e-4
+Alaska	Arkansas	8.637641138729023e-5
+Alaska	California	5.6709764678634095e-5
+Alaska	Colorado	1.4098085650854502e-4
+Alaska	Connecticut	3.204586933830875e-5
+Alaska	Delaware	2.9861145672622305e-5
+Alaska	Florida	2.4698012841048384e-5
+Alaska	Georgia	2.4331651220198516e-5
+Alaska	Hawaii	1.359886523921595e-4
+Alaska	Idaho	4.4525387511583635e-4
+Alaska	Illinois	1.0266311430213093e-5
+Alaska	Indiana	4.785357323924717e-5
+Alaska	Iowa	1.5540826305734675e-5
+Alaska	Kansas	2.959079627599829e-5
+Alaska	Kentucky	4.125606767548268e-5
+Alaska	Louisiana	1.2789190047364103e-4
+Alaska	Maine	9.430453028485207e-6
+Alaska	Maryland	1.643899270620159e-5
+Alaska	Massachusetts	3.46951768499902e-6
+Alaska	Michigan	3.5805239439607214e-5
+Alaska	Minnesota	5.1698202010388654e-5
+Alaska	Mississippi	6.848223794363214e-5
+Alaska	Missouri	2.082568729035617e-5
+Alaska	Montana	4.933289317017623e-4
+Alaska	Nebraska	4.057618178129438e-5
+Alaska	Nevada	1.2154538127551153e-4
+Alaska	New Hampshire	2.5073448852889713e-5
+Alaska	New Jersey	1.6921731862339147e-5
+Alaska	New Mexico	2.942031884900988e-5
+Alaska	New York	8.679700683860264e-6
+Alaska	North Carolina	2.6850455048086928e-5
+Alaska	North Dakota	7.536512983421094e-5
+Alaska	Ohio	1.8639019781405303e-5
+Alaska	Oklahoma	9.108753968000948e-5
+Alaska	Oregon	3.4084333098972447e-4
+Alaska	Pennsylvania	1.2165498064914755e-5
+Alaska	South Carolina	3.753299217034974e-5
+Alaska	South Dakota	1.0005749970983325e-4
+Alaska	Tennessee	4.7407367839442596e-5
+Alaska	Texas	7.327972000461791e-5
+Alaska	Utah	1.5587406381283045e-4
+Alaska	Vermont	4.6711000596343776e-5
+Alaska	Virginia	1.8901872715810853e-5
+Alaska	Washington	7.683201810519374e-4
+Alaska	Wisconsin	8.261428612499673e-6
+Alaska	Wyoming	2.121245952886011e-4
+Arizona	Arkansas	8.928678969216742e-5
+Arizona	California	9.337188923586704e-4
+Arizona	Colorado	5.239205091260759e-4
+Arizona	Connecticut	3.8761656687301966e-5
+Arizona	Delaware	2.3713659234716798e-5
+Arizona	Florida	1.1464832168118267e-4
+Arizona	Georgia	8.930288179359415e-5
+Arizona	Hawaii	5.6393781403150044e-5
+Arizona	Idaho	1.3604440099680676e-4
+Arizona	Illinois	1.5280038208497743e-4
+Arizona	Indiana	9.602727546101916e-5
+Arizona	Iowa	1.4121650444685397e-4
+Arizona	Kansas	8.560849624715352e-5
+Arizona	Kentucky	3.355462532123957e-5
+Arizona	Louisiana	7.480791805615245e-5
+Arizona	Maine	4.930273605533739e-5
+Arizona	Maryland	7.97454509297007e-5
+Arizona	Massachusetts	9.147892906348185e-5
+Arizona	Michigan	1.2693525928875982e-4
+Arizona	Minnesota	1.7607935410753476e-4
+Arizona	Mississippi	4.003408001818461e-5
+Arizona	Missouri	1.6339064903631123e-4
+Arizona	Montana	8.388714984374405e-5
+Arizona	Nebraska	1.493747118195418e-4
+Arizona	Nevada	0.0029652612921696325
+Arizona	New Hampshire	3.085908898358577e-5
+Arizona	New Jersey	1.1079383947490827e-4
+Arizona	New Mexico	0.0017533433415115867
+Arizona	New York	7.988964057464504e-5
+Arizona	North Carolina	1.4421363852784943e-4
+Arizona	North Dakota	2.1572264079241672e-4
+Arizona	Ohio	1.1140726840348813e-4
+Arizona	Oklahoma	1.3029477787435318e-4
+Arizona	Oregon	2.2019502256940852e-4
+Arizona	Pennsylvania	1.0285822838759146e-4
+Arizona	Rhode Island	3.16574778389496e-5
+Arizona	South Carolina	4.12905254362885e-5
+Arizona	South Dakota	8.715645965856375e-5
+Arizona	Tennessee	7.88825539030785e-5
+Arizona	Texas	2.7511652341530985e-4
+Arizona	Utah	9.631243320930941e-4
+Arizona	Vermont	1.0228445511536494e-5
+Arizona	Virginia	9.45825469581399e-5
+Arizona	Washington	2.183094897333604e-4
+Arizona	West Virginia	4.529614712188585e-5
+Arizona	Wisconsin	1.1321241545270486e-4
+Arizona	Wyoming	9.493180674762945e-5
+Arkansas	California	5.66930028472422e-5
+Arkansas	Colorado	6.0122056009597566e-5
+Arkansas	Delaware	1.105960083948876e-5
+Arkansas	Florida	6.986328811729011e-5
+Arkansas	Georgia	1.2857692275599134e-4
+Arkansas	Hawaii	4.345032514421434e-6
+Arkansas	Idaho	1.2032430682260698e-5
+Arkansas	Illinois	1.2802117237425303e-4
+Arkansas	Indiana	1.0593568328897702e-4
+Arkansas	Iowa	7.322405117943839e-5
+Arkansas	Kansas	2.5401198496932925e-4
+Arkansas	Kentucky	2.0002266232581792e-4
+Arkansas	Louisiana	0.0018099311563087833
+Arkansas	Maine	1.621697189990214e-5
+Arkansas	Maryland	4.480236556490183e-6
+Arkansas	Massachusetts	1.5375214641490763e-5
+Arkansas	Michigan	5.546269419090221e-5
+Arkansas	Minnesota	4.642348976125999e-5
+Arkansas	Mississippi	0.0018725865492844153
+Arkansas	Missouri	0.004060366891375062
+Arkansas	Montana	4.01867343589881e-5
+Arkansas	Nebraska	1.4012353826759483e-4
+Arkansas	Nevada	3.5408794532882124e-5
+Arkansas	New Jersey	3.971014131529704e-5
+Arkansas	New Mexico	1.3837259985312736e-5
+Arkansas	New York	2.9428024093507395e-5
+Arkansas	North Carolina	5.3929306222103133e-5
+Arkansas	North Dakota	5.724869287572545e-5
+Arkansas	Ohio	8.662127195837147e-5
+Arkansas	Oklahoma	0.007110052273248486
+Arkansas	Oregon	4.150502861560681e-5
+Arkansas	Pennsylvania	9.519360730703132e-5
+Arkansas	Rhode Island	1.804488072956075e-5
+Arkansas	South Carolina	3.8737723152886075e-5
+Arkansas	South Dakota	4.105002166178066e-5
+Arkansas	Tennessee	0.0032717993490761835
+Arkansas	Texas	0.0016659344594549808
+Arkansas	Utah	1.6496920231204337e-5
+Arkansas	Virginia	8.506765721355836e-5
+Arkansas	Washington	3.35417441278754e-5
+Arkansas	West Virginia	4.1473057519310896e-5
+Arkansas	Wisconsin	3.782278574143152e-5
+Arkansas	Wyoming	3.0120976795894786e-5
+California	Colorado	2.536931957214626e-4
+California	Connecticut	6.522751109092031e-5
+California	Delaware	3.078566279087245e-6
+California	Florida	1.6746898105989442e-4
+California	Georgia	1.6641383649050113e-4
+California	Hawaii	1.3353151868365543e-4
+California	Idaho	5.16661472370119e-5
+California	Illinois	2.3919059363818754e-4
+California	Indiana	5.9926282232532546e-5
+California	Iowa	3.922958528893948e-5
+California	Kansas	6.227826948762255e-5
+California	Kentucky	3.0853109683809186e-5
+California	Louisiana	7.919894786734772e-5
+California	Maine	1.867099611785989e-5
+California	Maryland	6.746777889405742e-5
+California	Massachusetts	1.0613963722393151e-4
+California	Michigan	1.004068152753287e-4
+California	Minnesota	9.053641338990037e-5
+California	Mississippi	3.561843725956832e-5
+California	Missouri	7.997494863219159e-5
+California	Montana	4.966384534438638e-5
+California	Nebraska	3.673992241159215e-5
+California	Nevada	0.0014898006353758994
+California	New Hampshire	1.8593051848036128e-5
+California	New Jersey	1.3862291390221882e-4
+California	New Mexico	8.009920104272037e-5
+California	New York	2.91553259140599e-4
+California	North Carolina	8.862114352946638e-5
+California	North Dakota	1.4366518623112855e-5
+California	Ohio	9.543151980630321e-5
+California	Oklahoma	6.076269627850347e-5
+California	Oregon	4.3742283508275433e-4
+California	Pennsylvania	1.448706527169376e-4
+California	Rhode Island	1.719126678838404e-5
+California	South Carolina	4.309012548341735e-5
+California	South Dakota	1.1918692844450223e-5
+California	Tennessee	7.311995808990944e-5
+California	Texas	4.143633469839889e-4
+California	Utah	1.8319460456946233e-4
+California	Vermont	7.99747134496929e-6
+California	Virginia	1.3230290418777367e-4
+California	Washington	4.6799705678963685e-4
+California	West Virginia	1.8028985864800634e-5
+California	Wisconsin	6.945375994176048e-5
+California	Wyoming	2.152809446649137e-5
+Colorado	Connecticut	3.9212447403241445e-5
+Colorado	Delaware	6.033591488235029e-6
+Colorado	Florida	1.325524280238403e-4
+Colorado	Georgia	1.5166641566942947e-4
+Colorado	Hawaii	7.367454685348823e-5
+Colorado	Idaho	1.1064127878160795e-4
+Colorado	Illinois	1.823442902999582e-4
+Colorado	Indiana	8.507171853128959e-5
+Colorado	Iowa	1.0239028982580118e-4
+Colorado	Kansas	3.758904657858077e-4
+Colorado	Kentucky	5.557208345968796e-5
+Colorado	Louisiana	1.0177991622098018e-4
+Colorado	Maine	2.2810783895847265e-5
+Colorado	Maryland	1.0160444339107406e-4
+Colorado	Massachusetts	6.118423614172566e-5
+Colorado	Michigan	9.574821253406913e-5
+Colorado	Minnesota	1.2976962260009635e-4
+Colorado	Mississippi	4.484688174554218e-5
+Colorado	Missouri	2.2381028183245311e-4
+Colorado	Montana	1.8506855917798087e-4
+Colorado	Nebraska	5.265454821448901e-4
+Colorado	Nevada	2.326541929349217e-4
+Colorado	New Hampshire	1.3524073345337873e-5
+Colorado	New Jersey	1.2102512268755569e-4
+Colorado	New Mexico	0.0012913370689006313
+Colorado	New York	8.323095355559661e-5
+Colorado	North Carolina	8.32329121160692e-5
+Colorado	North Dakota	4.636716622824211e-4
+Colorado	Ohio	1.2887250859294882e-4
+Colorado	Oklahoma	2.510219305664052e-4
+Colorado	Oregon	9.3362100176806e-5
+Colorado	Pennsylvania	1.1595535643318305e-4
+Colorado	Rhode Island	1.4198893248218472e-5
+Colorado	South Carolina	3.0098433365055398e-5
+Colorado	South Dakota	1.6548684554142128e-4
+Colorado	Tennessee	1.2895928487282148e-4
+Colorado	Texas	3.5043038523767573e-4
+Colorado	Utah	6.246958788413672e-4
+Colorado	Vermont	7.618229479936123e-6
+Colorado	Virginia	1.3797627935685806e-4
+Colorado	Washington	1.4768035189493035e-4
+Colorado	West Virginia	1.1885988315109758e-5
+Colorado	Wisconsin	1.0212181907553883e-4
+Colorado	Wyoming	0.002216031796125075
+Connecticut	Delaware	9.315988717527577e-5
+Connecticut	Florida	1.6819494886748733e-4
+Connecticut	Georgia	1.0628903648725766e-4
+Connecticut	Hawaii	2.106160123456086e-5
+Connecticut	Illinois	1.0230407094978798e-4
+Connecticut	Indiana	1.9704943672502004e-5
+Connecticut	Iowa	4.229881706477446e-6
+Connecticut	Kansas	5.183542322240783e-6
+Connecticut	Kentucky	4.0515793056133283e-5
+Connecticut	Louisiana	2.4865647796748196e-5
+Connecticut	Maine	2.8742510667288825e-4
+Connecticut	Maryland	1.336803035540505e-4
+Connecticut	Massachusetts	0.010450141601458313
+Connecticut	Michigan	9.182369779660066e-5
+Connecticut	Minnesota	2.564426510711892e-5
+Connecticut	Mississippi	1.147025762198619e-5
+Connecticut	Missouri	6.736526589760765e-5
+Connecticut	Montana	1.0095697598281616e-5
+Connecticut	Nebraska	7.909687191645788e-6
+Connecticut	Nevada	5.4800994104267075e-5
+Connecticut	New Hampshire	5.761965094910341e-4
+Connecticut	New Jersey	0.001271215570198984
+Connecticut	New Mexico	1.7470137238085063e-5
+Connecticut	New York	0.010950796140176515
+Connecticut	North Carolina	9.248792518754495e-5
+Connecticut	North Dakota	1.1646194681841152e-5
+Connecticut	Ohio	6.222613157014911e-5
+Connecticut	Oklahoma	2.0937958980075067e-5
+Connecticut	Oregon	1.950755018393486e-5
+Connecticut	Pennsylvania	3.0225307232020093e-4
+Connecticut	Rhode Island	0.008649250844272762
+Connecticut	South Carolina	6.951820465247736e-5
+Connecticut	Tennessee	3.890302834296535e-5
+Connecticut	Texas	5.17036867124462e-5
+Connecticut	Utah	3.458442792465486e-5
+Connecticut	Vermont	3.5255903013361203e-4
+Connecticut	Virginia	1.600033003090377e-4
+Connecticut	Washington	2.499193148418894e-5
+Connecticut	West Virginia	3.655859417670046e-5
+Connecticut	Wisconsin	4.9790820387526144e-5
+Connecticut	Wyoming	3.6342434216243804e-5
+Delaware	Florida	4.95808026964292e-5
+Delaware	Georgia	1.8436565735462713e-5
+Delaware	Hawaii	5.903466515537924e-6
+Delaware	Idaho	9.964615649827462e-6
+Delaware	Illinois	2.810695987847212e-5
+Delaware	Indiana	1.9021673423659416e-5
+Delaware	Kansas	2.023103845920411e-5
+Delaware	Kentucky	2.7545267263996258e-5
+Delaware	Louisiana	2.6358541177752337e-6
+Delaware	Maine	7.265940695392044e-6
+Delaware	Maryland	0.014211121588148114
+Delaware	Massachusetts	4.267741983854094e-5
+Delaware	Michigan	1.0403247984483781e-5
+Delaware	Minnesota	1.4057349299358282e-5
+Delaware	Mississippi	3.888802471056199e-5
+Delaware	Missouri	6.807166584980667e-6
+Delaware	Nebraska	2.2118336258746617e-5
+Delaware	Nevada	1.5509857483797045e-5
+Delaware	New Hampshire	2.8067024053439613e-5
+Delaware	New Jersey	0.0036867735914261745
+Delaware	New York	1.9261578008946352e-4
+Delaware	North Carolina	4.532942770815977e-5
+Delaware	North Dakota	1.5444080494547537e-5
+Delaware	Ohio	2.7725139295565615e-5
+Delaware	Oklahoma	1.7632046395455565e-5
+Delaware	Oregon	2.9731111824657797e-6
+Delaware	Pennsylvania	0.01014519750857739
+Delaware	Rhode Island	4.2184438032978e-5
+Delaware	South Carolina	2.4921574918927e-5
+Delaware	Tennessee	2.2967172255123345e-5
+Delaware	Texas	9.335451995607027e-6
+Delaware	Utah	1.8752004120440371e-06
+Delaware	Vermont	9.212783043565716e-6
+Delaware	Virginia	3.222771466269302e-4
+Delaware	Washington	1.2134528712662648e-5
+Delaware	West Virginia	2.381817207438415e-5
+Delaware	Wisconsin	8.236806201458442e-6
+Delaware	Wyoming	2.0442951584800508e-5
+Florida	Georgia	0.002383318044964315
+Florida	Hawaii	3.663056572268813e-5
+Florida	Idaho	9.605440892051509e-6
+Florida	Illinois	3.690875415314788e-4
+Florida	Indiana	2.1366182574449044e-4
+Florida	Iowa	6.741687430605334e-5
+Florida	Kansas	5.6532771745697465e-5
+Florida	Kentucky	1.6810517450800396e-4
+Florida	Louisiana	3.9697324287411856e-4
+Florida	Maine	6.18515757502759e-5
+Florida	Maryland	3.233829456749384e-4
+Florida	Massachusetts	3.0778346483522153e-4
+Florida	Michigan	3.4675866036593274e-4
+Florida	Minnesota	1.625142870478466e-4
+Florida	Mississippi	1.7314949233714365e-4
+Florida	Missouri	1.9484878798097798e-4
+Florida	Montana	7.214827155805139e-6
+Florida	Nebraska	7.109296162833206e-5
+Florida	Nevada	9.22101677658946e-5
+Florida	New Hampshire	7.939918172137427e-5
+Florida	New Jersey	4.3483059742676895e-4
+Florida	New Mexico	3.734591837970319e-5
+Florida	New York	6.17915623513456e-4
+Florida	North Carolina	4.902907499221004e-4
+Florida	North Dakota	5.0778613389362266e-5
+Florida	Ohio	3.24303941249433e-4
+Florida	Oklahoma	6.40138668999986e-5
+Florida	Oregon	2.84806780348415e-5
+Florida	Pennsylvania	3.336555209904913e-4
+Florida	Rhode Island	8.527036405932537e-5
+Florida	South Carolina	3.5316259021094383e-4
+Florida	South Dakota	1.0957671942547497e-5
+Florida	Tennessee	3.204338736650702e-4
+Florida	Texas	4.425082422982605e-4
+Florida	Utah	4.2543835576844074e-5
+Florida	Vermont	2.075102545656177e-5
+Florida	Virginia	4.5363817034506674e-4
+Florida	Washington	9.23112448348364e-5
+Florida	West Virginia	5.424855856721807e-5
+Florida	Wisconsin	1.2207521875869833e-4
+Florida	Wyoming	2.151475216999845e-5
+Georgia	Hawaii	1.599413099572094e-5
+Georgia	Idaho	1.1817043468572362e-5
+Georgia	Illinois	2.5567196816424155e-4
+Georgia	Indiana	1.4127034801204397e-4
+Georgia	Iowa	9.717692907923147e-5
+Georgia	Kansas	1.1216596389038516e-4
+Georgia	Kentucky	3.322130972214999e-4
+Georgia	Louisiana	2.728969886208109e-4
+Georgia	Maine	1.957944626346486e-5
+Georgia	Maryland	2.2859088986639003e-4
+Georgia	Massachusetts	1.34091891813107e-4
+Georgia	Michigan	2.0542621834233052e-4
+Georgia	Minnesota	1.811352271135343e-4
+Georgia	Mississippi	2.9477538637113923e-4
+Georgia	Missouri	1.4713014560340814e-4
+Georgia	Montana	1.4057212415242147e-5
+Georgia	Nebraska	5.2984359017218115e-5
+Georgia	Nevada	6.341052065716013e-5
+Georgia	New Hampshire	2.574130120990551e-5
+Georgia	New Jersey	1.6427175623117692e-4
+Georgia	New Mexico	3.161643908910607e-5
+Georgia	New York	2.6574195168616564e-4
+Georgia	North Carolina	0.0014330294878004658
+Georgia	North Dakota	2.9678334074167506e-5
+Georgia	Ohio	0.00021917710794434151
+Georgia	Oklahoma	6.939704109895546e-5
+Georgia	Oregon	2.9546857231150103e-5
+Georgia	Pennsylvania	2.119487766454363e-4
+Georgia	Rhode Island	9.739661073076013e-6
+Georgia	South Carolina	0.0072734725102034554
+Georgia	South Dakota	2.425472355178161e-5
+Georgia	Tennessee	0.00701384853481818
+Georgia	Texas	3.817858692397019e-4
+Georgia	Utah	7.271998028313936e-5
+Georgia	Vermont	1.481768885543384e-5
+Georgia	Virginia	4.335359502704771e-4
+Georgia	Washington	7.885161685872868e-5
+Georgia	West Virginia	4.954496637899665e-5
+Georgia	Wisconsin	1.0411808438084002e-4
+Georgia	Wyoming	1.3497181491109132e-5
+Hawaii	Idaho	5.200068824440324e-5
+Hawaii	Illinois	1.4797757163767408e-5
+Hawaii	Indiana	1.0570303085823814e-5
+Hawaii	Iowa	6.1471446749413535e-6
+Hawaii	Kansas	1.0851529884854934e-5
+Hawaii	Kentucky	1.3061645489244999e-5
+Hawaii	Louisiana	3.526512592943952e-5
+Hawaii	Maine	2.761356472974604e-5
+Hawaii	Maryland	5.375947551731203e-5
+Hawaii	Massachusetts	4.878077231627544e-5
+Hawaii	Michigan	1.12151059436041e-5
+Hawaii	Minnesota	2.673250152724604e-5
+Hawaii	Missouri	2.374928405161552e-5
+Hawaii	Nevada	1.3717132212092786e-4
+Hawaii	New Hampshire	6.501940016352379e-6
+Hawaii	New Jersey	1.1392213991347613e-5
+Hawaii	New Mexico	1.3974361704393007e-5
+Hawaii	New York	1.5054315432426071e-5
+Hawaii	North Carolina	3.0738109840439935e-5
+Hawaii	North Dakota	1.5743104028463532e-5
+Hawaii	Ohio	1.4265129226220646e-5
+Hawaii	Oklahoma	1.0484575223987659e-5
+Hawaii	Oregon	1.0075861766066048e-4
+Hawaii	Pennsylvania	1.8863831432802315e-5
+Hawaii	Rhode Island	1.1966952799576554e-5
+Hawaii	South Carolina	8.231807704972012e-6
+Hawaii	South Dakota	1.2233923918168224e-5
+Hawaii	Tennessee	2.7808197191553443e-5
+Hawaii	Texas	2.7628900297148407e-5
+Hawaii	Utah	4.096703204357212e-5
+Hawaii	Virginia	3.9733576906466684e-5
+Hawaii	Washington	1.772786826320645e-4
+Hawaii	Wisconsin	1.227824663044484e-5
+Idaho	Illinois	4.2746596598001856e-5
+Idaho	Indiana	1.738881327538634e-5
+Idaho	Iowa	8.610166846956901e-5
+Idaho	Kansas	1.664571214257885e-5
+Idaho	Kentucky	8.896246885254513e-6
+Idaho	Louisiana	8.918188665254815e-5
+Idaho	Maryland	4.937993614186658e-6
+Idaho	Massachusetts	2.2611951773229258e-5
+Idaho	Michigan	1.4216064662300566e-5
+Idaho	Minnesota	2.0737726315686748e-5
+Idaho	Missouri	4.9853196271104775e-5
+Idaho	Montana	0.0012206613371962085
+Idaho	Nebraska	6.87105155343559e-5
+Idaho	Nevada	7.054585534947373e-4
+Idaho	New Hampshire	2.4638795261466895e-6
+Idaho	New Jersey	1.7854481689157757e-5
+Idaho	New Mexico	4.56377676688631e-5
+Idaho	New York	8.075988374453216e-6
+Idaho	North Carolina	1.0483422040556167e-5
+Idaho	North Dakota	9.567348759231347e-4
+Idaho	Ohio	1.1120213211554644e-5
+Idaho	Oklahoma	3.602289650446113e-5
+Idaho	Oregon	0.0033971815304147434
+Idaho	Pennsylvania	2.7050902465363846e-5
+Idaho	South Carolina	2.088005903147255e-5
+Idaho	South Dakota	4.381590841332118e-5
+Idaho	Tennessee	3.97498369801533e-5
+Idaho	Texas	2.9914523843922726e-5
+Idaho	Utah	0.0024328756833231434
+Idaho	Virginia	1.3996803984012328e-5
+Idaho	Washington	0.007867834226160225
+Idaho	West Virginia	1.1548357592583183e-5
+Idaho	Wisconsin	2.1343985685701092e-5
+Idaho	Wyoming	0.0032230944717156797
+Illinois	Indiana	0.011649304965801764
+Illinois	Iowa	0.0073873039264366926
+Illinois	Kansas	1.3820398822553685e-4
+Illinois	Kentucky	9.588188193995206e-4
+Illinois	Louisiana	1.0771063668808182e-4
+Illinois	Maine	1.460466288786889e-5
+Illinois	Maryland	9.53849046893248e-5
+Illinois	Massachusetts	1.4605523659131156e-4
+Illinois	Michigan	7.762334123630429e-4
+Illinois	Minnesota	3.2247301855643063e-4
+Illinois	Mississippi	7.644212947112672e-5
+Illinois	Missouri	0.012729730997133027
+Illinois	Montana	1.6901181392579342e-5
+Illinois	Nebraska	1.3827724724380731e-4
+Illinois	Nevada	1.1984175658672084e-4
+Illinois	New Hampshire	4.710581098881165e-5
+Illinois	New Jersey	1.7443915863873434e-4
+Illinois	New Mexico	3.060565999652014e-5
+Illinois	New York	1.995230005022259e-4
+Illinois	North Carolina	1.6259841228151857e-4
+Illinois	North Dakota	2.0005849644300953e-5
+Illinois	Ohio	3.926595530606538e-4
+Illinois	Oklahoma	7.266376767372001e-5
+Illinois	Oregon	4.772713458929577e-5
+Illinois	Pennsylvania	1.9877944236062348e-4
+Illinois	Rhode Island	3.775527098723169e-5
+Illinois	South Carolina	8.136102087114576e-5
+Illinois	South Dakota	1.739267407441439e-5
+Illinois	Tennessee	2.8756395571011636e-4
+Illinois	Texas	3.085749215619709e-4
+Illinois	Utah	5.810179001090382e-5
+Illinois	Vermont	2.9896534607493575e-5
+Illinois	Virginia	1.7751007779994615e-4
+Illinois	Washington	8.685796531142998e-5
+Illinois	West Virginia	3.2000317796259494e-5
+Illinois	Wisconsin	0.007817388275233227
+Illinois	Wyoming	2.5452412444957066e-5
+Indiana	Iowa	1.6615851045798807e-4
+Indiana	Kansas	8.60513283738587e-5
+Indiana	Kentucky	0.01718117160142609
+Indiana	Louisiana	9.68681996702195e-5
+Indiana	Maine	2.8333909456158943e-5
+Indiana	Maryland	7.612673407354739e-5
+Indiana	Massachusetts	7.05075708571211e-5
+Indiana	Michigan	0.005075388768644513
+Indiana	Minnesota	1.2179792329892e-4
+Indiana	Mississippi	7.389718890393235e-5
+Indiana	Missouri	3.4207318114360525e-4
+Indiana	Montana	8.731304095106353e-6
+Indiana	Nebraska	6.921022921716666e-5
+Indiana	Nevada	5.9436133969045965e-5
+Indiana	New Hampshire	1.3873139189808672e-5
+Indiana	New Jersey	1.0397929557916547e-4
+Indiana	New Mexico	2.0623584741334264e-5
+Indiana	New York	8.651108606632247e-5
+Indiana	North Carolina	1.4326284626586266e-4
+Indiana	North Dakota	2.5147499758197118e-5
+Indiana	Ohio	0.0050147714548156
+Indiana	Oklahoma	8.023363302462053e-5
+Indiana	Oregon	2.0873226910127144e-5
+Indiana	Pennsylvania	1.6318835068302337e-4
+Indiana	Rhode Island	1.1035206407230014e-5
+Indiana	South Carolina	1.410384614472228e-4
+Indiana	South Dakota	1.5883221473098904e-5
+Indiana	Tennessee	3.2453836225079493e-4
+Indiana	Texas	1.673354397410438e-4
+Indiana	Utah	4.060787481945789e-5
+Indiana	Vermont	1.2826044632004336e-5
+Indiana	Virginia	1.065887528751643e-4
+Indiana	Washington	6.674157903295093e-5
+Indiana	West Virginia	7.829834731616225e-5
+Indiana	Wisconsin	2.4954514223704506e-4
+Indiana	Wyoming	3.96654746089728e-6
+Iowa	Kansas	2.7835483502348436e-4
+Iowa	Kentucky	4.103745204142384e-5
+Iowa	Louisiana	6.54822381651225e-5
+Iowa	Maine	1.0184993430679237e-5
+Iowa	Maryland	1.4824848318394047e-5
+Iowa	Massachusetts	4.336048108234768e-5
+Iowa	Michigan	1.1103650311454674e-4
+Iowa	Minnesota	0.0023874849790353476
+Iowa	Mississippi	2.9545065087778387e-5
+Iowa	Missouri	0.0015235007221724888
+Iowa	Montana	1.8268014741765953e-5
+Iowa	Nebraska	0.01993065040633556
+Iowa	Nevada	3.892777046674775e-5
+Iowa	New Hampshire	2.074264599118734e-5
+Iowa	New Jersey	2.615885212560642e-5
+Iowa	New Mexico	4.309579280587566e-5
+Iowa	New York	3.6060093948432676e-5
+Iowa	North Carolina	7.548876284317577e-5
+Iowa	North Dakota	1.468845564693812e-4
+Iowa	Ohio	8.589479278267459e-5
+Iowa	Oklahoma	1.4981064518126925e-4
+Iowa	Oregon	4.203221592879807e-5
+Iowa	Pennsylvania	4.320341203266869e-5
+Iowa	Rhode Island	5.84888294311536e-6
+Iowa	South Carolina	5.9181590340847104e-5
+Iowa	South Dakota	0.004816792534936215
+Iowa	Tennessee	6.531915842601302e-5
+Iowa	Texas	8.038960859027546e-5
+Iowa	Utah	3.8171149800268535e-5
+Iowa	Vermont	2.8576131386193844e-6
+Iowa	Virginia	5.534926781678994e-5
+Iowa	Washington	3.819213188480181e-5
+Iowa	West Virginia	2.6589304452284068e-5
+Iowa	Wisconsin	0.001932113798170649
+Iowa	Wyoming	3.2287767029923264e-5
+Kansas	Kentucky	3.915367818688352e-5
+Kansas	Louisiana	9.732585478544343e-5
+Kansas	Maine	6.375355426065003e-6
+Kansas	Maryland	6.984049903219074e-5
+Kansas	Massachusetts	1.686938038765836e-5
+Kansas	Michigan	8.12592867756315e-5
+Kansas	Minnesota	9.163225977694455e-5
+Kansas	Mississippi	9.580143837805621e-5
+Kansas	Missouri	0.04605632043609939
+Kansas	Montana	4.722512099997466e-5
+Kansas	Nebraska	0.0017107779927419877
+Kansas	Nevada	2.4733566774953737e-5
+Kansas	New Jersey	3.8108509008727266e-5
+Kansas	New Mexico	9.727465688253614e-5
+Kansas	New York	3.0056699239858006e-5
+Kansas	North Carolina	4.0020870142652166e-5
+Kansas	North Dakota	8.092142529603754e-5
+Kansas	Ohio	4.338048723437794e-5
+Kansas	Oklahoma	0.003847964081552002
+Kansas	Oregon	3.234569994562518e-5
+Kansas	Pennsylvania	3.326325381740189e-5
+Kansas	Rhode Island	1.939894998774339e-5
+Kansas	South Carolina	3.190207767808466e-5
+Kansas	South Dakota	1.0968258812757516e-4
+Kansas	Tennessee	1.1800609961549892e-4
+Kansas	Texas	2.3171126188968908e-4
+Kansas	Utah	2.7394660582140508e-5
+Kansas	Virginia	6.627995786989844e-5
+Kansas	Washington	4.6768200973895434e-5
+Kansas	West Virginia	1.6610554138467655e-5
+Kansas	Wisconsin	1.0747519030062961e-4
+Kansas	Wyoming	6.81736472836982e-5
+Kentucky	Louisiana	1.0402740158815166e-4
+Kentucky	Maryland	9.284168664834201e-5
+Kentucky	Massachusetts	4.310952305944969e-5
+Kentucky	Michigan	1.8374668840714115e-4
+Kentucky	Minnesota	6.490241048012824e-5
+Kentucky	Mississippi	1.5049791215426144e-4
+Kentucky	Missouri	2.5930145027254584e-4
+Kentucky	Montana	1.057741170735521e-5
+Kentucky	Nebraska	4.193696949733586e-5
+Kentucky	Nevada	4.234828468789314e-5
+Kentucky	New Hampshire	3.54735255823242e-5
+Kentucky	New Jersey	5.981100860538007e-5
+Kentucky	New Mexico	2.0737942060537575e-5
+Kentucky	New York	6.181737081642491e-5
+Kentucky	North Carolina	1.6500827354567826e-4
+Kentucky	North Dakota	2.271335695200281e-5
+Kentucky	Ohio	0.014337966756734434
+Kentucky	Oklahoma	1.0142685747282568e-4
+Kentucky	Oregon	1.4221741843386623e-5
+Kentucky	Pennsylvania	1.1717372531924287e-4
+Kentucky	Rhode Island	6.076915993180765e-6
+Kentucky	South Carolina	1.376068013271288e-4
+Kentucky	South Dakota	1.843480907919074e-5
+Kentucky	Tennessee	0.010152893732455487
+Kentucky	Texas	9.943155227076808e-5
+Kentucky	Utah	2.5026345301337488e-5
+Kentucky	Vermont	1.3942313677160748e-5
+Kentucky	Virginia	7.387201370870812e-4
+Kentucky	Washington	4.30749155129874e-5
+Kentucky	West Virginia	0.004725105437280602
+Kentucky	Wisconsin	8.2641260208643e-5
+Kentucky	Wyoming	2.8099147843164607e-5
+Louisiana	Maine	6.488440289732597e-5
+Louisiana	Maryland	5.173252936806976e-5
+Louisiana	Massachusetts	5.2861580163791406e-5
+Louisiana	Michigan	6.13093846960082e-5
+Louisiana	Minnesota	2.5044767521945477e-5
+Louisiana	Mississippi	0.010365493685298025
+Louisiana	Missouri	0.00015634785621327269
+Louisiana	Montana	6.298276287745569e-5
+Louisiana	Nebraska	2.0494960359919773e-5
+Louisiana	Nevada	7.359501019403373e-5
+Louisiana	New Hampshire	8.030954511067458e-6
+Louisiana	New Jersey	5.9558260401868445e-5
+Louisiana	New Mexico	1.0170244831452622e-4
+Louisiana	New York	8.995855183397552e-5
+Louisiana	North Carolina	1.6762772678434587e-4
+Louisiana	North Dakota	1.2914300875097626e-4
+Louisiana	Ohio	5.75056388674704e-5
+Louisiana	Oklahoma	3.337851403925651e-4
+Louisiana	Oregon	3.824428045619564e-5
+Louisiana	Pennsylvania	1.0890725002446028e-4
+Louisiana	Rhode Island	2.5571937696530998e-5
+Louisiana	South Carolina	9.314250751174645e-5
+Louisiana	South Dakota	7.319468537695048e-6
+Louisiana	Tennessee	2.595514836562444e-4
+Louisiana	Texas	0.002687580971483801
+Louisiana	Utah	6.88988198706725e-5
+Louisiana	Vermont	1.3542293938198388e-6
+Louisiana	Virginia	7.980494069108164e-5
+Louisiana	Washington	3.601094975643043e-5
+Louisiana	West Virginia	6.415762400599427e-5
+Louisiana	Wisconsin	6.457300826512764e-5
+Louisiana	Wyoming	3.9999872727677683e-5
+Maine	Maryland	7.839233663203838e-5
+Maine	Massachusetts	0.001847694568894529
+Maine	Michigan	3.466780114549263e-5
+Maine	Minnesota	3.612283988504909e-5
+Maine	Mississippi	5.321989217649845e-6
+Maine	Missouri	2.163524173933547e-5
+Maine	Montana	1.3101695359379503e-5
+Maine	Nebraska	1.4502077752230684e-5
+Maine	New Hampshire	0.01946104667769812
+Maine	New Jersey	6.633534246101237e-5
+Maine	New Mexico	2.7590373994417086e-6
+Maine	New York	1.2100326957538774e-4
+Maine	North Carolina	5.6665561547257384e-5
+Maine	North Dakota	2.1798500885953357e-5
+Maine	Ohio	2.7909602752135706e-5
+Maine	Oklahoma	7.602467850505072e-6
+Maine	Oregon	1.3661051680639865e-5
+Maine	Pennsylvania	4.8715989227369334e-5
+Maine	Rhode Island	2.8442841497912255e-4
+Maine	South Carolina	8.085475483997763e-5
+Maine	South Dakota	1.0894724279289228e-5
+Maine	Tennessee	5.344792896954543e-5
+Maine	Texas	2.0876698946179452e-5
+Maine	Utah	7.563675341121758e-6
+Maine	Vermont	4.120755870692453e-4
+Maine	Virginia	5.724168372939868e-5
+Maine	Washington	5.2616355146623324e-5
+Maine	West Virginia	1.90665948491594e-5
+Maine	Wisconsin	2.6169009198711023e-5
+Maine	Wyoming	1.240098937347947e-5
+Maryland	Massachusetts	2.6202531760575727e-4
+Maryland	Michigan	1.2034305670124968e-4
+Maryland	Minnesota	7.38719347378293e-5
+Maryland	Mississippi	5.670226532745702e-5
+Maryland	Missouri	1.286997404890389e-4
+Maryland	Montana	1.7534274245868399e-6
+Maryland	Nebraska	2.5756873297394918e-5
+Maryland	Nevada	5.165175326990498e-5
+Maryland	New Hampshire	5.370529372066897e-5
+Maryland	New Jersey	7.300243268585567e-4
+Maryland	New Mexico	2.6911097796476006e-5
+Maryland	New York	3.846358810536195e-4
+Maryland	North Carolina	4.3268993154013365e-4
+Maryland	North Dakota	2.2939003369484716e-5
+Maryland	Ohio	1.6141775535924492e-4
+Maryland	Oklahoma	1.4928485092165979e-5
+Maryland	Oregon	3.7755870050711314e-5
+Maryland	Pennsylvania	0.009285418354946458
+Maryland	Rhode Island	7.065356321186128e-5
+Maryland	South Carolina	1.6838598645578794e-4
+Maryland	South Dakota	6.087360062334567e-6
+Maryland	Tennessee	1.254225569293383e-4
+Maryland	Texas	1.5446273695863747e-4
+Maryland	Utah	3.02692504865782e-5
+Maryland	Vermont	2.085324010941993e-5
+Maryland	Virginia	0.031097985078886562
+Maryland	Washington	1.163758993270887e-4
+Maryland	West Virginia	0.00879295130067768
+Maryland	Wisconsin	5.1484286049060385e-5
+Maryland	Wyoming	6.741482137319497e-6
+Massachusetts	Michigan	9.29258620197234e-5
+Massachusetts	Minnesota	7.974058194955276e-5
+Massachusetts	Mississippi	1.573117800304613e-5
+Massachusetts	Missouri	6.463084197829387e-5
+Massachusetts	Montana	1.259470166090529e-5
+Massachusetts	Nebraska	1.6412178433203927e-5
+Massachusetts	Nevada	4.717605966028589e-5
+Massachusetts	New Hampshire	0.02995825036187762
+Massachusetts	New Jersey	4.7541147838272516e-4
+Massachusetts	New Mexico	3.995679608200854e-5
+Massachusetts	New York	0.0010932727132697856
+Massachusetts	North Carolina	1.2924170230258953e-4
+Massachusetts	North Dakota	2.3070099651295445e-6
+Massachusetts	Ohio	8.597593510206783e-5
+Massachusetts	Oklahoma	2.1938433583185373e-5
+Massachusetts	Oregon	2.4509562604859556e-5
+Massachusetts	Pennsylvania	3.093013219057285e-4
+Massachusetts	Rhode Island	0.028016589438863194
+Massachusetts	South Carolina	5.756857906954384e-5
+Massachusetts	Tennessee	6.006930887135151e-5
+Massachusetts	Texas	9.229111444430771e-5
+Massachusetts	Utah	7.117300458445985e-5
+Massachusetts	Vermont	0.001483100712210755
+Massachusetts	Virginia	2.324527023113103e-4
+Massachusetts	Washington	1.0285540290792274e-4
+Massachusetts	West Virginia	3.5342346428868476e-5
+Massachusetts	Wisconsin	4.317170422892746e-5
+Massachusetts	Wyoming	9.140816339769451e-6
+Michigan	Minnesota	1.982557968546897e-4
+Michigan	Mississippi	6.116907501289891e-5
+Michigan	Missouri	1.2860459501961785e-4
+Michigan	Montana	2.2973718066531886e-5
+Michigan	Nebraska	6.7529598464184e-5
+Michigan	Nevada	6.505498953698918e-5
+Michigan	New Hampshire	1.9845592660582124e-5
+Michigan	New Jersey	1.2585931133827033e-4
+Michigan	New Mexico	1.8948161091153287e-5
+Michigan	New York	1.5778918231993067e-4
+Michigan	North Carolina	1.0820211079603048e-4
+Michigan	North Dakota	4.952706179009798e-5
+Michigan	Ohio	0.0039687056381213295
+Michigan	Oklahoma	4.2672005057422824e-5
+Michigan	Oregon	2.9680729629154997e-5
+Michigan	Pennsylvania	2.2392755964373333e-4
+Michigan	Rhode Island	1.4693827390273844e-5
+Michigan	South Carolina	8.427251582837617e-5
+Michigan	South Dakota	1.2309854710142089e-5
+Michigan	Tennessee	2.5523792448382446e-4
+Michigan	Texas	1.5668467446468073e-4
+Michigan	Utah	3.635069873388445e-5
+Michigan	Vermont	1.7886991364481617e-5
+Michigan	Virginia	1.1173475609796034e-4
+Michigan	Washington	1.0467128772063318e-4
+Michigan	West Virginia	3.773458510399694e-5
+Michigan	Wisconsin	0.0018710564890941366
+Michigan	Wyoming	1.910085157579724e-5
+Minnesota	Mississippi	6.59371417191024e-5
+Minnesota	Missouri	2.2705119371589798e-4
+Minnesota	Montana	9.698766025998513e-5
+Minnesota	Nebraska	1.346770545874054e-4
+Minnesota	Nevada	9.023941694350986e-5
+Minnesota	New Hampshire	3.435484873403944e-5
+Minnesota	New Jersey	7.792781846892531e-5
+Minnesota	New Mexico	3.2813139532407004e-5
+Minnesota	New York	8.90710844031918e-5
+Minnesota	North Carolina	6.174137323474455e-5
+Minnesota	North Dakota	0.013310854100753639
+Minnesota	Ohio	1.0966871551529984e-4
+Minnesota	Oklahoma	6.571680843503401e-5
+Minnesota	Oregon	5.636081916957224e-5
+Minnesota	Pennsylvania	9.727409660992385e-5
+Minnesota	Rhode Island	2.1584491346744716e-5
+Minnesota	South Carolina	2.5428149226530978e-5
+Minnesota	South Dakota	0.0019362701962093712
+Minnesota	Tennessee	9.942837208483115e-5
+Minnesota	Texas	1.4720526785589507e-4
+Minnesota	Utah	7.637603949466928e-5
+Minnesota	Vermont	3.416803566596235e-6
+Minnesota	Virginia	5.2744538682070435e-5
+Minnesota	Washington	8.77149236685635e-5
+Minnesota	West Virginia	2.0712024579081403e-5
+Minnesota	Wisconsin	0.01304792484508284
+Minnesota	Wyoming	2.8508376482306775e-5
+Mississippi	Missouri	1.423787285088583e-4
+Mississippi	Montana	1.682673638975899e-5
+Mississippi	Nebraska	5.667856582162102e-5
+Mississippi	Nevada	4.175512159530936e-5
+Mississippi	New Hampshire	2.1764627643495398e-5
+Mississippi	New Jersey	2.0271377677331425e-5
+Mississippi	New Mexico	3.685570007142738e-5
+Mississippi	New York	2.9516315014568924e-5
+Mississippi	North Carolina	7.491053952875509e-5
+Mississippi	North Dakota	1.5553870552912323e-4
+Mississippi	Ohio	6.260126615157733e-5
+Mississippi	Oklahoma	1.2605855087955326e-4
+Mississippi	Oregon	8.740615674400412e-6
+Mississippi	Pennsylvania	3.407843394990957e-5
+Mississippi	South Carolina	1.7981839350583351e-4
+Mississippi	South Dakota	4.7098623845494986e-6
+Mississippi	Tennessee	0.018436558968398565
+Mississippi	Texas	4.340435174964022e-4
+Mississippi	Utah	5.3272705557460195e-5
+Mississippi	Vermont	2.030475994334972e-5
+Mississippi	Virginia	8.018061920504247e-5
+Mississippi	Washington	4.870157936786811e-5
+Mississippi	West Virginia	3.860841444461796e-5
+Mississippi	Wisconsin	5.0491387498013564e-5
+Mississippi	Wyoming	5.279865891406358e-5
+Missouri	Montana	4.17303986238826e-5
+Missouri	Nebraska	6.093653355559378e-4
+Missouri	Nevada	5.591818454060959e-5
+Missouri	New Hampshire	2.474473270295598e-5
+Missouri	New Jersey	1.0121109423535181e-4
+Missouri	New Mexico	5.781624537214536e-5
+Missouri	New York	7.85948103365542e-5
+Missouri	North Carolina	1.1529265317329977e-4
+Missouri	North Dakota	8.95081780865602e-5
+Missouri	Ohio	1.7352673956280734e-4
+Missouri	Oklahoma	0.0013793159057938619
+Missouri	Oregon	3.86425530852073e-5
+Missouri	Pennsylvania	1.4209474411734573e-4
+Missouri	Rhode Island	1.3297580571702882e-5
+Missouri	South Carolina	1.0484565780255126e-4
+Missouri	South Dakota	3.3172285794990585e-5
+Missouri	Tennessee	3.557052367609225e-4
+Missouri	Texas	2.8377183248860994e-4
+Missouri	Utah	3.711692458572807e-5
+Missouri	Vermont	7.994255258655867e-6
+Missouri	Virginia	1.4600187363651647e-4
+Missouri	Washington	8.046418737058379e-5
+Missouri	West Virginia	3.4637368401194744e-5
+Missouri	Wisconsin	1.7541409033160484e-4
+Missouri	Wyoming	2.515938646040629e-5
+Montana	Nebraska	6.709745175547355e-5
+Montana	Nevada	1.6940774447503866e-4
+Montana	New Jersey	9.963910715388862e-6
+Montana	New Mexico	1.2346777261070687e-4
+Montana	New York	1.813032207363416e-5
+Montana	North Carolina	2.1381600478249675e-5
+Montana	North Dakota	0.003699284154996959
+Montana	Ohio	3.5405420350853115e-5
+Montana	Oklahoma	2.0572312155652986e-5
+Montana	Oregon	1.2243936896632918e-4
+Montana	Pennsylvania	1.9998558087156404e-5
+Montana	South Carolina	1.2328988427756379e-5
+Montana	South Dakota	4.13168143231623e-4
+Montana	Tennessee	3.537673651535286e-6
+Montana	Texas	3.8450363763358634e-5
+Montana	Utah	2.843792528624091e-4
+Montana	Virginia	5.460265646887599e-6
+Montana	Washington	2.3932925823139122e-4
+Montana	West Virginia	3.145210787533822e-5
+Montana	Wisconsin	7.482825323791405e-5
+Montana	Wyoming	0.0023881481082609194
+Nebraska	Nevada	1.6941530305589992e-4
+Nebraska	New Hampshire	1.0811146832942105e-5
+Nebraska	New Jersey	2.8456023232662494e-5
+Nebraska	New Mexico	4.1658392054546244e-5
+Nebraska	New York	2.722706101783341e-5
+Nebraska	North Carolina	5.902189394302221e-5
+Nebraska	North Dakota	1.0663667148243141e-4
+Nebraska	Ohio	6.747587105023663e-5
+Nebraska	Oklahoma	1.5006037862478526e-4
+Nebraska	Oregon	4.8603769241746204e-5
+Nebraska	Pennsylvania	1.7971903507443572e-5
+Nebraska	Rhode Island	7.260734471946244e-5
+Nebraska	South Carolina	4.463125301707271e-5
+Nebraska	South Dakota	0.003158835166237689
+Nebraska	Tennessee	1.065142903394068e-4
+Nebraska	Texas	9.991297269383362e-5
+Nebraska	Utah	4.504226310903989e-5
+Nebraska	Virginia	3.349943095633282e-5
+Nebraska	Washington	3.916072962033673e-5
+Nebraska	West Virginia	1.2169821532769806e-5
+Nebraska	Wisconsin	4.9875714734317086e-5
+Nebraska	Wyoming	0.0012594320968788754
+Nevada	New Hampshire	4.598332792130379e-5
+Nevada	New Jersey	6.19640974960814e-5
+Nevada	New Mexico	1.4011461867437805e-4
+Nevada	New York	7.293056471143248e-5
+Nevada	North Carolina	6.078803119423451e-5
+Nevada	North Dakota	1.8156958832165086e-4
+Nevada	Ohio	3.446416596396272e-5
+Nevada	Oklahoma	3.404035626069523e-5
+Nevada	Oregon	2.1059772610521757e-4
+Nevada	Pennsylvania	6.421502002790136e-5
+Nevada	Rhode Island	3.0295648431983798e-5
+Nevada	South Carolina	5.5154299018058816e-5
+Nevada	South Dakota	9.412331660448253e-6
+Nevada	Tennessee	5.547552552642497e-5
+Nevada	Texas	8.735611018027168e-5
+Nevada	Utah	0.0014877675408326166
+Nevada	Vermont	4.0366853968869085e-6
+Nevada	Virginia	5.9042196890808495e-5
+Nevada	Washington	1.7985082347001048e-4
+Nevada	West Virginia	9.225462711222396e-6
+Nevada	Wisconsin	4.108113135885531e-5
+Nevada	Wyoming	9.244544019663689e-5
+New Hampshire	New Jersey	1.1082025173414294e-4
+New Hampshire	New Mexico	1.7696133324084155e-5
+New Hampshire	New York	1.7402908489579533e-4
+New Hampshire	North Carolina	4.794990705176907e-5
+New Hampshire	North Dakota	3.454544669421666e-5
+New Hampshire	Ohio	5.0819854887841116e-5
+New Hampshire	Oklahoma	2.6829230583140147e-5
+New Hampshire	Oregon	1.836776841917577e-5
+New Hampshire	Pennsylvania	7.640688929400859e-5
+New Hampshire	Rhode Island	7.291722039957032e-4
+New Hampshire	South Carolina	3.128659414136177e-5
+New Hampshire	South Dakota	4.112721470051162e-6
+New Hampshire	Tennessee	1.087530008060151e-5
+New Hampshire	Texas	1.8923329816397444e-5
+New Hampshire	Utah	8.820821549267045e-6
+New Hampshire	Vermont	0.02637628227415266
+New Hampshire	Virginia	6.572829854566473e-5
+New Hampshire	Washington	1.5029855137246236e-5
+New Hampshire	West Virginia	4.256329243437477e-5
+New Hampshire	Wisconsin	1.6619301656944376e-5
+New Hampshire	Wyoming	1.1765245699508567e-5
+New Jersey	New Mexico	1.0464722397076611e-5
+New Jersey	New York	0.041548911968997425
+New Jersey	North Carolina	2.8577650974401513e-4
+New Jersey	North Dakota	2.6091307297278215e-5
+New Jersey	Ohio	2.4460110423926256e-4
+New Jersey	Oklahoma	6.155548986206167e-5
+New Jersey	Oregon	4.218347818884086e-5
+New Jersey	Pennsylvania	0.026886487513817007
+New Jersey	Rhode Island	1.145811556213113e-4
+New Jersey	South Carolina	1.3242177197595324e-4
+New Jersey	South Dakota	4.803354460508715e-6
+New Jersey	Tennessee	9.174758674823011e-5
+New Jersey	Texas	1.65442230578067e-4
+New Jersey	Utah	5.0030476898844214e-5
+New Jersey	Vermont	6.963677923659902e-5
+New Jersey	Virginia	3.915085460181166e-4
+New Jersey	Washington	7.344622459034342e-5
+New Jersey	West Virginia	8.77529049422008e-5
+New Jersey	Wisconsin	6.883194752213814e-5
+New Jersey	Wyoming	6.522411789598475e-6
+New Mexico	New York	1.750684770856456e-5
+New Mexico	North Carolina	5.7404194413705784e-5
+New Mexico	North Dakota	4.838659891430483e-5
+New Mexico	Ohio	3.753856234131426e-5
+New Mexico	Oklahoma	1.1652088070365665e-4
+New Mexico	Oregon	7.026949549297045e-5
+New Mexico	Pennsylvania	2.842830783498378e-5
+New Mexico	South Carolina	1.93895510806748e-5
+New Mexico	South Dakota	1.5261730648125537e-5
+New Mexico	Tennessee	4.211128207082086e-5
+New Mexico	Texas	0.002556716878645218
+New Mexico	Utah	2.4440258184970585e-4
+New Mexico	Vermont	9.668978138440429e-6
+New Mexico	Virginia	3.8317807441454246e-5
+New Mexico	Washington	6.415928058819572e-5
+New Mexico	West Virginia	2.141862228728129e-5
+New Mexico	Wisconsin	2.9247902953754237e-5
+New Mexico	Wyoming	9.622272353073247e-5
+New York	North Carolina	2.546114640809423e-4
+New York	North Dakota	9.782672374855997e-6
+New York	Ohio	2.1676159350590758e-4
+New York	Oklahoma	3.671409081936404e-5
+New York	Oregon	3.164562798661681e-5
+New York	Pennsylvania	0.00423135554557711
+New York	Rhode Island	1.9421694507002176e-4
+New York	South Carolina	1.0758406916373754e-4
+New York	South Dakota	9.400785109333343e-6
+New York	Tennessee	1.0302470068135381e-4
+New York	Texas	1.8915219192375244e-4
+New York	Utah	1.892102405034166e-5
+New York	Vermont	8.629912729070952e-4
+New York	Virginia	3.0964184241564206e-4
+New York	Washington	8.47987410345052e-5
+New York	West Virginia	4.5526920832451676e-5
+New York	Wisconsin	7.76557744798565e-5
+New York	Wyoming	2.062951410767261e-5
+North Carolina	North Dakota	4.800934284141621e-5
+North Carolina	Ohio	2.0029075523069536e-4
+North Carolina	Oklahoma	3.825387742170953e-5
+North Carolina	Oregon	3.4231631272081996e-5
+North Carolina	Pennsylvania	3.188038852676304e-4
+North Carolina	Rhode Island	2.2206631163906706e-5
+North Carolina	South Carolina	0.016833965849056297
+North Carolina	South Dakota	1.326145624050977e-6
+North Carolina	Tennessee	0.0010712194180504603
+North Carolina	Texas	2.1812849121319002e-4
+North Carolina	Utah	4.0067947784941344e-5
+North Carolina	Vermont	1.5168068996150027e-5
+North Carolina	Virginia	0.0059921449076333795
+North Carolina	Washington	5.6123225890245925e-5
+North Carolina	West Virginia	2.31016196895335e-4
+North Carolina	Wisconsin	1.2967045180890281e-4
+North Carolina	Wyoming	4.089268736518192e-6
+North Dakota	Ohio	1.89799469417444e-5
+North Dakota	Oklahoma	2.1557683677257298e-4
+North Dakota	Oregon	1.3179382293252156e-4
+North Dakota	Pennsylvania	1.8305571309181954e-5
+North Dakota	South Carolina	1.8246632161246823e-5
+North Dakota	South Dakota	0.003114871738256145
+North Dakota	Tennessee	4.992802043720303e-5
+North Dakota	Texas	6.26043816729655e-5
+North Dakota	Utah	2.9370374166068846e-4
+North Dakota	Virginia	2.497463036272847e-5
+North Dakota	Washington	9.766107640854647e-5
+North Dakota	West Virginia	1.8856969883434152e-5
+North Dakota	Wisconsin	1.3803295462669004e-4
+North Dakota	Wyoming	0.00154668961315487
+Ohio	Oklahoma	6.153012019735974e-5
+Ohio	Oregon	2.6347254114625227e-5
+Ohio	Pennsylvania	0.0030723140948718825
+Ohio	Rhode Island	2.2593166503922394e-5
+Ohio	South Carolina	1.457359920865501e-4
+Ohio	South Dakota	9.224505082241075e-6
+Ohio	Tennessee	2.462224802689459e-4
+Ohio	Texas	2.1210409403126472e-4
+Ohio	Utah	3.2099488612027695e-5
+Ohio	Vermont	2.409118815857874e-5
+Ohio	Virginia	2.480258943691485e-4
+Ohio	Washington	5.546609678361308e-5
+Ohio	West Virginia	0.008992088004367215
+Ohio	Wisconsin	1.832872668737947e-4
+Ohio	Wyoming	1.2080664104307473e-5
+Oklahoma	Oregon	5.834126663143908e-5
+Oklahoma	Pennsylvania	8.948519462538154e-5
+Oklahoma	Rhode Island	1.119234482543835e-5
+Oklahoma	South Carolina	3.409265246518288e-5
+Oklahoma	South Dakota	3.2491299962142715e-5
+Oklahoma	Tennessee	1.4774785052593093e-4
+Oklahoma	Texas	0.0019447730995278928
+Oklahoma	Utah	7.76258060204208e-5
+Oklahoma	Vermont	2.0790301740044303e-6
+Oklahoma	Virginia	5.8111152780955394e-5
+Oklahoma	Washington	4.127571186629421e-5
+Oklahoma	West Virginia	7.059923402023611e-5
+Oklahoma	Wisconsin	7.54381680920225e-5
+Oklahoma	Wyoming	1.466821032118142e-4
+Oregon	Pennsylvania	3.300150044957552e-5
+Oregon	Rhode Island	7.66260038006498e-6
+Oregon	South Carolina	2.955332263784514e-5
+Oregon	South Dakota	8.719409405336278e-6
+Oregon	Tennessee	2.9929352806746865e-5
+Oregon	Texas	6.331631444206619e-5
+Oregon	Utah	1.2250583623309695e-4
+Oregon	Vermont	1.5329053461606852e-6
+Oregon	Virginia	2.8490142888583083e-5
+Oregon	Washington	0.01991223761037248
+Oregon	West Virginia	6.916143489228971e-6
+Oregon	Wisconsin	1.2900283115141938e-5
+Oregon	Wyoming	3.501954141910512e-5
+Pennsylvania	Rhode Island	6.423804048281311e-5
+Pennsylvania	South Carolina	1.7883307355119808e-4
+Pennsylvania	South Dakota	1.1542091291152647e-5
+Pennsylvania	Tennessee	1.3676236181840612e-4
+Pennsylvania	Texas	2.3874811764298628e-4
+Pennsylvania	Utah	4.886360919093299e-5
+Pennsylvania	Vermont	4.615861760645266e-5
+Pennsylvania	Virginia	6.963392592234609e-4
+Pennsylvania	Washington	5.310106083466644e-5
+Pennsylvania	West Virginia	0.0035059556130829722
+Pennsylvania	Wisconsin	1.0087126329505285e-4
+Pennsylvania	Wyoming	1.7507743276159862e-5
+Rhode Island	South Carolina	1.7695295640914977e-5
+Rhode Island	South Dakota	1.4483692569141527e-5
+Rhode Island	Tennessee	1.5938929827722937e-5
+Rhode Island	Texas	1.5069017376620292e-5
+Rhode Island	Utah	5.988733993611219e-6
+Rhode Island	Vermont	1.9268944560889864e-4
+Rhode Island	Virginia	7.611039813249118e-5
+Rhode Island	Washington	3.682397559759223e-5
+Rhode Island	Wisconsin	5.152789881466509e-6
+South Carolina	South Dakota	1.962239534504456e-5
+South Carolina	Tennessee	2.9051257298329984e-4
+South Carolina	Texas	1.1587901232026264e-4
+South Carolina	Utah	2.584045275025362e-5
+South Carolina	Vermont	2.1042789139359073e-5
+South Carolina	Virginia	4.023192044883954e-4
+South Carolina	Washington	1.5670992199712752e-05
+South Carolina	West Virginia	8.180824540585739e-5
+South Carolina	Wisconsin	7.264488880846409e-5
+South Carolina	Wyoming	1.4742141517187494e-5
+South Dakota	Tennessee	1.901304589978748e-5
+South Dakota	Texas	2.76394006822496e-5
+South Dakota	Utah	6.135390450781108e-5
+South Dakota	Virginia	1.007498813670147e-5
+South Dakota	Washington	2.0145538376374715e-5
+South Dakota	West Virginia	1.7079613773000547e-5
+South Dakota	Wisconsin	5.646479744389703e-5
+South Dakota	Wyoming	0.0026171388969709907
+Tennessee	Texas	3.456054644167362e-4
+Tennessee	Utah	4.547858112993462e-5
+Tennessee	Vermont	2.1404800451199603e-5
+Tennessee	Virginia	0.0036260388735219174
+Tennessee	Washington	6.630151460167425e-5
+Tennessee	West Virginia	1.715091746802763e-4
+Tennessee	Wisconsin	1.3044867210759633e-4
+Tennessee	Wyoming	1.5027907507327812e-5
+Texas	Utah	1.0680716610822384e-4
+Texas	Vermont	1.1192495862005135e-5
+Texas	Virginia	1.7421024799507107e-4
+Texas	Washington	1.4333184494087737e-4
+Texas	West Virginia	4.243358267239687e-5
+Texas	Wisconsin	1.07712962383605e-4
+Texas	Wyoming	3.146605975965103e-5
+Utah	Vermont	5.328512545722861e-5
+Utah	Virginia	4.4682854606771137e-5
+Utah	Washington	2.0950570012516443e-4
+Utah	West Virginia	3.271391470532678e-5
+Utah	Wisconsin	2.4727393235655883e-5
+Utah	Wyoming	0.0013772082199862345
+Vermont	Virginia	2.873398080570082e-5
+Vermont	Washington	3.0140999596110606e-6
+Vermont	West Virginia	1.5846052431418284e-5
+Vermont	Wisconsin	1.5130322511230062e-5
+Virginia	Washington	1.369988126769568e-4
+Virginia	West Virginia	0.008647430418071917
+Virginia	Wisconsin	6.626975246806806e-5
+Virginia	Wyoming	7.537205204310242e-6
+Washington	West Virginia	1.4425183648918247e-5
+Washington	Wisconsin	7.365812004484728e-5
+Washington	Wyoming	3.8455750300454474e-5
+West Virginia	Wisconsin	2.1017663244190416e-5
+West Virginia	Wyoming	4.509946041717001e-5
+Wisconsin	Wyoming	1.8588554182255704e-5
