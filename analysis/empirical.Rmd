@@ -126,16 +126,8 @@ unit_data = named_bind_rows(marketscan, nhsn, europe) %>%
   mutate(
     n_susceptible = n_isolates - n_resistant,
     f_resistant = n_resistant / n_isolates
-  )
-
-# look for dataset/region combinations to do
-region_combinations = unit_data %>%
-  group_by(dataset, bugdrug) %>%
-  summarize_at(c('unit', 'us_region', 'us_division', 'eu_region'), ~ not(any(is.na(.)))) %>%
-  ungroup() %>%
-  gather('group_type', 'is_present', -dataset, -bugdrug) %>%
-  filter(is_present) %>% select(-is_present) %>%
-  arrange(dataset, bugdrug, group_type)
+  ) %>%
+  nest(-dataset, -bugdrug)
 ```
 
 ## Adjacency
@@ -186,11 +178,9 @@ cross_units <- function(df) {
     left_join(commuting_db, by = c('unit1', 'unit2')) %>%
     replace_na(list(f_commuting = 0))
 }
-```
 
-```{r adjacency_analysis}
 # compute indices, models, and predictions
-adjacency_boot_f = function(df, model_f, stat_f, n_trials = 1e2, alpha = 0.05) {
+adjacency_boot_f = function(df, model_f, stat_f, n_trials = 1e2 - 1, alpha = 0.05) {
   base_data <- cross_units(df)
   base_model <- model_f(base_data)
   base_statistic <- stat_f(base_model)
@@ -216,19 +206,13 @@ adjacency_boot_f = function(df, model_f, stat_f, n_trials = 1e2, alpha = 0.05) {
   )
 }
 
-adjacency_results <- unit_data %>%
-  nest(-dataset, -bugdrug) %>%
-  mutate(
-    results = map(data, ~ adjacency_boot_f(
-      .,
-      function(data) wilcox.test(dr_du ~ adjacent, data = data),
-      function(model) model$statistic
-    ))
-  )
-```
+adjacency_analysis <- function(model_f, stat_f) {
+  unit_data %>%
+    mutate(results = map(data, ~ adjacency_boot_f(
+      ., model_f, stat_f
+    )))
+}
 
-```{r adjacency_results}
-# table of results
 adjacency_results_table <- function(results) {
   results %>%
     select(-data) %>%
@@ -240,7 +224,16 @@ adjacency_results_table <- function(results) {
     ) %>%
     select(bugdrug, dataset, statistic, cil, ciu, p_value)
 }
+```
 
+```{r adjacency_analysis}
+adjacency_results <- adjacency_analysis(
+  function(data) wilcox.test(dr_du ~ adjacent, data = data),
+  function(model) model$statistic
+)
+```
+
+```{r adjacency_results}
 adjacency_results %>%
   adjacency_results_table()
 
@@ -264,15 +257,10 @@ adjacency_results %>%
 ## Adjacency with LOR
 
 ```{r lor_adjacency_analysis}
-lor_adjacency_results <- unit_data %>%
-  nest(-dataset, -bugdrug) %>%
-  mutate(
-    results = map(data, ~ adjacency_boot_f(
-      .,
-      function(data) wilcox.test(lorr_du ~ adjacent, data = data),
-      function(model) model$statistic
-    ))
-  )
+lor_adjacency_results <- adjacency_analysis(
+  function(data) wilcox.test(lorr_du ~ adjacent, data = data),
+  function(model) model$statistic
+)
 
 lor_adjacency_results %>%
   adjacency_results_table()
@@ -283,15 +271,10 @@ lor_adjacency_results %>%
 ```{r adjacency_covariates_analysis}
 bisquare <- partial(MASS::rlm, psi = MASS::psi.bisquare)
 
-adjacency_covariates_results <- unit_data %>%
-  nest(-dataset, -bugdrug) %>%
-  mutate(
-    results = map(data, ~ adjacency_boot_f(
-      .,
-      function(data) bisquare(dr_du ~ adjacent + d_income + d_density + d_temperature, data = data),
-      function(model) coef(model)['adjacent']
-    ))
-  )
+adjacency_covariates_results <- adjacency_analysis(
+    function(data) bisquare(dr_du ~ adjacent + d_income + d_density + d_temperature, data = data),
+    function(model) coef(model)['adjacent']
+)
 
 adjacency_covariates_results %>%
   adjacency_results_table()
@@ -301,9 +284,8 @@ adjacency_covariates_results %>%
 
 ```{r commuting_analysis}
 commute_model_f <- safely(function(data) {
-  bisquare(dr_du ~ f_commuting, data = data)
+  bisquare(dr_du ~ f_commuting + d_income + d_density + d_temperature, data = data)
 })
-      #function(data) bisquare(dr_du ~ f_commuting + d_income + d_density + d_temperature, data = data),
 
 commute_stat_f <- function(model) {
   if (is.null(model$result)) {
@@ -314,7 +296,6 @@ commute_stat_f <- function(model) {
 }
 
 commuting_results <- unit_data %>%
-  nest(-dataset, -bugdrug) %>%
   filter(dataset != 'europe') %>%
   mutate(
     results = map(data, ~ adjacency_boot_f(
