@@ -190,7 +190,7 @@ permute_cross_units <- function(df) {
 }
 
 # compute indices, models, and predictions
-adjacency_permute_f = function(df, model_f, stat_f, n_trials = 1e2 - 1, alpha = 0.05) {
+adjacency_permute_f = function(df, model_f, stat_f, n_trials = 1e3 - 1, alpha = 0.05) {
   base_data <- cross_units(df)
   base_model <- model_f(base_data)
   base_statistic <- stat_f(base_model)
@@ -244,22 +244,75 @@ adjacency_results <- adjacency_analysis(
 ```{r adjacency_results}
 adjacency_results %>%
   adjacency_results_table()
+```
 
-# plot of results
-adjacency_results %>%
-  mutate(data = map(results, ~ .$base_data)) %>%
-  select(-results) %>%
-  unnest() %>%
-  ggplot(aes(factor(adjacent), dr_du)) +
-  facet_wrap(~ dataset + bugdrug) +
-  geom_boxplot(outlier.shape = NA) +
-  geom_jitter(width = 0.2, size = 0.1) +
-  coord_cartesian(ylim = c(-2.0, 10.0)) +
+```{r adjacency_plot}
+boxplot_data_f <- function(df, ymin, ymax) {
+  df %>%
+    nest(-adjacent) %>%
+    mutate(
+      y = map(data, ~ .$dr_du),
+      box = map(y, ~ boxplot.stats(.)$stats),
+      boxplot_data = map(box, ~ tibble(
+        ymin = max(.[1], ymin),
+        lower = .[2],
+        middle = .[3],
+        upper = .[4],
+        ymax = min(.[5], ymax)
+      ))
+    ) %>%
+    select(adjacent, boxplot_data) %>%
+    unnest()
+}
+
+f_to_keep <- 0.90
+half_drop <- (1 - f_to_keep) / 2
+plot_data <- adjacency_results %>%
+  mutate(
+    data = map(results, ~ .$base_data),
+    y = map(data, ~ .$dr_du),
+    ymin = map_dbl(y, ~ quantile(., half_drop)),
+    ymax = map_dbl(y, ~ quantile(., 1 - half_drop)),
+    boxplot_data = pmap(list(data, ymin, ymax), boxplot_data_f),
+    point_data = pmap(list(data, ymin, ymax), ~ filter(..1, between(dr_du, ..2, ..3))),
+    # some plotting niceties
+    dataset = recode(dataset,
+      'europe' = 'ECDC',
+      'marketscan' = 'MarketScan/RO',
+      'nhsn' = 'Xponent/NHSN'
+    ),
+    label = str_c(dataset, ' ', bugdrug)
+  )
+
+point_data <- plot_data %>%
+  select(label, point_data) %>%
+  unnest()
+
+boxplot_data <- plot_data %>%
+  select(label, boxplot_data) %>%
+  unnest()
+
+ggplot(data = NULL, aes(x = factor(adjacent))) +
+  facet_wrap(~ label, scales = 'free_y') +
+  geom_boxplot(
+    data = boxplot_data,
+    aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
+    stat = 'identity'
+  ) +
+  geom_jitter(data = point_data, aes(y = dr_du), size = 0.1, width = 0.2) +
   scale_x_discrete(
     '',
+    breaks = c(0, 1),
     labels = c('Not adjacent', 'Adjacent')
   ) +
-  theme_classic()
+  ylab('Use-resistance association') +
+  theme_classic() +
+  theme(
+    strip.text = element_text(size = 8),
+    strip.background = element_blank(),
+    axis.text = element_text(size = 8, color = 'black'),
+    axis.title = element_text(size = 8)
+  )
 ```
 
 ## Adjacency with covariates
@@ -276,6 +329,8 @@ adjacency_covariates_results %>%
   adjacency_results_table() %>%
   kable()
 ```
+
+### Adjacency, covariates, with LOR
 
 ```{r adjacency_covariates_lor_analysis}
 adjacency_covariates_lor_results <- adjacency_analysis(
@@ -321,6 +376,30 @@ commuting_results %>%
   ) %>%
   select(bugdrug, dataset, p_value, p_value_lor) %>%
   kable()
+```
+
+```{r commute_plot}
+not_crazy <- function(x) between(x, quantile(x, 0.025), quantile(x, 0.975))
+
+unit_data %>%
+  filter(dataset != 'europe') %>%
+  mutate(
+    data = map(data, cross_units),
+    data = map(data, ~ filter(., not_crazy(dr_du))),
+    dataset = recode(dataset,
+      'europe' = 'ECDC',
+      'marketscan' = 'MarketScan/RO',
+      'nhsn' = 'Xponent/NHSN'
+    ),
+    label = str_c(dataset, ' ', bugdrug)
+  ) %>%
+  unnest() %>%
+  ggplot(aes(f_commuting, dr_du)) +
+  facet_wrap(~ label) +
+  geom_hline(yintercept = 0, color = 'gray', size = 1) +
+  geom_point() +
+  scale_x_log10('Fraction of workers commuting between states') +
+  theme_classic()
 ```
 
 ### Plots
