@@ -343,7 +343,7 @@ adjacency_covariates_lor_results %>%
   kable()
 ```
 
-## Commuting analysis
+## Commuting analysis with covariates
 
 ```{r commuting_analysis}
 commute_model_f <- safely(function(data) {
@@ -402,7 +402,34 @@ unit_data %>%
   theme_classic()
 ```
 
-### Plots
+## Commuting without covariates
+
+```{r commute1}
+commute_model_f1 <- safely(function(data) {
+  bisquare(dr_du ~ f_commuting, data = data)
+})
+
+commute_lor_f1 <- safely(function(data) {
+  bisquare(lorr_du ~ f_commuting, data = data)
+})
+
+commuting_results1 <- unit_data %>%
+  filter(dataset != 'europe') %>%
+  mutate(
+    results = map(data, ~ adjacency_permute_f(., commute_model_f1, commute_stat_f)),
+    results_lor = map(data, ~ adjacency_permute_f(., commute_lor_f1, commute_stat_f))
+  )
+
+commuting_results1 %>%
+  mutate(
+    p_value = map_dbl(results, ~ .$p_value),
+    p_value_lor = map_dbl(results_lor, ~ .$p_value)
+  ) %>%
+  select(bugdrug, dataset, p_value, p_value_lor) %>%
+  kable()
+```
+
+## Plots
 
 First plot shows MS/RO and Sp/m.
 
