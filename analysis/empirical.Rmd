@@ -190,7 +190,7 @@ permute_cross_units <- function(df) {
 }
 
 # compute indices, models, and predictions
-adjacency_permute_f = function(df, model_f, stat_f, n_trials = 1e3 - 1, alpha = 0.05) {
+adjacency_permute_f = function(df, model_f, stat_f, n_trials = 1e2 - 1, alpha = 0.05) {
   base_data <- cross_units(df)
   base_model <- model_f(base_data)
   base_statistic <- stat_f(base_model)
@@ -207,6 +207,7 @@ adjacency_permute_f = function(df, model_f, stat_f, n_trials = 1e3 - 1, alpha = 
     base_data = base_data,
     base_model = base_model,
     base_statistic = base_statistic,
+    statistics = results$statistic,
     statistic_cil = quantile(results$statistic, alpha / 2),
     statistic_ciu = quantile(results$statistic, 1 - alpha / 2),
     # small stat => group 0 had smaller values
@@ -235,15 +236,35 @@ adjacency_results_table <- function(results) {
 ```
 
 ```{r adjacency_analysis}
+median_drdu_by_adjacency <- function(df) {
+  df %>%
+    group_by(adjacent) %>%
+    summarize(y = median(dr_du)) %>%
+    with(y[adjacent == 1] - y[adjacent == 0])
+}
+
 adjacency_results <- adjacency_analysis(
-  function(data) wilcox.test(dr_du ~ adjacent, data = data),
-  function(model) model$statistic
+  median_drdu_by_adjacency,
+  identity
 )
 ```
 
 ```{r adjacency_results}
 adjacency_results %>%
   adjacency_results_table()
+
+adjacency_results2 %>%
+  mutate(
+    ar = map(results, function(r) {
+      r$base_data %>%
+        group_by(adjacent) %>%
+        summarize(y = median(dr_du))
+    })
+  ) %>%
+  select(dataset, bugdrug, ar) %>%
+  unnest() %>%
+  mutate(adjacent = recode(adjacent, `0` = 'not', `1` = 'adj')) %>%
+  spread(adjacent, y)
 ```
 
 ```{r adjacency_plot}
@@ -365,8 +386,8 @@ commute_stat_f <- function(model) {
 commuting_results <- unit_data %>%
   filter(dataset != 'europe') %>%
   mutate(
-    results = map(data, ~ adjacency_permute_f(., commute_model_f, commute_stat_f)),
-    results_lor = map(data, ~ adjacency_permute_f(., commute_lor_f, commute_stat_f))
+    results = map(data, ~ adjacency_permute_f(., commute_model_f, commute_stat_f, n_trials = 9)),
+    results_lor = map(data, ~ adjacency_permute_f(., commute_lor_f, commute_stat_f, n_trials = 9))
   )
 
 commuting_results %>%
@@ -416,8 +437,8 @@ commute_lor_f1 <- safely(function(data) {
 commuting_results1 <- unit_data %>%
   filter(dataset != 'europe') %>%
   mutate(
-    results = map(data, ~ adjacency_permute_f(., commute_model_f1, commute_stat_f)),
-    results_lor = map(data, ~ adjacency_permute_f(., commute_lor_f1, commute_stat_f))
+    results = map(data, ~ adjacency_permute_f(., commute_model_f1, commute_stat_f, n_trials = 9)),
+    results_lor = map(data, ~ adjacency_permute_f(., commute_lor_f1, commute_stat_f, n_trials = 9))
   )
 
 commuting_results1 %>%

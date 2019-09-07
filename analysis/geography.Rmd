@@ -184,12 +184,12 @@ whn2 <- tibble(
   delta_tau = seq(0.0, 0.15, length.out = 7),
   taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
 ) %>%
-  crossing(epsilon = c(0.01, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20, 0.3, 0.4, 0.5)) %>%
+  crossing(epsilon = c(0.0, 0.01, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20, 0.3, 0.4, 0.5)) %>%
   mutate(results = map2(taui, epsilon, whn_sim))
 ```
 
 ```{r whn_barcharts}
-whn2_plot_f = function(df) {
+whn2_plot_f <- function(df) {
   df %>%
   ggplot(aes(x = factor(epsilon), y = rho, fill = pop)) +
   geom_col(position = 'dodge', color = 'black') +
@@ -213,7 +213,7 @@ whn2_plot_f = function(df) {
   )
 }
 
-whn2_plot_data = whn2 %>%
+whn2_plot_data <- whn2 %>%
   mutate(
     pop = rerun(n(), c('intervention', 'control')),
     delta_tau = round(delta_tau, 3)
@@ -225,7 +225,7 @@ whn2_plot1 <- whn2_plot_data %>%
   filter(delta_tau == 0.05) %>%
   whn2_plot_f()
 
-whn2_plot2 = whn2_plot_data %>%
+whn2_plot2 <- whn2_plot_data %>%
   filter(delta_tau == 0.15) %>%
   whn2_plot_f()
 ```
