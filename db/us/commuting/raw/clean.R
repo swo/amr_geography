@@ -34,4 +34,5 @@ commuting <- counts %>%
   ) %>%
   select(state1, state2, f_commuting)
 
+write_tsv(counts, '../commuting_counts.tsv')
 write_tsv(commuting, '../commuting.tsv')

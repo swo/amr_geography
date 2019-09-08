@@ -13,8 +13,8 @@ knitr::opts_chunk$set(
 pdf.options(useDingbats = FALSE, useKerning = FALSE)
 
 library(MASS)
-map = purrr::map
-select = dplyr::select
+map <- purrr::map
+select <- dplyr::select
 ```
 
 # Methods
@@ -23,7 +23,7 @@ select = dplyr::select
 
 ### MarketScan
 
-```{r maup_db}
+```{r state_data}
 state_data = read_tsv('../db/state_data.tsv') %>%
   rename(us_region = region, us_division = division) %>%
   mutate(density = population / area)
@@ -189,82 +189,80 @@ permute_cross_units <- function(df) {
     cross_units()
 }
 
-# compute indices, models, and predictions
-adjacency_permute_f = function(df, model_f, stat_f, n_trials = 1e2 - 1, alpha = 0.05) {
-  base_data <- cross_units(df)
-  base_model <- model_f(base_data)
-  base_statistic <- stat_f(base_model)
-  
-  results <- tibble(
-    # shuffle data sets
-    cross_data = rerun(n_trials, permute_cross_units(df)),
-    # run the model and predict the outcomes
-    model = map(cross_data, model_f),
-    statistic = map_dbl(model, stat_f)
-  )
-  
-  list(
-    base_data = base_data,
-    base_model = base_model,
-    base_statistic = base_statistic,
-    statistics = results$statistic,
-    statistic_cil = quantile(results$statistic, alpha / 2),
-    statistic_ciu = quantile(results$statistic, 1 - alpha / 2),
-    # small stat => group 0 had smaller values
-    p_value = (sum(base_statistic < results$statistic) + 1) / (n_trials + 1)
-  )
+# Jackknife to build confidence interval
+jackknife_se <- function(df, stat) {
+  bootstrap::jackknife(
+    1:nrow(df),
+    function(idx) {
+      df %>%
+        slice(idx) %>%
+        cross_units() %>%
+        stat()
+    }
+  )$jack.se
 }
 
-adjacency_analysis <- function(model_f, stat_f) {
+# Permute for hypothesis testing
+permute_p <- function(df, stat, n_trials) {
+  base_stat <- stat(cross_units(df))
+  results <- replicate(n_trials, stat(permute_cross_units(df)))
+  # small stat => group 0 had smaller values
+  (sum(base_stat < results) + 1) / (n_trials + 1)
+}
+
+adjacency_analysis <- function(unit_data, jackknife_stat, permute_stat, n_trials = 1e2 - 1, alpha = 0.05) {
+  se_multiplier <- qnorm(1 - alpha / 2)
+  
   unit_data %>%
-    mutate(results = map(data, ~ adjacency_permute_f(
-      ., model_f, stat_f
-    )))
-}
-
-adjacency_results_table <- function(results) {
-  results %>%
-    select(-data) %>%
     mutate(
-      statistic = map_dbl(results, ~ .$base_statistic),
-      cil = map_dbl(results, ~ .$statistic_cil),
-      ciu = map_dbl(results, ~ .$statistic_ciu),
-      p_value = map_dbl(results, ~ .$p_value)
-    ) %>%
-    select(bugdrug, dataset, statistic, cil, ciu, p_value)
+      base_data = map(data, cross_units),
+      estimate = map_dbl(base_data, jackknife_stat),
+      std_error = map_dbl(data, ~ jackknife_se(., jackknife_stat)),
+      cil = estimate - std_error * se_multiplier,
+      ciu = estimate + std_error * se_multiplier,
+      p_value = map_dbl(data, ~ permute_p(., permute_stat, n_trials))
+    )
 }
 ```
 
 ```{r adjacency_analysis}
-median_drdu_by_adjacency <- function(df) {
+median_by_adjacency <- function(df, metric) {
   df %>%
     group_by(adjacent) %>%
-    summarize(y = median(dr_du)) %>%
-    with(y[adjacent == 1] - y[adjacent == 0])
+    summarize(x = median(!!as.symbol(metric))) %>%
+    with(x[adjacent == 1] - x[adjacent == 0])
 }
 
 adjacency_results <- adjacency_analysis(
-  median_drdu_by_adjacency,
-  identity
+  unit_data,
+  function(df) median_by_adjacency(df, 'dr_du'),
+  function(df) wilcox.test(dr_du ~ adjacent, data = df)$statistic
+)
+
+adjacency_results_lorru <- adjacency_analysis(
+  unit_data,
+  function(df) median_by_adjacency(df, 'lorr_du'),
+  function(df) wilcox.test(lorr_du ~ adjacent, data = df)$statistic
 )
 ```
 
 ```{r adjacency_results}
-adjacency_results %>%
-  adjacency_results_table()
+adjacency_results_table <- function(df, metric) {
+  df %>%
+    mutate(
+      adjacent = map_dbl(base_data, ~ median(.[[metric]][.$adjacent == 1])),
+      not_adjacent = map_dbl(base_data, ~ median(.[[metric]][.$adjacent == 0])),
+      sig = p.adjust(p_value, 'BH') < 0.05
+    ) %>%
+    select(dataset, bugdrug, adjacent, not_adjacent, estimate, cil, ciu, p_value) %>%
+    mutate_if(is.numeric, ~ round(., 2))
+}
 
-adjacency_results2 %>%
-  mutate(
-    ar = map(results, function(r) {
-      r$base_data %>%
-        group_by(adjacent) %>%
-        summarize(y = median(dr_du))
-    })
-  ) %>%
-  select(dataset, bugdrug, ar) %>%
-  unnest() %>%
-  mutate(adjacent = recode(adjacent, `0` = 'not', `1` = 'adj')) %>%
-  spread(adjacent, y)
+adjacency_results %>%
+  adjacency_results_table('dr_du')
+
+adjacency_results_loru %>%
+  adjacency_results_table('lorr_du')
 ```
 
 ```{r adjacency_plot}
@@ -288,6 +286,7 @@ boxplot_data_f <- function(df, ymin, ymax) {
 
 f_to_keep <- 0.90
 half_drop <- (1 - f_to_keep) / 2
+
 plot_data <- adjacency_results %>%
   mutate(
     data = map(results, ~ .$base_data),
@@ -341,14 +340,15 @@ ggplot(data = NULL, aes(x = factor(adjacent))) +
 ```{r adjacency_covariates_analysis}
 bisquare <- partial(MASS::rlm, psi = MASS::psi.bisquare)
 
-adjacency_covariates_results <- adjacency_analysis(
-    function(data) bisquare(dr_du ~ adjacent + d_income + d_density + d_temperature, data = data),
-    function(model) coef(model)['adjacent']
-)
+model_f <- function(data) {
+  model <- bisquare(d_resistant ~ 0 + d_use * adjacent + d_income + d_density + d_temperature, data = data)
+  coef(model)['d_use:adjacent']
+}
+
+adjacency_covariates_results <- adjacency_analysis(model_f, model_f)
 
 adjacency_covariates_results %>%
-  adjacency_results_table() %>%
-  kable()
+  adjacency_results_table()
 ```
 
 ### Adjacency, covariates, with LOR
@@ -367,36 +367,29 @@ adjacency_covariates_lor_results %>%
 ## Commuting analysis with covariates
 
 ```{r commuting_analysis}
-commute_model_f <- safely(function(data) {
-  bisquare(dr_du ~ f_commuting + d_income + d_density + d_temperature, data = data)
-})
-
-commute_lor_f <- safely(function(data) {
-  bisquare(lorr_du ~ f_commuting + d_income + d_density + d_temperature, data = data)
-})
-
-commute_stat_f <- function(model) {
-  if (is.null(model$result)) {
-    NA_real_
-  } else {
-    coef(model$result)['f_commuting']
-  }
+commute_stat <- function(data) {
+  model <- bisquare(d_resistant ~ 0 + d_use * f_commuting, data = data)
+  coef(model)['d_use:f_commuting']
 }
 
-commuting_results <- unit_data %>%
-  filter(dataset != 'europe') %>%
-  mutate(
-    results = map(data, ~ adjacency_permute_f(., commute_model_f, commute_stat_f, n_trials = 9)),
-    results_lor = map(data, ~ adjacency_permute_f(., commute_lor_f, commute_stat_f, n_trials = 9))
-  )
+commute_results <- adjacency_analysis(
+  filter(unit_data, dataset != 'europe'),
+  commute_stat,
+  commute_stat
+)
+```
 
-commuting_results %>%
-  mutate(
-    p_value = map_dbl(results, ~ .$p_value),
-    p_value_lor = map_dbl(results_lor, ~ .$p_value)
-  ) %>%
-  select(bugdrug, dataset, p_value, p_value_lor) %>%
-  kable()
+```{r commuting_lor}
+commute_stat_lor <- function(data) {
+  model <- bisquare(lor_resistant ~ 0 + d_use * f_commuting, data = data)
+  coef(model)['d_use:f_commuting']
+}
+
+commute_results_lor <- adjacency_analysis(
+  filter(unit_data, dataset != 'europe'),
+  commute_stat_lor,
+  commute_stat_lor
+)
 ```
 
 ```{r commute_plot}
@@ -542,4 +535,78 @@ ggsave(
   plot = other_distance_plot,
   width = 180, height = 80, units = 'mm'
 )
+```
+
+# Test
+
+```{r}
+unit_data %>%
+  filter(dataset != 'europe') %>%
+  mutate(
+    u2_data = map(data, function(df) {
+      df %>%
+        left_join(cdb2, by = c('unit' = 'from_state')) %>%
+        group_by(to_state) %>%
+        summarize(
+          use2 = weighted.mean(use, n_workers),
+          res2 = weighted.mean(f_resistant, n_workers)
+        ) %>%
+        rename(unit = to_state)
+    }),
+    data2 = map2(data, u2_data, ~ left_join(.x, .y, by = 'unit')),
+    model = map(data2, ~ lm(f_resistant ~ use + res2 + density + income + temperature, data = .)),
+    cuse = map_dbl(model, ~ coef(.)['use']),
+    puse = map_dbl(model, ~ coef(summary(.))['use', 'Pr(>|t|)']),
+    cres2 = map_dbl(model, ~ coef(.)['res2']),
+    pres2 = map_dbl(model, ~ coef(summary(.))['res2', 'Pr(>|t|)'])
+  ) %>%
+  select(dataset, bugdrug, cuse, puse, cres2, pres2) %>%
+  mutate_if(is.numeric, ~ signif(., 2))
+
+jkse <- function(df, stat) {
+  bootstrap::jackknife(
+    1:nrow(df),
+    function(idx) stat(df[idx])
+  )
+}
+
+permp <- function(df, stat, n_trials = 99) {
+  base_stat <- stat(df)
+  perms <- replicate(n_trials, {
+    df %>%
+      mutate(use = sample(use)) %>%
+      stat
+  })
+  (sum(perms > base_stat) + 1) / (n_trials + 1)
+}
+
+unit_data %>%
+  mutate(
+    u2_data = map(data, function(df) {
+      df %>%
+        left_join(filter(adjacency_db, unit1 != unit2, !is.na(unit1), !is.na(unit2)), by = c('unit' = 'unit1')) %>%
+        group_by(unit2) %>%
+        summarize(
+          use2 = mean(use),
+          res2 = mean(f_resistant)
+        ) %>%
+        rename(unit = unit2)
+    }),
+    data2 = map2(data, u2_data, ~ left_join(.x, .y, by = 'unit')),
+    #model1 = map(data2, ~ summary(lm(f_resistant ~ use, data = .))),
+    #model2 = map(data2, ~ summary(lm(f_resistant ~ use + use2, data = .))),
+    model = map(data2, ~ lm(f_resistant ~ use + res2 + density + income + temperature, data = .)),
+    permpuse = map_dbl(data2, function(df) {
+      permp(df, function(x) coef(lm(f_resistant ~ use + res2, data = x))['use'])
+    }),
+    permpres2 = map_dbl(data2, function(df) {
+      permp(df, function(x) coef(lm(f_resistant ~ use + res2, data = x))['res2'])
+    }),
+    cuse = map_dbl(model, ~ coef(.)['use']),
+    puse = map_dbl(model, ~ coef(summary(.))['use', 'Pr(>|t|)']),
+    cres2 = map_dbl(model, ~ coef(.)['res2']),
+    pres2 = map_dbl(model, ~ coef(summary(.))['res2', 'Pr(>|t|)'])
+  ) %>%
+  select(dataset, bugdrug, cuse, puse, permpuse, cres2, pres2, permpres2) %>%
+  mutate_if(is.numeric, ~ signif(., 2))
 ```
