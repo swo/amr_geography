@@ -14,13 +14,20 @@ pdf.options(useDingbats = FALSE, useKerning = FALSE)
 
 library(kableExtra)
 options(knitr.table.format = 'pandoc')
+library(cowplot)
 ```
 
 ```{r helpers}
 odds <- function(p) p / (1 - p)
 logodds <- function(p) log(odds(p))
+
 annotate_text <- function(x, y, label) {
   annotate('text', x = x, y = y, label = label, parse = TRUE)
+}
+
+# approximately in
+`%ain%` <- function(x, table, tol = sqrt(.Machine$double.eps)) {
+  map_lgl(x, function(xx) min(abs(xx - table)) < tol)
 }
 ```
 
@@ -126,10 +133,11 @@ whn_ode_func = function(t, state_vector, parms) {
 
 whn_sim = function(taui, epsilon) {
   n_pop = length(taui)
+  stopifnot(between(epsilon, 0, 1 - 1 / n_pop))
 
   parms = with(whn_base_parms, {
-    betaij = matrix(beta * epsilon / n_pop, ncol = n_pop, nrow = n_pop)
-    diag(betaij) <- beta * (1 - epsilon * (1 - 1 / n_pop))
+    betaij = matrix(beta * epsilon, ncol = n_pop, nrow = n_pop)
+    diag(betaij) <- beta * (1 - epsilon)
 
     stopifnot(all(rowSums(betaij) == beta))
     stopifnot(all(colSums(betaij) == beta))
@@ -174,7 +182,8 @@ whn_repro %>%
     name = 'antibiotic tx per month',
     sec.axis = sec_axis(~ . * 12)
   ) +
-  ylab('proportion resistant')
+  ylab('proportion resistant') +
+  theme_cowplot()
 ```
 
 ## WHN two-population model
@@ -184,7 +193,7 @@ whn2 <- tibble(
   delta_tau = seq(0.0, 0.15, length.out = 7),
   taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
 ) %>%
-  crossing(epsilon = c(0.0, 0.01, 0.025, 0.05, 0.075, 0.10, 0.15, 0.20, 0.3, 0.4, 0.5)) %>%
+  crossing(epsilon = c(0, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)) %>%
   mutate(results = map2(taui, epsilon, whn_sim))
 ```
 
@@ -219,14 +228,14 @@ whn2_plot_data <- whn2 %>%
     delta_tau = round(delta_tau, 3)
   ) %>%
   unnest() %>%
-  filter(epsilon %in% c(0.01, 0.10, 0.50))
+  filter(epsilon %in% c(0.0, 0.01, 0.1))
 
 whn2_plot1 <- whn2_plot_data %>%
   filter(delta_tau == 0.05) %>%
   whn2_plot_f()
 
 whn2_plot2 <- whn2_plot_data %>%
-  filter(delta_tau == 0.15) %>%
+  filter(delta_tau == 0.10) %>%
   whn2_plot_f()
 ```
 
@@ -237,7 +246,7 @@ whn2_plot3 <- whn2 %>%
     min_rho = map_dbl(results, ~ min(.$rho)),
     delta_rho = max_rho - min_rho
   ) %>%
-  filter(epsilon %in% c(0.01, 0.1, 0.5)) %>%
+  filter(epsilon %in% c(0.0, 0.01, 0.1)) %>%
   ggplot(aes(delta_tau, delta_rho, group = factor(epsilon))) +
   geom_point() +
   geom_line() +
@@ -251,17 +260,17 @@ whn2_plot3 <- whn2 %>%
     limits = c(0, 0.80),
     expand = c(0, 0.01)
   ) +
-  annotate('text', x = 0.12, y = 0.15, label = "epsilon == 0.01", parse = TRUE) +
-  annotate('text', x = 0.10, y = 0.31, label = "epsilon == 0.1", parse = TRUE) +
-  annotate('text', x = 0.08, y = 0.55, label = "epsilon == 0.5", parse = TRUE) +
-  cowplot::theme_half_open(font_size = 12)
+  annotate('text', x = 0.07, y = 0.60, label = "epsilon == 0", parse = TRUE) +
+  annotate('text', x = 0.10, y = 0.35, label = "epsilon == 0.01", parse = TRUE) +
+  annotate('text', x = 0.13, y = 0.12, label = "epsilon == 0.1", parse = TRUE) +
+  theme_cowplot(font_size = 12)
 
 whn2_plot3
 ```
 
 ```{r whn_drdtau_vs_epsilon}
 whn2_plot4 <- whn2 %>%
-  filter(round(delta_tau, 3) %in% c(0.05, 0.15)) %>%
+  filter(round(delta_tau, 3) %in% c(0.05, 0.10)) %>%
   mutate(
     max_rho = map_dbl(results, ~ max(.$rho)),
     min_rho = map_dbl(results, ~ min(.$rho)),
@@ -269,21 +278,28 @@ whn2_plot4 <- whn2 %>%
     dr_du = delta_rho / delta_tau
   ) %>%
   ggplot(aes(epsilon, dr_du, group = factor(delta_tau))) +
-  geom_point() +
+  geom_point(aes(shape = factor(delta_tau))) +
   geom_line() +
-  geom_blank(data = tibble(epsilon = 0, dr_du = 0, delta_tau = 0.15)) +
-  annotate_text(0.05, 1.7, "Delta * tau == 0.15") +
-  annotate_text(0.09, 4.5, "Delta * tau == 0.05") +
+  geom_blank(data = tibble(epsilon = 0, dr_du = 0, delta_tau = 0.01)) +
+  scale_shape_manual(
+    values = c(1, 16),
+    labels = c(
+      expression(Delta * tau == 0.05),
+      expression(Delta * tau == 0.10)
+    )
+  ) +
+  guides(shape = guide_legend(title = "", label.hjust = 0)) +
   scale_x_continuous(
     expression(epsilon),
     expand = c(0, 0.005)
   ) +
   scale_y_continuous(
     expression(Delta * rho / Delta * tau),
-    limits = c(0, 6),
+    limits = c(0, 7),
     expand = c(0, 0.1)
   ) +
-  cowplot::theme_half_open(font_size = 12)
+  theme_cowplot(font_size = 12) +
+  theme(legend.position = c(0.5, 0.75))
 
 whn2_plot4
 ```
@@ -447,10 +463,11 @@ dtypes_ode_func = function(t, state_vector, parms) {
 
 dtypes_sim = function(tau_i, epsilon = 0) {
   n_pop = length(tau_i)
+  stopifnot(between(epsilon, 0, 1 - 1 / n_pop))
 
   parms = with(dtypes_base_parms, {
-    beta_ij = matrix(beta * epsilon / n_pop, ncol = n_pop, nrow = n_pop)
-    diag(beta_ij) <- beta * (1 - epsilon * (1 - 1 / n_pop))
+    beta_ij = matrix(beta * epsilon, ncol = n_pop, nrow = n_pop)
+    diag(beta_ij) <- beta * (1 - epsilon)
 
     stopifnot(all(rowSums(beta_ij) == beta))
     stopifnot(all(colSums(beta_ij) == beta))
@@ -462,15 +479,23 @@ dtypes_sim = function(tau_i, epsilon = 0) {
 
   n_d = parms$n_d
 
-  state = list(X_i = rep(0.9 / n_pop, n_pop),
-               S_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d),
-               R_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d))
+  state = list(
+    X_i = rep(0.9 / n_pop, n_pop),
+    S_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d),
+    R_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d)
+  )
 
   state_vector = dtypes_pack(state)
   stopifnot(all.equal(sum(state_vector), 1))
 
-  result = rootSolve::runsteady(state_vector, func = dtypes_ode_func, parms = parms,
-                                stol = 1e-8 / n_pop, rtol = 1e-6 / n_pop, atol = 1e-6 / n_pop)
+  result = rootSolve::runsteady(
+    state_vector,
+    func = dtypes_ode_func,
+    parms = parms,
+    stol = 1e-8 / n_pop,
+    rtol = 1e-6 / n_pop,
+    atol = 1e-6 / n_pop
+  )
 
   result$y %>%
     dtypes_unpack(n_pop = n_pop, n_d = n_d) %>%
@@ -489,7 +514,8 @@ dtype_repro_bars %>%
   ggplot(aes(mu_d, value, fill = phenotype)) +
   geom_col() +
   xlab('Clearance rate') +
-  ylab('Strain prevalence')
+  ylab('Strain prevalence') +
+  theme_cowplot()
 ```
 
 Next, I show the jagged line in Figure 4. It may not look exactly right because I ran a limited number of simulations:
@@ -504,19 +530,23 @@ dtype_repro_line %>%
   mutate(rho = f_res / f_all) %>%
   ggplot(aes(tau, rho)) +
   geom_point() +
-  geom_line()
+  geom_line() +
+  theme_cowplot()
 ```
 
 ## D-types two-population
 
 ```{r dtypes_double}
-dtypes2 = twopop_taui_df %>%
-  crossing(epsilon = c(0, 0.01, 0.1, 0.25, 0.5, 1.0)) %>%
+dtypes2 <- tibble(
+  delta_tau = c(0.05, 0.10),
+  taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
+) %>%
+  crossing(epsilon = c(0, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)) %>%
   mutate(results = map2(taui, epsilon, dtypes_sim))
 ```
 
-```{r dtypes_double_results}
-dtypes_simplify_results = function(df) {
+```{r dtypes_plot}
+dtypes_simplify_results <- function(df) {
   df %>%
     group_by(pop, phenotype) %>%
     summarize(
@@ -528,48 +558,41 @@ dtypes_simplify_results = function(df) {
     mutate(rho = R / (R + S))
 }
 
-dtypes2_plot = dtypes2 %>%
-  mutate(results = map(results, dtypes_simplify_results)) %>%
-  unnest() %>%
-  group_by(epsilon, size) %>%
-  mutate(delta_tau = max(tau) - min(tau)) %>%
-  ungroup() %>%
-  filter(epsilon %in% c(0.01, 0.10, 0.50)) %>%
-  mutate_at('pop', factor) %>%
-  ggplot(aes(x = factor(epsilon), y = rho, fill = pop)) +
-  facet_grid(
-    rows = vars(delta_tau),
-    labeller = label_bquote(Delta * tau == .(delta_tau))
+dtypes_simplify <- function(df) {
+  df %>%
+    mutate(results = map(results, dtypes_simplify_results))
+}
+
+dtypes2_plot <- dtypes2 %>%
+  dtypes_simplify() %>%
+  mutate(
+    delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
+    dr_du = delta_rho / delta_tau
+  ) %>%
+  ggplot(aes(epsilon, dr_du, group = factor(delta_tau))) +
+  geom_point(aes(shape = factor(delta_tau))) +
+  geom_line() +
+  geom_blank(data = tibble(epsilon = 0, dr_du = 0, delta_tau = 0.01)) +
+  scale_shape_manual(
+    values = c(1, 16),
+    labels = c(
+      expression(Delta * tau == 0.05),
+      expression(Delta * tau == 0.10)
+    )
   ) +
-  geom_col(position = 'dodge', color = 'black') +
-  geom_hline(yintercept = 0) +
-  scale_fill_manual(
-    name = '',
-    labels = c('intervention', 'control'),
-    values = c('white', 'black')
+  guides(shape = guide_legend(title = "", label.hjust = 0)) +
+  scale_x_continuous(
+    expression(epsilon),
+    limits = c(0, 0.1),
+    expand = c(0.02, 0, 0.05, 0)
   ) +
-  scale_x_discrete(name = expression('interaction strength ' (epsilon))) +
   scale_y_continuous(
-    name = 'resistance (% of hosts)',
-    labels = scales::percent_format(accuracy = 1, suffix = ''),
-    limits = c(0, 1.0),
-    expand = c(0, 0)
+    expression(Delta * rho / Delta * tau),
+    limits = c(0, 6.5),
+    expand = c(0, 0.1)
   ) +
-  theme_classic() +
-  theme(
-    axis.title = element_text(size = 8),
-    axis.text = element_text(size = 8, color = 'black'),
-    panel.spacing = unit(6, 'mm'),
-    legend.text = element_text(size = 8, color = 'black'),
-    legend.key.size = unit(4, 'mm'),
-    legend.background = element_blank(),
-    legend.position = c(0.7, 1.0),
-    strip.background = element_blank(),
-    strip.text = element_text(size = 8, color = 'black', face = 'bold'),
-    axis.ticks.x = element_blank(),
-    axis.title.x = element_text(size = 8, color = 'black'),
-    axis.title.y.right = element_text(size = 8, color = 'black', angle = -90)
-  )
+  theme_cowplot(font_size = 12) +
+  theme(legend.position = c(0.5, 0.75))
 
 show(dtypes2_plot)
 
