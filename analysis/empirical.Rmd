@@ -343,10 +343,16 @@ adjacency_covariates_results <- adjacency_analysis(unit_data, model_f)
 ```
 
 ```{r}
+interaction_term_table <- function(df, caption = NULL) {
+  df %>%
+    mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
+    select(dataset, bugdrug, estimate, cil, ciu, p_value, sig) %>%
+    mutate_if(is.numeric, sigfig) %>%
+    kable(caption = caption)
+}
+
 adjacency_covariates_results %>%
-  mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
-  select(dataset, bugdrug, estimate, cil, ciu, p_value, sig) %>%
-  mutate_if(is.numeric, ~ round(., 2))
+  interaction_term_table('Regression interaction term, adjacency with covariates, dr/dt')
 ```
 
 ## Log odds ratio resistance
@@ -362,9 +368,7 @@ adjacency_covariates_lor_results <- adjacency_analysis(unit_data, model_f)
 
 ```{r}
 adjacency_covariates_lor_results %>%
-  mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
-  select(dataset, bugdrug, estimate, cil, ciu, p_value, sig) %>%
-  mutate_if(is.numeric, ~ round(., 2))
+  interaction_term_table('Regrssion interaction term, adjacency with covariates, LOR')
 ```
 
 # Commuting analysis
@@ -385,9 +389,7 @@ commute_results <- adjacency_analysis(
 
 ```{r}
 commute_results %>%
-  mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
-  select(dataset, bugdrug, estimate, cil, ciu, p_value, sig) %>%
-  mutate_if(is.numeric, ~ round(., 2))
+  interaction_term_table('Interaction term, commuting without covariates, dr/dt')
 ```
 
 ## Log odds ratio resistance
@@ -406,9 +408,7 @@ commute_results_lor <- adjacency_analysis(
 
 ```{r}
 commute_results_lor %>%
-  mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
-  select(dataset, bugdrug, estimate, cil, ciu, p_value, sig) %>%
-  mutate_if(is.numeric, ~ round(., 2))
+  interaction_term_table('Interaction term, commuting without covariates, LOR')
 ```
 
 ```{r commute_plot}
@@ -468,10 +468,7 @@ commuting_results_cv <- unit_data %>%
 
 ```{r}
 commuting_results_cv %>%
-  mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
-  select(dataset, bugdrug, estimate, cil, ciu, p_value, sig) %>%
-  mutate_if(is.numeric, sigfig) %>%
-  kable(caption = 'Interaction coefficient, with covariates, dr/dt')
+  interaction_term_table('Interaction coefficient, commuting with covariates, dr/dt')
 ```
 
 ## Log odds ratio resistance
