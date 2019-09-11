@@ -195,7 +195,7 @@ permute_p <- function(df, stat, n_trials, alternative) {
   (n_exceptional + 1) / (n_trials + 1)
 }
 
-adjacency_analysis <- function(unit_data, jackknife_stat, permute_stat = NULL, alternative = 'less', n_trials = 1e2 - 1, alpha = 0.05) {
+adjacency_analysis <- function(unit_data, jackknife_stat, permute_stat = NULL, alternative = 'less', n_trials = 1e3 - 1, alpha = 0.05) {
   if (is.null(permute_stat)) permute_stat <- jackknife_stat
   se_multiplier <- qnorm(1 - alpha / 2)
   
@@ -230,14 +230,14 @@ adjacency_results_lorru <- adjacency_analysis(
 )
 ```
 
-## With dr/du
+## Using $\Delta \rho / \Delta \tau$
 
 ```{r adjacency_results}
 sigfig <- function(x, n = 2) {
   formatC(signif(x, digits = n), digits = n, format = "fg", flag = "#")
 }
 
-adjacency_results_table <- function(df, metric) {
+adjacency_results_table <- function(df, metric, caption = NULL) {
   df %>%
     mutate(
       adjacent = map_dbl(base_data, ~ median(.[[metric]][.$adjacent == 1])),
@@ -246,11 +246,11 @@ adjacency_results_table <- function(df, metric) {
     ) %>%
     select(dataset, bugdrug, adjacent, not_adjacent, estimate, cil, ciu, p_value, sig) %>%
     mutate_if(is.numeric, sigfig) %>%
-    kable()
+    kable(caption = caption)
 }
 
 adjacency_results %>%
-  adjacency_results_table('dr_du')
+  adjacency_results_table('dr_du', 'Median associations (dr/du) by adjacency, and differences in median associations (with jackknife CIs), and permutation test p-values')
 ```
 
 ```{r adjacency_plot}
@@ -309,76 +309,22 @@ plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
   geom_jitter(data = point_data, aes(y = dr_du), size = 0.1, width = 0.2) +
   scale_x_discrete(
     '',
-    labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adjacent')
+    labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adj.')
   ) +
-  ylab(expression(paste('Use-resistance association ', Delta * rho / Delta * tau))) +
-  theme_classic() +
-  theme(
-    strip.text = element_text(size = 8),
-    strip.background = element_blank(),
-    axis.text = element_text(size = 8, color = 'black'),
-    axis.title = element_text(size = 8)
-  )
+  ylab(expression(paste('Use-resistance association ', (Delta * rho / Delta * tau)))) +
+  #theme_classic() +
+  theme_cowplot() +
+  theme(strip.background = element_blank())
 
 show(plot)
 ggsave('fig/adjacency_plot.pdf', plot = plot)
 ```
 
-## LOR
+## Using log odds ratio resistance
 
 ```{r}
 adjacency_results_lorru %>%
-  adjacency_results_table('lorr_du')
-```
-
-```{r adjacency_plot_lor}
-plot_data <- adjacency_results %>%
-  mutate(
-    y = map(base_data, ~ .$lorr_du),
-    ymin = map_dbl(y, ~ quantile(., half_drop)),
-    ymax = map_dbl(y, ~ quantile(., 1 - half_drop)),
-    boxplot_data = pmap(list(base_data, ymin, ymax), boxplot_data_f),
-    point_data = pmap(list(base_data, ymin, ymax), ~ filter(..1, between(dr_du, ..2, ..3))),
-    # some plotting niceties
-    dataset = recode(dataset,
-      'europe' = 'ECDC',
-      'marketscan' = 'MarketScan/RO',
-      'nhsn' = 'Xponent/NHSN'
-    ),
-    label = str_c(dataset, ' ', bugdrug)
-  )
-
-point_data <- plot_data %>%
-  select(label, point_data) %>%
-  unnest()
-
-boxplot_data <- plot_data %>%
-  select(label, boxplot_data) %>%
-  unnest()
-
-plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
-  facet_wrap(~ label, scales = 'free_y') +
-  geom_boxplot(
-    data = boxplot_data,
-    aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
-    stat = 'identity'
-  ) +
-  geom_jitter(data = point_data, aes(y = dr_du), size = 0.1, width = 0.2) +
-  scale_x_discrete(
-    '',
-    labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adjacent')
-  ) +
-  ylab(expression(paste('Use-resistance association ', (LOR(rho) / Delta * tau)))) +
-  theme_classic() +
-  theme(
-    strip.text = element_text(size = 8),
-    strip.background = element_blank(),
-    axis.text = element_text(size = 8, color = 'black'),
-    axis.title = element_text(size = 8)
-  )
-
-show(plot)
-ggsave('fig/adjacency_plot_lor.pdf', plot = plot)
+  adjacency_results_table('lorr_du', 'Median associations (LOR(r)/du) by adjacency, and differences in median associations (with jackknife CIs), and permutation test p-values')
 ```
 
 # Adjacency with covariates
@@ -403,7 +349,7 @@ adjacency_covariates_results %>%
   mutate_if(is.numeric, ~ round(., 2))
 ```
 
-## LOR
+## Log odds ratio resistance
 
 ```{r adjacency_covariates_lor_analysis}
 model_f <- function(data) {
@@ -444,7 +390,7 @@ commute_results %>%
   mutate_if(is.numeric, ~ round(., 2))
 ```
 
-## LOR
+## Log odds ratio resistance
 
 ```{r commuting_lor}
 commute_stat_lor <- function(data) {
@@ -464,8 +410,6 @@ commute_results_lor %>%
   select(dataset, bugdrug, estimate, cil, ciu, p_value, sig) %>%
   mutate_if(is.numeric, ~ round(., 2))
 ```
-
-## Plot
 
 ```{r commute_plot}
 not_crazy <- function(x) between(x, quantile(x, 0.025), quantile(x, 0.975))
@@ -506,7 +450,7 @@ ggsave('fig/commute_plot.pdf', plot = plot)
 
 ## $\Delta \rho / \Delta \tau$
 
-```{r commuting_analysis}
+```{r commuting_analysis_cv}
 commute_cv <- function(data) {
   model <- bisquare(d_resistant ~ d_use * f_commuting + d_density + d_income + d_temperature, data = data)
   coef(model)['d_use:f_commuting']
@@ -530,7 +474,7 @@ commuting_results_cv %>%
   kable(caption = 'Interaction coefficient, with covariates, dr/dt')
 ```
 
-## LOR
+## Log odds ratio resistance
 
 ```{r, eval = FALSE}
 commuting_results_cv_lor <- unit_data %>%
