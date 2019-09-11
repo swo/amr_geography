@@ -1,28 +1,22 @@
 ---
-title: "Empirical use-resistance relationships over geographic scales"
+title: "Geography and associations between antibiotic use and resistance: observational data"
 author: "Scott Olesen"
 ---
 
-```{r global_options}
+```{r global_options, echo = FALSE, message = FALSE}
 library(knitr)
 library(tidyverse)
-
-# filter <- dplyr::filter
+library(cowplot)
 
 knitr::opts_chunk$set(
-  fig.width = 7, fig.height = 4, fig.path = 'fig/',
-  dev = c('png', 'pdf'),
   echo = FALSE, warning = FALSE, message = FALSE,
-  cache = TRUE, autodep = TRUE)
+  cache = TRUE, autodep = TRUE
+)
 
 pdf.options(useDingbats = FALSE, useKerning = FALSE)
 ```
 
-# Methods
-
-## Use and resistance data
-
-### MarketScan
+# Load data
 
 ```{r state_data}
 state_data = read_tsv('../db/state_data.tsv') %>%
@@ -44,11 +38,11 @@ marketscan_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv'
   mutate(n_resistant = as.integer(round(f_ns * n_isolates))) %>%
   select(bugdrug, drug, state, n_resistant, n_isolates)
 
-marketscan_use = read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
+marketscan_use <- read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
   rename(drug = drug_group, use = total_use) %>%
   filter(drug %in% c('quinolone', 'beta_lactam', 'macrolide'))
 
-marketscan = marketscan_use %>%
+marketscan <- marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
   rename(unit = state) %>%
   left_join(state_data, by = 'unit') %>%
@@ -57,8 +51,6 @@ marketscan = marketscan_use %>%
     density, income, temperature
   )
 ```
-
-### NHSN/IMS
 
 ```{r nhsn_ims}
 nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
@@ -76,12 +68,10 @@ nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
   )
 ```
 
-### ECDC
-
 For the European data, we convert to "treatments" per person per year, assuming a certain conversion from DDD to treatments. This is just an *ad hoc* adjustment to get the European data to the same scales as used in the simulations and the US data.
 
 ```{r ecdc_convert}
-did_cpy_map = data_frame(
+did_cpy_map <- data_frame(
   drug = c('beta_lactam', 'quinolone', 'macrolide'),
   ddd_per_tx = c(10, 10, 7),
   cpy_per_did = 365 / (1e3 * ddd_per_tx)
@@ -96,7 +86,7 @@ europe_units <- read_tsv('../db/europe_units.tsv') %>%
   mutate(density = population / area) %>%
   select(unit, density, income, temperature)
 
-europe = read_tsv('../data/ecdc/data.tsv') %>%
+europe <- read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
   mutate(use = cpy_per_did * did) %>%
   mutate(bugdrug = case_when(
@@ -129,15 +119,13 @@ unit_data = named_bind_rows(marketscan, nhsn, europe) %>%
   nest(-dataset, -bugdrug)
 ```
 
-## Adjacency
-
 ```{r adjacency_db}
-us_adjacency = read_tsv('../db/state_adjacency.tsv') %>%
+us_adjacency <- read_tsv('../db/state_adjacency.tsv') %>%
   mutate(adjacent = TRUE) %>%
   complete(unit1, unit2) %>%
   replace_na(list(adjacent = FALSE))
 
-eu_adjacency = read_tsv('../db/europe_adjacency.tsv') %>%
+eu_adjacency <- read_tsv('../db/europe_adjacency.tsv') %>%
   mutate(adjacent = TRUE) %>%
   right_join(crossing(unit1 = europe_names, unit2 = europe_names)) %>%
   replace_na(list(adjacent = FALSE))
@@ -149,14 +137,9 @@ commuting_db <- read_tsv('../db/us/commuting/commuting.tsv') %>%
   rename_all(~ str_replace(., '^state', 'unit'))
 ```
 
-# Results
-
-## Adjacency analysis
-
-A state is too small a unit if resistance/susceptibility seems to be spilling over between states. As a first step, ask if use/relationships are weaker (more "spilled over") in physically adjacent pairs of states.
+# Adjacency analysis
 
 ```{r distance_analysis_helpers}
-# because no US states and European countries share names, it's OK to combine this list
 odds <- function(p) p / (1 - p)
 log_odds_ratio <- function(p, q) log(odds(p)) - log(odds(q))
 
@@ -177,7 +160,6 @@ cross_units <- function(df) {
       lorr_du = lor_resistant / d_use
     ) %>%
     select(unit1, unit2, starts_with('d_'), dr_du, starts_with('lor')) %>%
-    # pairs of units not in the adjacency list are not adjacent
     left_join(adjacency_db, by = c('unit1', 'unit2')) %>%
     left_join(commuting_db, by = c('unit1', 'unit2'))
 }
@@ -229,31 +211,6 @@ adjacency_analysis <- function(unit_data, jackknife_stat, permute_stat = NULL, a
 }
 ```
 
-```{r test, include = FALSE}
-test_data <- with(list(n = 10), {
-  tibble(
-    adjacent = rep(c(1, 0), each = n),
-    y = c(rnorm(n), rnorm(n, 5))
-  )
-})
-
-with(test_data, wilcox.test(y[adjacent == 1], y[adjacent == 0], alternative = 'less'))
-
-observed_stat <- with(
-  test_data,
-  wilcox.test(y[adjacent == 1], y[adjacent == 0])$statistic
-)
-
-permuted_stats <- replicate(99, {
-  with(
-    mutate_at(test_data, 'y', sample),
-    wilcox.test(y[adjacent == 1], y[adjacent == 0])$statistic
-  )
-})
-
-(sum(`<`(permuted_stats, observed_stat)) + 1) / 100
-```
-
 ```{r adjacency_analysis}
 median_by_adjacency <- function(df, metric) {
   df[[metric]] %>%
@@ -273,9 +230,13 @@ adjacency_results_lorru <- adjacency_analysis(
 )
 ```
 
-### With dr/du
+## With dr/du
 
 ```{r adjacency_results}
+sigfig <- function(x, n = 2) {
+  formatC(signif(x, digits = n), digits = n, format = "fg", flag = "#")
+}
+
 adjacency_results_table <- function(df, metric) {
   df %>%
     mutate(
@@ -284,7 +245,7 @@ adjacency_results_table <- function(df, metric) {
       sig = p.adjust(p_value, 'BH') < 0.05
     ) %>%
     select(dataset, bugdrug, adjacent, not_adjacent, estimate, cil, ciu, p_value, sig) %>%
-    mutate_if(is.numeric, ~ round(., 2)) %>%
+    mutate_if(is.numeric, sigfig) %>%
     kable()
 }
 
@@ -363,7 +324,7 @@ show(plot)
 ggsave('fig/adjacency_plot.pdf', plot = plot)
 ```
 
-### With LORU
+## LOR
 
 ```{r}
 adjacency_results_lorru %>%
@@ -420,9 +381,9 @@ show(plot)
 ggsave('fig/adjacency_plot_lor.pdf', plot = plot)
 ```
 
-## Adjacency with covariates
+# Adjacency with covariates
 
-### Normal drdu
+## $\Delta \rho / \Delta \tau$
 
 ```{r adjacency_covariates_analysis}
 bisquare <- partial(MASS::rlm, psi = MASS::psi.bisquare, maxit = 30)
@@ -442,7 +403,7 @@ adjacency_covariates_results %>%
   mutate_if(is.numeric, ~ round(., 2))
 ```
 
-### LOR
+## LOR
 
 ```{r adjacency_covariates_lor_analysis}
 model_f <- function(data) {
@@ -460,9 +421,9 @@ adjacency_covariates_lor_results %>%
   mutate_if(is.numeric, ~ round(., 2))
 ```
 
-## Commuting analysis
+# Commuting analysis
 
-### drdu
+## $\Delta \rho / \Delta \tau$
 
 ```{r commuting_analysis}
 commute_stat <- function(data) {
@@ -483,18 +444,7 @@ commute_results %>%
   mutate_if(is.numeric, ~ round(., 2))
 ```
 
-```{r}
-unit_data %>%
-  filter(dataset != 'europe') %>%
-  mutate(
-    cross_data = map(data, cross_units),
-    model = map(cross_data, ~ bisquare(d_resistant ~ d_use * f_commuting, data = .)),
-    duse = map_dbl(model, ~ coef(.)['d_use']),
-    duseadj = map_dbl(model, ~ coef(.)['d_use:f_commuting'])
-  )
-```
-
-### LOR
+## LOR
 
 ```{r commuting_lor}
 commute_stat_lor <- function(data) {
@@ -515,7 +465,7 @@ commute_results_lor %>%
   mutate_if(is.numeric, ~ round(., 2))
 ```
 
-### Plot
+## Plot
 
 ```{r commute_plot}
 not_crazy <- function(x) between(x, quantile(x, 0.025), quantile(x, 0.975))
@@ -552,9 +502,11 @@ show(plot)
 ggsave('fig/commute_plot.pdf', plot = plot)
 ```
 
-## Commuting with covariates
+# Commuting with covariates
 
-```{r commute1}
+## $\Delta \rho / \Delta \tau$
+
+```{r commuting_analysis}
 commute_cv <- function(data) {
   model <- bisquare(d_resistant ~ d_use * f_commuting + d_density + d_income + d_temperature, data = data)
   coef(model)['d_use:f_commuting']
@@ -568,17 +520,22 @@ commute_cv_lor <- function(data) {
 commuting_results_cv <- unit_data %>%
   filter(dataset != 'europe') %>%
   adjacency_analysis(commute_cv)
-
-commuting_results_cv_lor <- unit_data %>%
-  filter(dataset != 'europe') %>%
-  adjacency_analysis(commute_cv_lor)
 ```
 
 ```{r}
 commuting_results_cv %>%
   mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
   select(dataset, bugdrug, estimate, cil, ciu, p_value, sig) %>%
-  mutate_if(is.numeric, ~ round(., 2))
+  mutate_if(is.numeric, sigfig) %>%
+  kable(caption = 'Interaction coefficient, with covariates, dr/dt')
+```
+
+## LOR
+
+```{r, eval = FALSE}
+commuting_results_cv_lor <- unit_data %>%
+  filter(dataset != 'europe') %>%
+  adjacency_analysis(commute_cv_lor)
 
 commuting_results_cv_lor %>%
   mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%

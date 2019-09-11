@@ -1,5 +1,5 @@
 ---
-title: "Theory of use-resistance relationships over geographic scales"
+title: "Geography and associations between antibiotic use and resistance: simulations"
 author: "Scott Olesen"
 ---
 
@@ -31,9 +31,9 @@ annotate_text <- function(x, y, label) {
 }
 ```
 
-# Diagrams
+# Diagram
 
-```{r}
+```{r two_pop_diagram}
 dummy_data = data_frame(
   x = c(-2, 2),
   y = c(-2, 2)
@@ -70,7 +70,7 @@ label_data = data_frame(
   )
 )
 
-twopop_diagram = ggplot(data = NULL, aes(x, y)) +
+twopop_diagram <- ggplot(data = NULL, aes(x, y)) +
   geom_blank(data = dummy_data) +
   geom_segment(data = line_data, aes(xend = xend, yend = yend, linetype = linetype)) +
   geom_text(data = label_data, aes(label = label), size = 3) +
@@ -100,64 +100,77 @@ whn_base_parms %>%
 ## WHN single-population model
 
 ```{r whn_sim}
-# vector to data frame
-whn_unpack = function(x) {
+# The ODE function only takes a vector, so we need to "unpack" the
+# vector into a sensible data frame, compute the ODEs, then "pack"
+# the data frame back into a vector.
+whn_unpack <- function(x) {
   matrix(x, ncol = 4) %>%
     as_tibble() %>%
     setNames(c('X', 'S', 'R', 'D'))
 }
 
 # data frame to vector
-whn_pack = function(df) {
+whn_pack <- function(df) {
   stopifnot(names(df) == c('X', 'S', 'R', 'D'))
   unlist(df)
 }
 
-whn_ode_func = function(t, state_vector, parms) {
-  state = whn_unpack(state_vector)
+whn_ode_func <- function(t, state_vector, parms) {
+  state <- whn_unpack(state_vector)
 
   with(c(state, parms), {
-    n_pop = nrow(state)
+    n_pop <- nrow(state)
     stopifnot(dim(betaij) == rep(n_pop, 2))
 
-    N = X + S + R + D
+    N <- X + S + R + D
 
-    dS = (betaij %*% ((S + D) / N)) * X - (u + taui) * S - (1 - cost) * (betaij %*% (R / N)) * S
-    dR = (1 - cost) * (betaij %*% (R / N)) * X - u * R + taui * D
-    dD = (1 - cost) * (betaij %*% (R / N)) * S - (u + taui) * D
-    dX = -(dS + dR + dD)
+    dS <- (betaij %*% ((S + D) / N)) * X - (u + taui) * S - (1 - cost) * (betaij %*% (R / N)) * S
+    dR <- (1 - cost) * (betaij %*% (R / N)) * X - u * R + taui * D
+    dD <- (1 - cost) * (betaij %*% (R / N)) * S - (u + taui) * D
+    dX <- -(dS + dR + dD)
 
     list(c(dX, dS, dR, dD))
   })
 }
 
-whn_sim = function(taui, epsilon) {
-  n_pop = length(taui)
+# Check that:
+# - All entries in the transmission matrix are nonnegative
+# - All rows add up to the overall constant
+# - All columns add up to the overall constant
+check_beta <- function(mat, const) {
+  stopifnot(all(mat >= 0))
+  stopifnot(all(rowSums(mat) == const))
+  stopifnot(all(colSums(mat) == const))
+}
+
+whn_sim <- function(taui, epsilon) {
+  n_pop <- length(taui)
   stopifnot(between(epsilon, 0, 1 - 1 / n_pop))
 
-  parms = with(whn_base_parms, {
+  parms <- with(whn_base_parms, {
     betaij = matrix(beta * epsilon, ncol = n_pop, nrow = n_pop)
     diag(betaij) <- beta * (1 - epsilon)
 
-    stopifnot(all(rowSums(betaij) == beta))
-    stopifnot(all(colSums(betaij) == beta))
+    check_beta(betaij, beta)
 
+    # Add transmission matrix beta_ij to the parameter list
     c(whn_base_parms, list(
       taui = taui, epsilon = epsilon,
       betaij = betaij
     ))
   })
 
-  state = data_frame(
+  # Starting simulation state
+  state <- data_frame(
     X = rep(0.990 / n_pop, n_pop),
     S = rep(0.005 / n_pop, n_pop),
     R = S,
     D = 0
   )
 
-  state_vector = whn_pack(state)
+  state_vector <- whn_pack(state)
 
-  result = rootSolve::runsteady(state_vector, func = whn_ode_func, parms = parms)
+  result <- rootSolve::runsteady(state_vector, func = whn_ode_func, parms = parms)
 
   result$y %>%
     whn_unpack() %>%
@@ -169,10 +182,10 @@ whn_sim = function(taui, epsilon) {
 }
 ```
 
-First, I reproduce the $k = 1$ line in Davies *et al.* Figure 2g.
+To make sure I got the equations right, I reproduce the $k = 1$ line in Davies *et al.* Figure 2g.
 
 ```{r davies_repro}
-whn_repro = whn_sim(taui = seq(0, 3 / 12, length.out = 16), epsilon = 0.0)
+whn_repro <- whn_sim(taui = seq(0, 3 / 12, length.out = 16), epsilon = 0.0)
 
 whn_repro %>%
   ggplot(aes(tau, rho)) +
@@ -200,26 +213,26 @@ whn2 <- tibble(
 ```{r whn_barcharts}
 whn2_plot_f <- function(df) {
   df %>%
-  ggplot(aes(x = factor(epsilon), y = rho, fill = pop)) +
-  geom_col(position = 'dodge', color = 'black') +
-  scale_fill_manual(
-    "",
-    values = c('white', 'black')
-  ) +
-  scale_x_discrete(name = expression(epsilon)) +
-  scale_y_continuous(
-    name = 'resistance (%)',
-    labels = scales::percent_format(accuracy = 1, suffix = ''),
-    limits = c(0, 1.0),
-    expand = c(0, 0)
-  ) +
-  cowplot::theme_half_open(font_size = 12) +
-  theme(
-    legend.key.size = unit(4, 'mm'),
-    legend.background = element_blank(),
-    legend.position = c(0.3, 1.0),
-    axis.ticks.x = element_blank()
-  )
+    ggplot(aes(x = factor(epsilon), y = rho, fill = pop)) +
+    geom_col(position = 'dodge', color = 'black') +
+    scale_fill_manual(
+      "",
+      values = c('white', 'black')
+    ) +
+    scale_x_discrete(name = expression(epsilon)) +
+    scale_y_continuous(
+      name = 'resistance (%)',
+      labels = scales::percent_format(accuracy = 1, suffix = ''),
+      limits = c(0, 1.0),
+      expand = c(0, 0)
+    ) +
+    cowplot::theme_half_open(font_size = 12) +
+    theme(
+      legend.key.size = unit(4, 'mm'),
+      legend.background = element_blank(),
+      legend.position = c(0.3, 1.0),
+      axis.ticks.x = element_blank()
+    )
 }
 
 whn2_plot_data <- whn2 %>%
@@ -260,12 +273,12 @@ whn2_plot3 <- whn2 %>%
     limits = c(0, 0.80),
     expand = c(0, 0.01)
   ) +
-  annotate('text', x = 0.07, y = 0.60, label = "epsilon == 0", parse = TRUE) +
-  annotate('text', x = 0.10, y = 0.35, label = "epsilon == 0.01", parse = TRUE) +
-  annotate('text', x = 0.13, y = 0.12, label = "epsilon == 0.1", parse = TRUE) +
+  annotate_text(0.07, 0.60, "epsilon == 0") +
+  annotate_text(0.10, 0.35, "epsilon == 0.01") +
+  annotate_text(0.13, 0.12, "epsilon == 0.1") +
   theme_cowplot(font_size = 12)
 
-whn2_plot3
+show(whn2_plot3)
 ```
 
 ```{r whn_drdtau_vs_epsilon}
@@ -337,7 +350,7 @@ whn2 %>%
 # D-types model
 
 ```{r dtypes_parameters}
-dtypes_base_parms = list(
+dtypes_base_parms <- list(
   n_d = 16,
   min_mu = 0.5,
   max_mu = 2.0,
@@ -351,54 +364,58 @@ dtypes_base_parms %>%
   as_tibble() %>%
   kable(caption = 'D-types base parameters')
 
-dtypes_base_parms$mu_d = with(dtypes_base_parms,
-                             seq(min_mu, max_mu, length = n_d))
+dtypes_base_parms$mu_d <- with(
+  dtypes_base_parms,
+  seq(min_mu, max_mu, length = n_d)
+)
 
-dtypes_base_parms %$%
+with(
+  dtypes_base_parms,
   data_frame(
     d = 1:n_d,
     mu_d = mu_d
-  ) %>%
+  )
+) %>%
   kable(caption = 'D-types mu_d values')
 ```
 
 ## Single-population model
 
 ```{r dtype_helpers}
-# pack the list into a vector
-dtypes_pack = function(lst) {
+dtypes_pack <- function(lst) {
   stopifnot(setequal(names(lst), c('X_i', 'S_id', 'R_id')))
   stopifnot(all(dim(lst$S_id) == dim(lst$R_id)))
   stopifnot(dim(lst$S_id)[1] == length(lst$X_i))
   c(lst$X_i, as.vector(lst$S_id), as.vector(lst$R_id))
 }
 
-# unpack the vector into a list
-dtypes_unpack = function(x, n_pop, n_d) {
+dtypes_unpack <- function(x, n_pop, n_d) {
   stopifnot(length(x) == n_pop + 2 * (n_d * n_pop))
 
-  x_end = n_pop
-  s_start = x_end + 1
-  s_end = x_end + n_d * n_pop
-  r_start = s_end + 1
-  r_end = s_end + n_d * n_pop
+  x_end <- n_pop
+  s_start <- x_end + 1
+  s_end <- x_end + n_d * n_pop
+  r_start <- s_end + 1
+  r_end <- s_end + n_d * n_pop
   stopifnot(r_end == length(x))
 
-  list(X_i = x[1:x_end],
-       S_id = matrix(x[s_start:s_end], nrow = n_pop, ncol = n_d),
-       R_id = matrix(x[r_start:r_end], nrow = n_pop, ncol = n_d))
+  list(
+    X_i = x[1:x_end],
+    S_id = matrix(x[s_start:s_end], nrow = n_pop, ncol = n_d),
+    R_id = matrix(x[r_start:r_end], nrow = n_pop, ncol = n_d)
+  )
 }
 
 # for initially packing the data frame into the list
-dtypes_df_to_list = function(df) {
+dtypes_df_to_list <- function(df) {
   # check we have the right column names
   stopifnot(setequal(names(df), c('population', 'phenotype', 'dtype', 'value')))
   # check we have the right phenotypes
   stopifnot(setequal(df$phenotype, c('S', 'R', 'X')))
 
   # extract the no. populations and D-types
-  n_pop = length(unique(df$population))
-  n_d = length(unique(df$dtype))
+  n_pop <- length(unique(df$population))
+  n_d <- length(unique(df$dtype))
 
   # there should be S and R for each pop/D-type combo
   stopifnot(nrow(filter(df, phenotype == 'S')) == n_pop * n_d)
@@ -406,28 +423,30 @@ dtypes_df_to_list = function(df) {
   # but X for only each pop
   stopifnot(nrow(filter(df, phenotype == 'X')) == n_pop)
 
-  list(X_i = df %>% filter(phenotype == 'X') %$% values,
-       S_id = df %>% filter(phenotype == 'S') %$% value %>% matrix(nrow = n_pop, ncol = n_d),
-       R_id = df %>% filter(phenotype == 'R') %$% value %>% matrix(nrow = n_pop, ncol = n_d))
+  list(
+    X_i = df %>% filter(phenotype == 'X') %>% pull(values),
+    S_id = df %>% filter(phenotype == 'S') %>% pull(value) %>% matrix(nrow = n_pop, ncol = n_d),
+    R_id = df %>% filter(phenotype == 'R') %>% pull(value) %>% matrix(nrow = n_pop, ncol = n_d)
+  )
 }
 
 # for finally unpacking the list into a data frame
-dtypes_list_to_df = function(lst) {
+dtypes_list_to_df <- function(lst) {
   # check for names
   stopifnot(setequal(names(lst), c('X_i', 'S_id', 'R_id')))
 
   # get dimensions
-  n_pop = length(lst$X_i)
-  n_d = dim(lst$S_id)[2]
+  n_pop <- length(lst$X_i)
+  n_d <- dim(lst$S_id)[2]
 
   # check shapes
   stopifnot(all(dim(lst$S_id) == c(n_pop, n_d)))
   stopifnot(all(dim(lst$R_id) == c(n_pop, n_d)))
 
-  X_rows = data_frame(pop = 1:n_pop, phenotype = 'X', dtype = NA, value = lst$X_i)
-  S_rows = crossing(dtype = 1:n_d, pop = 1:n_pop) %>%
+  X_rows <- data_frame(pop = 1:n_pop, phenotype = 'X', dtype = NA, value = lst$X_i)
+  S_rows <- crossing(dtype = 1:n_d, pop = 1:n_pop) %>%
     mutate(phenotype = 'S', value = as.vector(lst$S_id))
-  R_rows = crossing(dtype = 1:n_d, pop = 1:n_pop) %>%
+  R_rows <- crossing(dtype = 1:n_d, pop = 1:n_pop) %>%
     mutate(phenotype = 'R', value = as.vector(lst$R_id))
 
   bind_rows(X_rows, S_rows, R_rows) %>%
@@ -436,8 +455,8 @@ dtypes_list_to_df = function(lst) {
 ```
 
 ```{r dtypes_sim}
-dtypes_ode_func = function(t, state_vector, parms) {
-  state = dtypes_unpack(state_vector, n_pop = parms$n_pop, n_d = parms$n_d)
+dtypes_ode_func <- function(t, state_vector, parms) {
+  state <- dtypes_unpack(state_vector, n_pop = parms$n_pop, n_d = parms$n_d)
 
   with(c(state, parms), {
     stopifnot(length(X_i) == n_pop)
@@ -445,50 +464,49 @@ dtypes_ode_func = function(t, state_vector, parms) {
     stopifnot(dim(R_id) == c(n_pop, n_d))
 
     # rowSums are over D-types (second index)
-    v_id = (1.0 - ((S_id + R_id) / rowSums(S_id + R_id) - 1.0 / n_d)) ** k
+    v_id <- (1.0 - ((S_id + R_id) / rowSums(S_id + R_id) - 1.0 / n_d)) ** k
     stopifnot(dim(v_id) == c(n_pop, n_d))
 
-    N_i = X_i + rowSums(S_id + R_id)
+    N_i <- X_i + rowSums(S_id + R_id)
     stopifnot(length(N_i) == n_pop)
 
     # "tau_i * S_id" does sum_i { tau_i S_id }, which is length P vector
     # to multiply by rows, need to do some fancy footwork: "mat %*% diag(row)"
-    dS_id = v_id * (beta_ij %*% (S_id / N_i)) * X_i - tau_i * S_id - S_id %*% diag(mu_d)
-    dR_id = v_id * (beta_ij %*% (R_id / N_i)) * X_i - c_mu * R_id %*% diag(mu_d)
-    dX_i = -rowSums(dS_id + dR_id)
+    dS_id <- v_id * (beta_ij %*% (S_id / N_i)) * X_i - tau_i * S_id - S_id %*% diag(mu_d)
+    dR_id <- v_id * (beta_ij %*% (R_id / N_i)) * X_i - c_mu * R_id %*% diag(mu_d)
+    dX_i <- -rowSums(dS_id + dR_id)
 
     list(dtypes_pack(list(X_i = dX_i, S_id = dS_id, R_id = dR_id)))
   })
 }
 
-dtypes_sim = function(tau_i, epsilon = 0) {
-  n_pop = length(tau_i)
+dtypes_sim <- function(tau_i, epsilon = 0) {
+  n_pop <- length(tau_i)
   stopifnot(between(epsilon, 0, 1 - 1 / n_pop))
 
-  parms = with(dtypes_base_parms, {
+  parms <- with(dtypes_base_parms, {
     beta_ij = matrix(beta * epsilon, ncol = n_pop, nrow = n_pop)
     diag(beta_ij) <- beta * (1 - epsilon)
-
-    stopifnot(all(rowSums(beta_ij) == beta))
-    stopifnot(all(colSums(beta_ij) == beta))
+    
+    check_beta(beta_ij, beta)
 
     c(dtypes_base_parms, list(
       n_pop = n_pop, tau_i = tau_i, epsilon = epsilon, beta_ij = beta_ij
     ))
   })
 
-  n_d = parms$n_d
+  n_d <- parms$n_d
 
-  state = list(
+  state <- list(
     X_i = rep(0.9 / n_pop, n_pop),
     S_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d),
     R_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d)
   )
 
-  state_vector = dtypes_pack(state)
+  state_vector <- dtypes_pack(state)
   stopifnot(all.equal(sum(state_vector), 1))
 
-  result = rootSolve::runsteady(
+  result <- rootSolve::runsteady(
     state_vector,
     func = dtypes_ode_func,
     parms = parms,
@@ -504,10 +522,10 @@ dtypes_sim = function(tau_i, epsilon = 0) {
 }
 ```
 
-First, I reproduce Figure 3 with $\tau = 0.075$.
+To ensure I got the equations right, I reproduce Figure 3 with $\tau = 0.075$.
 
 ```{r dtypes_repro_bars}
-dtype_repro_bars = dtypes_sim(0.075, 0)
+dtype_repro_bars <- dtypes_sim(0.075, 0)
 
 dtype_repro_bars %>%
   mutate(mu_d = dtypes_base_parms$mu_d[dtype]) %>%
@@ -521,12 +539,14 @@ dtype_repro_bars %>%
 Next, I show the jagged line in Figure 4. It may not look exactly right because I ran a limited number of simulations:
 
 ```{r dtypes_repro_line}
-dtype_repro_line = dtypes_sim(seq(0.04, 0.20, length.out = 50), 0)
+dtype_repro_line <- dtypes_sim(seq(0.04, 0.20, length.out = 50), 0)
 
 dtype_repro_line %>%
   group_by(tau) %>%
-  summarize(f_res = sum(value[phenotype == 'R']),
-            f_all = sum(value)) %>%
+  summarize(
+    f_res = sum(value[phenotype == 'R']),
+    f_all = sum(value)
+  ) %>%
   mutate(rho = f_res / f_all) %>%
   ggplot(aes(tau, rho)) +
   geom_point() +
@@ -558,14 +578,9 @@ dtypes_simplify_results <- function(df) {
     mutate(rho = R / (R + S))
 }
 
-dtypes_simplify <- function(df) {
-  df %>%
-    mutate(results = map(results, dtypes_simplify_results))
-}
-
 dtypes2_plot <- dtypes2 %>%
-  dtypes_simplify() %>%
   mutate(
+    results = map(results, dtypes_simplify_results),
     delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
     dr_du = delta_rho / delta_tau
   ) %>%
