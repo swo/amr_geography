@@ -125,6 +125,7 @@ unit_data = named_bind_rows(marketscan, nhsn, europe) %>%
     n_susceptible = n_isolates - n_resistant,
     f_resistant = n_resistant / n_isolates
   ) %>%
+  select(dataset, bugdrug, unit, f_resistant, use, density, temperature, income) %>%
   nest(-dataset, -bugdrug)
 ```
 
@@ -183,7 +184,7 @@ cross_units <- function(df) {
 
 permute_cross_units <- function(df) {
   df %>%
-    mutate(use = sample(use)) %>%
+    mutate(f_resistant = sample(f_resistant)) %>%
     cross_units()
 }
 
@@ -272,6 +273,8 @@ adjacency_results_lorru <- adjacency_analysis(
 )
 ```
 
+### With dr/du
+
 ```{r adjacency_results}
 adjacency_results_table <- function(df, metric) {
   df %>%
@@ -281,14 +284,12 @@ adjacency_results_table <- function(df, metric) {
       sig = p.adjust(p_value, 'BH') < 0.05
     ) %>%
     select(dataset, bugdrug, adjacent, not_adjacent, estimate, cil, ciu, p_value, sig) %>%
-    mutate_if(is.numeric, ~ round(., 2))
+    mutate_if(is.numeric, ~ round(., 2)) %>%
+    kable()
 }
 
 adjacency_results %>%
   adjacency_results_table('dr_du')
-
-adjacency_results_lorru %>%
-  adjacency_results_table('lorr_du')
 ```
 
 ```{r adjacency_plot}
@@ -337,7 +338,7 @@ boxplot_data <- plot_data %>%
   select(label, boxplot_data) %>%
   unnest()
 
-ggplot(data = NULL, aes(x = factor(adjacent))) +
+plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
   facet_wrap(~ label, scales = 'free_y') +
   geom_boxplot(
     data = boxplot_data,
@@ -349,7 +350,7 @@ ggplot(data = NULL, aes(x = factor(adjacent))) +
     '',
     labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adjacent')
   ) +
-  ylab('Use-resistance association') +
+  ylab(expression(paste('Use-resistance association ', Delta * rho / Delta * tau))) +
   theme_classic() +
   theme(
     strip.text = element_text(size = 8),
@@ -357,6 +358,66 @@ ggplot(data = NULL, aes(x = factor(adjacent))) +
     axis.text = element_text(size = 8, color = 'black'),
     axis.title = element_text(size = 8)
   )
+
+show(plot)
+ggsave('fig/adjacency_plot.pdf', plot = plot)
+```
+
+### With LORU
+
+```{r}
+adjacency_results_lorru %>%
+  adjacency_results_table('lorr_du')
+```
+
+```{r adjacency_plot_lor}
+plot_data <- adjacency_results %>%
+  mutate(
+    y = map(base_data, ~ .$lorr_du),
+    ymin = map_dbl(y, ~ quantile(., half_drop)),
+    ymax = map_dbl(y, ~ quantile(., 1 - half_drop)),
+    boxplot_data = pmap(list(base_data, ymin, ymax), boxplot_data_f),
+    point_data = pmap(list(base_data, ymin, ymax), ~ filter(..1, between(dr_du, ..2, ..3))),
+    # some plotting niceties
+    dataset = recode(dataset,
+      'europe' = 'ECDC',
+      'marketscan' = 'MarketScan/RO',
+      'nhsn' = 'Xponent/NHSN'
+    ),
+    label = str_c(dataset, ' ', bugdrug)
+  )
+
+point_data <- plot_data %>%
+  select(label, point_data) %>%
+  unnest()
+
+boxplot_data <- plot_data %>%
+  select(label, boxplot_data) %>%
+  unnest()
+
+plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
+  facet_wrap(~ label, scales = 'free_y') +
+  geom_boxplot(
+    data = boxplot_data,
+    aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
+    stat = 'identity'
+  ) +
+  geom_jitter(data = point_data, aes(y = dr_du), size = 0.1, width = 0.2) +
+  scale_x_discrete(
+    '',
+    labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adjacent')
+  ) +
+  ylab(expression(paste('Use-resistance association ', (LOR(rho) / Delta * tau)))) +
+  theme_classic() +
+  theme(
+    strip.text = element_text(size = 8),
+    strip.background = element_blank(),
+    axis.text = element_text(size = 8, color = 'black'),
+    axis.title = element_text(size = 8)
+  )
+
+show(plot)
+ggsave('fig/adjacency_plot_lor.pdf', plot = plot)
 ```
 
 ## Adjacency with covariates
@@ -381,17 +442,7 @@ adjacency_covariates_results %>%
   mutate_if(is.numeric, ~ round(., 2))
 ```
 
-```{r}
-unit_data %>%
-  mutate(
-    cross_data = map(data, cross_units),
-    model = map(cross_data, ~ bisquare(d_resistant ~ d_use * adjacent + d_income + d_density + d_temperature, data = .)),
-    duse = map_dbl(model, ~ coef(.)['d_use']),
-    duseadj = map_dbl(model, ~ coef(.)['d_use:adjacentTRUE'])
-  )
-```
-
-### Adjacency, covariates, with LOR
+### LOR
 
 ```{r adjacency_covariates_lor_analysis}
 model_f <- function(data) {
@@ -469,7 +520,7 @@ commute_results_lor %>%
 ```{r commute_plot}
 not_crazy <- function(x) between(x, quantile(x, 0.025), quantile(x, 0.975))
 
-unit_data %>%
+plot <- unit_data %>%
   filter(dataset != 'europe') %>%
   mutate(
     data = map(data, cross_units),
@@ -485,9 +536,20 @@ unit_data %>%
   ggplot(aes(f_commuting, dr_du)) +
   facet_wrap(~ label) +
   geom_hline(yintercept = 0, color = 'gray', size = 1) +
-  geom_point() +
-  scale_x_log10('Fraction of workers commuting between states') +
-  theme_classic()
+  geom_point(shape = 1, size = 0.75) +
+  scale_x_log10(
+    'Proportion of workers commuting between states',
+    breaks = scales::trans_breaks("log10", function(x) 10^x),
+    labels = scales::trans_format("log10", scales::math_format(10^.x))
+  ) +
+  ylab(expression(paste('Use-resistance association ', (Delta * rho / Delta * tau)))) +
+  cowplot::theme_cowplot() +
+  theme(
+    strip.background = element_blank()
+  )
+
+show(plot)
+ggsave('fig/commute_plot.pdf', plot = plot)
 ```
 
 ## Commuting with covariates
@@ -522,84 +584,4 @@ commuting_results_cv_lor %>%
   mutate(sig = p.adjust(p_value, 'BH') < 0.05) %>%
   select(dataset, bugdrug, estimate, cil, ciu, p_value, sig) %>%
   mutate_if(is.numeric, ~ round(., 2))
-```
-
-## Plots
-
-First plot shows MS/RO and Sp/m.
-
-```{r distance_plots, eval = FALSE}
-main_distance_plot_data = distance_results %>%
-  filter(dataset == 'marketscan', bugdrug == 'Sp/m') %$%
-  pair_data[[1]] %>%
-  mutate(adjacent = adjacent == 1)
-  
-main_distance_pred_data = distance_results %>%
-  filter(dataset == 'marketscan', bugdrug == 'Sp/m') %$%
-  pred_data[[1]] %>%
-  mutate(adjacent = adjacent == 1)
-
-main_distance_plot = ggplot(data = NULL, aes(d_use, d_resistant, color = adjacent, fill = adjacent)) +
-  geom_ribbon(
-    data = main_distance_pred_data,
-    aes(ymin = ymin, ymax = ymax, color = NULL),
-    alpha = 0.25
-  ) + 
-  geom_line(data = main_distance_pred_data) +
-  geom_point(data = main_distance_plot_data, shape = 1) +
-  scale_color_manual(values = c('black', 'red')) +
-  scale_fill_manual(values = c('black', 'red')) +
-  xlab('Difference in antibiotic use (annual treatments per capita)') +
-  ylab('Difference in resistance (log odds ratio)') +
-  theme_classic() +
-  theme(
-    legend.position = 'none',
-    axis.text = element_text(size = 8, color = 'black'),
-    axis.title = element_text(size = 8)
-  )
-
-show(main_distance_plot)
-
-other_distance_plot_data = distance_results %>%
-  filter(!(dataset == 'marketscan' & bugdrug == 'Sp/m')) %>%
-  select(dataset, bugdrug, pair_data) %>%
-  unnest() %>%
-  mutate(
-    adjacent = adjacent == 1,
-    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'Xponent/NHSN'),
-    label = str_c(dataset, ' ', bugdrug)
-  )
-
-other_distance_pred_data = distance_results %>%
-  filter(!(dataset == 'marketscan' & bugdrug == 'Sp/m')) %>%
-  select(dataset, bugdrug, pred_data) %>%
-  unnest() %>%
-  mutate(
-    adjacent = adjacent == 1,
-    dataset = recode(dataset, 'europe' = 'ECDC', 'marketscan' = 'MarketScan/RO', 'nhsn' = 'Xponent/NHSN'),
-    label = str_c(dataset, ' ', bugdrug)
-  )
-
-other_distance_plot = ggplot(
-  data = NULL, aes(d_use, d_resistant, color = adjacent, fill = adjacent)
-) +
-  facet_wrap(~ label, scales = 'free') +
-  geom_ribbon(
-    data = other_distance_pred_data,
-    aes(ymin = ymin, ymax = ymax, color = NULL), alpha = 0.25
-  ) + 
-  geom_line(data = other_distance_pred_data) +
-  geom_point(data = other_distance_plot_data, shape = 1, size = 0.5) +
-  scale_color_manual(values = c('black', 'red')) +
-  scale_fill_manual(values = c('black', 'red')) +
-  xlab('Difference in antibiotic use (annual treatments per capita)') +
-  ylab('Difference in resistance (log odds ratio)') +
-  theme_classic() +
-  theme(
-    legend.position = 'none',
-    strip.text = element_text(size = 8),
-    strip.background = element_blank(),
-    axis.text = element_text(size = 8, color = 'black'),
-    axis.title = element_text(size = 8)
-  )
 ```
