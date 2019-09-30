@@ -1,0 +1,82 @@
+key	desc
+J01	Antibacterials for systemic use
+D	Dermatologicals
+D01	Antifungals for dermatological use
+D01B	Antifungals for systemic use
+D01BA	Antifungals for systemic use
+J	Antiinfectives for systemic use
+J01A	Tetracyclines
+J01AA	Tetracyclines
+J01B	Amphenicols
+J01BA	Amphenicols
+J01C	Beta-lactam antibacterials, penicillins
+J01CA	Penicillins with extended spectrum
+J01CE	Beta-lactamase sensitive penicillins
+J01CF	Beta-lactamase resistant penicillins
+J01CG	Beta-lactamase inhibitors
+J01CR	Combinations of penicillins, incl. beta-lactamase inhibitors
+J01D	Other beta-lactam antibacterials
+J01DB	First-generation cephalosporins
+J01DC	Second-generation cephalosporins
+J01DD	Third-generation cephalosporins
+J01DE	Fourth-generation cephalosporins
+J01DF	Monobactams
+J01DH	Carbapenems
+J01DI	Other cephalosporins and penems
+J01DZ	Other beta-lactam antibacterials – unclassified
+J01E	Sulfonamides and trimethoprim
+J01EA	Trimethoprim and derivatives
+J01EB	Short-acting sulfonamides
+J01EC	Intermediate-acting sulfonamides
+J01ED	Long-acting sulfonamides
+J01EE	Combinations of sulfonamides and trimethoprim, incl. derivatives
+J01F	Macrolides, lincosamides and streptogramins
+Short-acting macrolides	Short-acting macrolides
+Intermediate-acting macrolides	Intermediate-acting macrolides
+Long-acting macrolides	Long-acting macrolides
+J01FA	Macrolides
+J01FF	Lincosamides
+J01FG	Streptogramins
+J01G	Aminoglycoside antibacterials
+J01GA	Streptomycins
+J01GB	Other aminoglycosides
+J01M	Quinolone antibacterials
+First-generation quinolones	First-generation quinolones
+Second-generation quinolones	Second-generation quinolones
+Third-generation quinolones	Third-generation quinolones
+J01MA	Fluoroquinolones
+J01MB	Other quinolones
+J01R	Combinations of antibacterials
+J01RA	Combinations of antibacterials
+J01X	Other antibacterials
+J01XA	Glycopeptide antibacterials
+J01XB	Polymyxins
+J01XC	Steroid antibacterials
+J01XD	Imidazole derivatives
+J01XE	Nitrofuran derivatives
+J01XX	Other antibacterials
+J02	Antimycotics for systemic use
+J02A	Antimycotics for systemic use
+J02AA	Antibiotics
+J02AB	Imidazole derivatives
+J02AC	Triazole derivatives
+J02AX	Other antimycotics for systemic use
+J05	Antivirals for systemic use
+Substances used for the treatment of influenza	Substances used for the treatment of influenza
+Substances used for the treatment of hepatitis C antivirals	Substances used for the treatment of hepatitis C antivirals
+Substances used for the treatment of herpetic infections	Substances used for the treatment of herpetic infections
+Substances used for the treatment of HIV/AIDS	Substances used for the treatment of HIV/AIDS
+Substances used for the treatment of hepatitis B	Substances used for the treatment of hepatitis B
+Substances used for both HIV and hepatitis B treatment	Substances used for both HIV and hepatitis B treatment
+Other antivirals	Other antivirals
+J05A	Direct acting antivirals
+J05AA	Thiosemicarbazones
+J05AB	Nucleosides and nucleotides excl. reverse transcriptase inhibitors
+J05AC	Cyclic amines
+J05AD	Phosphonic acid derivatives
+J05AE	Protease inhibitors
+J05AF	Nucleoside and nucleotide reverse transcriptase inhibitors
+J05AG	Non-nucleoside reverse transcriptase inhibitors
+J05AH	Neuraminidase inhibitors
+J05AR	Antivirals for treatment of HIV infections, combinations
+J05AX	Other antivirals
