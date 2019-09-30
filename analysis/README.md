@@ -4,6 +4,15 @@ date: 25 July 2019
 author: swo
 ---
 
+# 11 Sep notes
+
+## Thoughts
+
+- A limitation is that we do a pairwise analysis only. There might be some signal that arises only when considering the whole network.
+- But, doing a full hierarchical Bayesian model seems overkill. There isn't enough good data here to think that we're *really* going to learn a lot new that way.
+
+# 25 July 2019 notes
+
 # Intro
 
 This is the results of my meeting with Yonatan and Marc about what next steps should be for this project.

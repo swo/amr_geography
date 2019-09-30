@@ -4,6 +4,9 @@
 .Ruserdata
 *.pdf
 old/
+tmp*
+pack/
+doc/
 
 # data files
 *.csv
