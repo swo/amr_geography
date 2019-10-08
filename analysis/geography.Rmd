@@ -203,11 +203,16 @@ whn_repro %>%
 
 ```{r whn_double}
 whn2 <- tibble(
-  delta_tau = seq(0.0, 0.15, length.out = 7),
+  delta_tau = round(seq(0.0, 0.15, length.out = 7), 3),
   taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
 ) %>%
-  crossing(epsilon = c(0, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)) %>%
-  mutate(results = map2(taui, epsilon, whn_sim))
+  crossing(epsilon = c(0, 1e-6, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)) %>%
+  mutate(
+    results = map2(taui, epsilon, whn_sim),
+    max_rho = map_dbl(results, ~ max(.$rho)),
+    min_rho = map_dbl(results, ~ min(.$rho)),
+    delta_rho = max_rho - min_rho
+  )
 ```
 
 ```{r whn_barcharts}
@@ -216,7 +221,7 @@ whn2_plot_f <- function(df) {
     ggplot(aes(x = factor(epsilon), y = rho, fill = pop)) +
     geom_col(position = 'dodge', color = 'black') +
     scale_fill_manual(
-      "",
+      '',
       values = c('white', 'black')
     ) +
     scale_x_discrete(name = expression(epsilon)) +
@@ -226,7 +231,7 @@ whn2_plot_f <- function(df) {
       limits = c(0, 1.0),
       expand = c(0, 0)
     ) +
-    cowplot::theme_half_open(font_size = 12) +
+    theme_half_open(font_size = 12) +
     theme(
       legend.key.size = unit(4, 'mm'),
       legend.background = element_blank(),
@@ -238,7 +243,6 @@ whn2_plot_f <- function(df) {
 whn2_plot_data <- whn2 %>%
   mutate(
     pop = rerun(n(), c('intervention', 'control')),
-    delta_tau = round(delta_tau, 3)
   ) %>%
   unnest() %>%
   filter(epsilon %in% c(0.0, 0.01, 0.1))
@@ -283,7 +287,7 @@ show(whn2_plot3)
 
 ```{r whn_drdtau_vs_epsilon}
 whn2_plot4 <- whn2 %>%
-  filter(round(delta_tau, 3) %in% c(0.05, 0.10)) %>%
+  filter(delta_tau %in% c(0.05, 0.10)) %>%
   mutate(
     max_rho = map_dbl(results, ~ max(.$rho)),
     min_rho = map_dbl(results, ~ min(.$rho)),
@@ -561,7 +565,7 @@ dtypes2 <- tibble(
   delta_tau = c(0.05, 0.10),
   taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
 ) %>%
-  crossing(epsilon = c(0, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)) %>%
+  crossing(epsilon = c(0, 1e-6, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)) %>%
   mutate(results = map2(taui, epsilon, dtypes_sim))
 ```
 
