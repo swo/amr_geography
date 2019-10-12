@@ -25,20 +25,17 @@ state_data = read_tsv('../db/state_data.tsv') %>%
 ```
 
 ```{r marketscan_data}
-marketscan_res = read_tsv('~/grad/proj/medicare/analysis/ms2/data/abg_state.tsv', col_types = cols('n_isolates' = 'n')) %>%
-  # specify n_isolates as "n" to parse things like "5e3"
-  mutate_at('n_isolates', as.integer) %>%
+marketscan_res = read_tsv('../data/ms-medicare-ro/abg_state.tsv') %>%
   rename(drug = drug_group) %>%
   mutate(bugdrug = case_when(
+    # don't do Sp/bl, as they have negative correlation
     .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
-    .$bug == 'S. pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
     .$bug == 'S. pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
   )) %>%
   filter(!is.na(bugdrug)) %>%
-  mutate(n_resistant = as.integer(round(f_ns * n_isolates))) %>%
-  select(bugdrug, drug, state, n_resistant, n_isolates)
+  select(bugdrug, drug, state, f_resistant = f_ns)
 
-marketscan_use <- read_tsv('~/grad/proj/medicare/analysis/ms2/ineq_marketscan.tsv') %>%
+marketscan_use <- read_tsv('../data/ms-medicare-ro/ineq_marketscan.tsv') %>%
   rename(drug = drug_group, use = total_use) %>%
   filter(drug %in% c('quinolone', 'beta_lactam', 'macrolide'))
 
@@ -47,7 +44,7 @@ marketscan <- marketscan_use %>%
   rename(unit = state) %>%
   left_join(state_data, by = 'unit') %>%
   select(
-    unit, bugdrug, use, n_resistant, n_isolates,
+    unit, bugdrug, use, f_resistant,
     density, income, temperature
   )
 ```
@@ -59,11 +56,12 @@ nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
   mutate(
     unit = state.name[match(state_abbreviation, state.abb)],
     bugdrug = 'Ec/q',
-    use = rx_1k_year / 1e3
+    use = rx_1k_year / 1e3,
+    f_resistant = n_resistant / n_isolates
   ) %>%
   left_join(state_data, by = 'unit') %>%
   select(
-    unit, bugdrug, use, n_resistant, n_isolates,
+    unit, bugdrug, use, f_resistant,
     density, income, temperature
   )
 ```
@@ -89,15 +87,18 @@ europe_units <- read_tsv('../db/europe_units.tsv') %>%
 europe <- read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
   mutate(use = cpy_per_did * did) %>%
-  mutate(bugdrug = case_when(
-    .$bug == 'Escherichia coli' & .$drug == 'quinolone' ~ 'Ec/q',
-    .$bug == 'Streptococcus pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
-    .$bug == 'Streptococcus pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
-  )) %>%
+  mutate(
+    bugdrug = case_when(
+      .$bug == 'Escherichia coli' & .$drug == 'quinolone' ~ 'Ec/q',
+      .$bug == 'Streptococcus pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
+      .$bug == 'Streptococcus pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
+    ),
+    f_resistant = n_ns / n_isolates
+  ) %>%
   rename(unit = country) %>%
   left_join(europe_units, by = 'unit') %>%
   select(
-    unit, bugdrug, use, n_resistant = n_ns, n_isolates,
+    unit, bugdrug, use, f_resistant,
     density, temperature, income
   )
 
@@ -111,10 +112,6 @@ named_bind_rows = function(..., label = 'dataset') {
 }
 
 unit_data = named_bind_rows(marketscan, nhsn, europe) %>%
-  mutate(
-    n_susceptible = n_isolates - n_resistant,
-    f_resistant = n_resistant / n_isolates
-  ) %>%
   select(dataset, bugdrug, unit, f_resistant, use, density, temperature, income) %>%
   nest(-dataset, -bugdrug)
 ```
