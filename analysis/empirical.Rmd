@@ -19,9 +19,13 @@ pdf.options(useDingbats = FALSE, useKerning = FALSE)
 # Load data
 
 ```{r state_data}
-state_data = read_tsv('../db/state_data.tsv') %>%
-  mutate(density = population / area) %>%
-  select(unit, temperature, income, density)
+state_temp <- read_tsv('../db/us/temperature.tsv')
+state_income <- read_tsv('../db/us/income.tsv')
+state_density <- read_tsv('../db/us/density.tsv')
+
+state_data <- state_temp %>%
+  left_join(state_income, by = 'state') %>%
+  left_join(state_density, by = 'state')
 ```
 
 ```{r marketscan_data}
@@ -41,10 +45,9 @@ marketscan_use <- read_tsv('../data/ms-medicare-ro/ineq_marketscan.tsv') %>%
 
 marketscan <- marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
-  rename(unit = state) %>%
-  left_join(state_data, by = 'unit') %>%
+  left_join(state_data, by = 'state') %>%
   select(
-    unit, bugdrug, use, f_resistant,
+    unit = state, bugdrug, use, f_resistant,
     density, income, temperature
   )
 ```
@@ -54,14 +57,14 @@ nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
   rename(state_abbreviation = state) %>%
   filter(state_abbreviation %in% state.abb) %>%
   mutate(
-    unit = state.name[match(state_abbreviation, state.abb)],
+    state = state.name[match(state_abbreviation, state.abb)],
     bugdrug = 'Ec/q',
     use = rx_1k_year / 1e3,
     f_resistant = n_resistant / n_isolates
   ) %>%
-  left_join(state_data, by = 'unit') %>%
+  left_join(state_data, by = 'state') %>%
   select(
-    unit, bugdrug, use, f_resistant,
+    unit = state, bugdrug, use, f_resistant,
     density, income, temperature
   )
 ```
@@ -117,10 +120,11 @@ unit_data = named_bind_rows(marketscan, nhsn, europe) %>%
 ```
 
 ```{r adjacency_db}
-us_adjacency <- read_tsv('../db/state_adjacency.tsv') %>%
+us_adjacency <- read_tsv('../db/us/adjacency.tsv') %>%
   mutate(adjacent = TRUE) %>%
-  complete(unit1, unit2) %>%
-  replace_na(list(adjacent = FALSE))
+  complete(state1, state2) %>%
+  replace_na(list(adjacent = FALSE)) %>%
+  rename(unit1 = state1, unit2 = state2)
 
 eu_adjacency <- read_tsv('../db/europe_adjacency.tsv') %>%
   mutate(adjacent = TRUE) %>%
