@@ -1,4 +1,4 @@
-unit1	unit2
+state1	state2
 Alabama	Alabama
 Alabama	Florida
 Alabama	Georgia
@@ -38,9 +38,6 @@ Delaware	Delaware
 Delaware	Maryland
 Delaware	New Jersey
 Delaware	Pennsylvania
-NA	NA
-NA	Maryland
-NA	Virginia
 Florida	Florida
 Florida	Georgia
 Florida	Alabama
@@ -101,7 +98,6 @@ Maryland	Pennsylvania
 Maryland	West Virginia
 Maryland	Delaware
 Maryland	Virginia
-Maryland	NA
 Massachusetts	Massachusetts
 Massachusetts	Connecticut
 Massachusetts	New York
@@ -249,7 +245,6 @@ Vermont	New Hampshire
 Virginia	Maryland
 Virginia	Virginia
 Virginia	West Virginia
-Virginia	NA
 Virginia	North Carolina
 Virginia	Kentucky
 Virginia	Tennessee
@@ -274,8 +269,3 @@ Wyoming	South Dakota
 Wyoming	Nebraska
 Wyoming	Idaho
 Wyoming	Utah
-NA	NA
-NA	NA
-NA	NA
-NA	NA
-NA	NA

@@ -7,14 +7,22 @@ raw_adjacency = read_tsv(
 
 raw_fips = read_csv(
   'national_county.txt',
-  col_names = c('state', 'state_fips', 'county_fips', 'county', 'fips_class_code')
+  col_names = c('state_abb', 'state_fips', 'county_fips', 'county', 'fips_class_code')
 )
 
 fips = raw_fips %>%
-  select(state, state_fips) %>%
+  select(state_abb, state_fips) %>%
   distinct()
 
-fips_to_state = function(x) with(fips, state[match(x, state_fips)])
+recode_many <- function(x, from_values, to_values) {
+  to_values[match(x, from_values)]
+}
+
+fips_to_state = function(x) {
+  x %>%
+    recode_many(fips$state_fips, fips$state_abb) %>%
+    recode_many(state.abb, state.name)
+}
 
 adjacency = raw_adjacency %>%
   mutate(
@@ -24,13 +32,16 @@ adjacency = raw_adjacency %>%
   select(fips1, fips2) %>%
   distinct() %>%
   mutate(
-    state_abb1 = fips_to_state(fips1),
-    state_abb2 = fips_to_state(fips2),
-    unit_id1 = match(state_abb1, state.abb),
-    unit_id2 = match(state_abb2, state.abb),
-    unit1 = state.name[unit_id1],
-    unit2 = state.name[unit_id2]
+    state1 = fips_to_state(fips1),
+    state2 = fips_to_state(fips2),
   ) %>%
-  select(unit1, unit2)
+  select(state1, state2) %>%
+  filter(!is.na(state1), !is.na(state2))
 
-write_tsv(adjacency, '../../state_adjacency.tsv')
+# there should be 50 states in the "from" column
+stopifnot(length(unique(adjacency$state1)) == 50)
+
+# the result should be symmetrical
+stopifnot(all_equal(adjacency, rename(adjacency, state1 = state2, state2 = state1)))
+
+write_tsv(adjacency, '../adjacency.tsv')
