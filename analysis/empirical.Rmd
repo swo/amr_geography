@@ -134,8 +134,20 @@ eu_adjacency <- read_tsv('../db/europe_adjacency.tsv') %>%
 adjacency_db <- bind_rows(us_adjacency, eu_adjacency)
 
 # swo: need to mirror this, based on how the crossing function is written
-commuting_db <- read_tsv('../db/us/commuting/commuting.tsv') %>%
+commuting_db <- read_tsv('../db/us/commuting.tsv') %>%
   rename_all(~ str_replace(., '^state', 'unit'))
+```
+
+# Commuting histogram
+
+```{r commuting_histogram}
+commuting_db %>%
+  filter(unit1 > unit2) %>%
+  ggplot(aes(x = log10(f_commuting))) +
+  geom_histogram(fill = 'black') +
+  xlab('Commuting fraction (log 10)') +
+  ylab('Number of state pairs') +
+  theme_half_open()
 ```
 
 # Adjacency analysis

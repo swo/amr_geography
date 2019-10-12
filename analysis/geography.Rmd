@@ -4,17 +4,18 @@ author: "Scott Olesen"
 ---
 
 ```{r global_options, echo = FALSE}
+library(knitr)
+library(cowplot)
+library(gridExtra)
+library(tidyverse)
+
+pdf.options(useDingbats = FALSE, useKerning = FALSE)
+
 knitr::opts_chunk$set(
   fig.width = 7, fig.height = 4, fig.path = 'fig/',
   dev = c('png', 'pdf'),
   echo = FALSE, warning = FALSE, message = FALSE,
   cache = TRUE, autodep = TRUE)
-
-pdf.options(useDingbats = FALSE, useKerning = FALSE)
-
-library(kableExtra)
-options(knitr.table.format = 'pandoc')
-library(cowplot)
 ```
 
 ```{r helpers}
@@ -206,7 +207,7 @@ whn2 <- tibble(
   delta_tau = round(seq(0.0, 0.15, length.out = 7), 3),
   taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
 ) %>%
-  crossing(epsilon = c(0, 1e-6, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)) %>%
+  crossing(epsilon = c(0, 1e-4, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)) %>%
   mutate(
     results = map2(taui, epsilon, whn_sim),
     max_rho = map_dbl(results, ~ max(.$rho)),
@@ -343,12 +344,13 @@ whn2 %>%
     delta_rho = max_rho - min_rho,
     dr_du = delta_rho / delta_tau
   ) %>%
-  filter(delta_tau > 0) %>%
+  filter(delta_tau %in% c(0.05, 0.10)) %>%
   group_by(delta_tau) %>%
   mutate(pct_red = scales::percent(1 - dr_du / max(dr_du))) %>%
   ungroup() %>%
   select(delta_tau, epsilon, pct_red) %>%
-  spread(delta_tau, pct_red)
+  spread(delta_tau, pct_red) %>%
+  kable(caption = 'Columns show Delta rho')
 ```
 
 # D-types model
@@ -565,7 +567,7 @@ dtypes2 <- tibble(
   delta_tau = c(0.05, 0.10),
   taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
 ) %>%
-  crossing(epsilon = c(0, 1e-6, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)) %>%
+  crossing(epsilon = c(0, 1e-4, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)) %>%
   mutate(results = map2(taui, epsilon, dtypes_sim))
 ```
 
@@ -619,5 +621,23 @@ ggsave(
   'fig/dtypes2_plot.pdf', dtypes2_plot,
   width = 88, height = 80, unit = 'mm'
 )
+```
+
+## Reduction in $\Delta \rho/\Delta \tau$ against $\epsilon$
+
+```{r}
+dtypes2 %>%
+  mutate(
+    results = map(results, dtypes_simplify_results),
+    delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
+    dr_du = delta_rho / delta_tau
+  ) %>%
+  filter(delta_tau > 0) %>%
+  group_by(delta_tau) %>%
+  mutate(pct_red = scales::percent(1 - dr_du / max(dr_du))) %>%
+  ungroup() %>%
+  select(delta_tau, epsilon, pct_red) %>%
+  spread(delta_tau, pct_red) %>%
+  kable(caption = 'Columns show Delta rho')
 ```
 
