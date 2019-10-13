@@ -47,6 +47,8 @@ commuting <- data %>%
   left_join(rename(workers, within1 = n_workers), by = c('country1' = 'country')) %>%
   left_join(rename(workers, within2 = n_workers), by = c('country2' = 'country')) %>%
   mutate(f_commuting = n_commuters / (within1 + within2)) %>%
-  select(country1, country2, f_commuting)
+  select(country1, country2, f_commuting) %>%
+  # symmetrize
+  bind_rows(rename(., country1 = country2, country2 = country1))
 
 write_tsv(commuting, '../commuting.tsv')

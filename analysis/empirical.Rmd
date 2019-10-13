@@ -109,7 +109,7 @@ europe <- read_tsv('../data/ecdc/data.tsv') %>%
     density, temperature, income
   )
 
-europe_names = unique(europe$unit)
+eu_units <- unique(europe$unit)
 ```
 
 ```{r combine_data}
@@ -138,8 +138,16 @@ eu_adjacency <- read_tsv('../db/europe_adjacency.tsv') %>%
 adjacency_db <- bind_rows(us_adjacency, eu_adjacency)
 
 # swo: need to mirror this, based on how the crossing function is written
-commuting_db <- read_tsv('../db/us/commuting.tsv') %>%
-  rename_all(~ str_replace(., '^state', 'unit'))
+us_commuting <- read_tsv('../db/us/commuting.tsv') %>%
+  rename_all(~ str_replace(., '^state', 'unit')) %>%
+  mutate(dataset = 'US')
+
+eu_commuting <- read_tsv('../db/europe/commuting.tsv') %>%
+  rename_all(~ str_replace(., '^country', 'unit')) %>%
+  filter(unit1 %in% eu_units, unit2 %in% eu_units) %>%
+  mutate(dataset = 'Europe')
+
+commuting_db <- bind_rows(us_commuting, eu_commuting)
 ```
 
 # Commuting histogram
@@ -148,10 +156,12 @@ commuting_db <- read_tsv('../db/us/commuting.tsv') %>%
 commuting_db %>%
   filter(unit1 > unit2) %>%
   ggplot(aes(x = log10(f_commuting))) +
+  facet_wrap(~ dataset, scales = 'free_y') +
   geom_histogram(fill = 'black') +
   xlab('Commuting fraction (log 10)') +
   ylab('Number of state pairs') +
-  theme_half_open()
+  theme_half_open() +
+  theme(strip.background = element_blank())
 ```
 
 # Adjacency analysis

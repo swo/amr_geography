@@ -4,6 +4,10 @@ date: 25 July 2019
 author: swo
 ---
 
+# To do
+
+- Pick "EU" or "Europe" in all places
+
 # 11 Sep notes
 
 ## Thoughts
