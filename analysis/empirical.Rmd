@@ -72,7 +72,7 @@ nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
 For the European data, we convert to "treatments" per person per year, assuming a certain conversion from DDD to treatments. This is just an *ad hoc* adjustment to get the European data to the same scales as used in the simulations and the US data.
 
 ```{r ecdc_convert}
-did_cpy_map <- data_frame(
+did_cpy_map <- tibble(
   drug = c('beta_lactam', 'quinolone', 'macrolide'),
   ddd_per_tx = c(10, 10, 7),
   cpy_per_did = 365 / (1e3 * ddd_per_tx)
@@ -83,9 +83,13 @@ did_cpy_map %>%
 ```
 
 ```{r ecdc}
-europe_units <- read_tsv('../db/europe_units.tsv') %>%
-  mutate(density = population / area) %>%
-  select(unit, density, income, temperature)
+europe_temp <- read_tsv('../db/europe/temperature.tsv')
+europe_income <- read_tsv('../db/europe/income.tsv')
+europe_density <- read_tsv('../db/europe/density.tsv')
+
+europe_data <- europe_temp %>%
+  left_join(europe_income, by = 'country') %>%
+  left_join(europe_density, by = 'country')
 
 europe <- read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
@@ -98,8 +102,8 @@ europe <- read_tsv('../data/ecdc/data.tsv') %>%
     ),
     f_resistant = n_ns / n_isolates
   ) %>%
+  left_join(europe_data, by = 'country') %>%
   rename(unit = country) %>%
-  left_join(europe_units, by = 'unit') %>%
   select(
     unit, bugdrug, use, f_resistant,
     density, temperature, income
