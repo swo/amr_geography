@@ -1,15 +1,14 @@
-#!/usr/bin/env Rscript
+#!/usr/bin/env Rscript --vanilla
 
-codes = read_csv('UNSD — Methodology.csv') %>%
-  select(ISO_3DIGIT = `ISO-alpha3 Code`, unit = `Country or Area`) %>%
-  mutate(unit = recode(unit,
-                       'United Kingdom of Great Britain and Northern Ireland' = 'United Kingdom',
-                       'Czechia' = 'Czech Republic'))
+library(tidyverse)
+library(countrycode)
 
-raw = read_tsv('cckp_historical_data_0.txt')
+raw <- read_tsv('cckp_historical_data_0.txt')
 
-raw %>%
-  left_join(codes) %>%
-  select(unit, temperature = Annual_temp) %>%
-  bind_rows(data_frame(unit = 'Malta', temperature = 19.5)) %>%
-  write_tsv('europe_temperatures.tsv')
+data <- raw %>%
+  # left_join(codes) %>%
+  mutate(country = countrycode(ISO_3DIGIT, 'iso3c', 'country.name', custom_match = c('KSV' = 'Kosovo'))) %>%
+  select(country, temperature = Annual_temp) %>%
+  bind_rows(tibble(country = 'Malta', temperature = 19.5))
+
+write_tsv(data, '../temperature.tsv')

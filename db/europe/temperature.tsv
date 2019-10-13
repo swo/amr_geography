@@ -1,4 +1,4 @@
-unit	temperature
+country	temperature
 Afghanistan	12.92
 Angola	21.51
 Albania	11.27
@@ -15,12 +15,12 @@ Burkina Faso	28.18
 Bangladesh	25.47
 Bulgaria	10.4
 Bahamas	25.06
-Bosnia and Herzegovina	9.02
+Bosnia & Herzegovina	9.02
 Belarus	6.29
 Belize	25.06
-Bolivia (Plurinational State of)	20.98
+Bolivia	20.98
 Brazil	24.92
-Brunei Darussalam	25.93
+Brunei	25.93
 Bhutan	8.58
 Botswana	21.48
 Central African Republic	24.84
@@ -30,14 +30,14 @@ Chile	8.37
 China	6.33
 Côte d’Ivoire	26.3
 Cameroon	24.53
-Democratic Republic of the Congo	24.04
-Congo	24.52
+Congo - Kinshasa	24.04
+Congo - Brazzaville	24.52
 Colombia	24.4
 Comoros	23.99
 Costa Rica	23.85
 Cuba	25.13
 Cyprus	18.71
-Czech Republic	7.67
+Czechia	7.67
 Germany	8.5
 Djibouti	27.64
 Denmark	7.82
@@ -52,7 +52,7 @@ Estonia	5.03
 Ethiopia	22.37
 Finland	1.35
 Fiji	23.37
-Falkland Islands (Malvinas)	5.79
+Falkland Islands	5.79
 France	10.54
 Gabon	25
 United Kingdom	8.31
@@ -74,7 +74,7 @@ Hungary	10.06
 Indonesia	25.72
 India	23.95
 Ireland	9.11
-Iran (Islamic Republic of)	16.93
+Iran	16.93
 Iraq	21.58
 Iceland	1.35
 Israel	19.7
@@ -86,10 +86,10 @@ Kazakhstan	5.99
 Kenya	24.5
 Kyrgyzstan	1.09
 Cambodia	26.94
-Republic of Korea	10.66
-NA	8.42
+South Korea	10.66
+Kosovo	8.42
 Kuwait	25.15
-Lao People's Democratic Republic	23.22
+Laos	23.22
 Lebanon	15.61
 Liberia	25.25
 Libya	21.9
@@ -99,12 +99,12 @@ Lithuania	6.24
 Luxembourg	8.88
 Latvia	5.63
 Morocco	17.23
-Republic of Moldova	9.67
+Moldova	9.67
 Madagascar	22.01
 Mexico	20.54
-The former Yugoslav Republic of Macedonia	9.85
+Macedonia	9.85
 Mali	28.3
-Myanmar	22.96
+Myanmar (Burma)	22.96
 Montenegro	7.91
 Mongolia	-0.5
 Mozambique	23.69
@@ -129,18 +129,18 @@ Philippines	25.33
 Papua New Guinea	25.05
 Poland	7.87
 Puerto Rico	24.28
-Democratic People's Republic of Korea	4.86
+North Korea	4.86
 Portugal	14.97
 Paraguay	23.48
 Qatar	26.92
 Réunion	21.08
 Romania	8.81
-Russian Federation	-6.32
+Russia	-6.32
 Rwanda	19.01
 Saudi Arabia	24.65
 Sudan	26.82
 Senegal	27.87
-Svalbard and Jan Mayen Islands	-9.14
+Svalbard & Jan Mayen	-9.14
 Solomon Islands	25.68
 Sierra Leone	26.04
 El Salvador	24.77
@@ -151,27 +151,27 @@ Suriname	25.77
 Slovakia	7.27
 Slovenia	8.04
 Sweden	1.55
-Eswatini	20.41
-Syrian Arab Republic	17.65
+Swaziland	20.41
+Syria	17.65
 Chad	26.65
 Togo	26.8
 Thailand	26.25
 Tajikistan	3.03
 Turkmenistan	15.22
 Timor-Leste	24.97
-Trinidad and Tobago	25.86
+Trinidad & Tobago	25.86
 Tunisia	19.36
 Turkey	10.93
-United Republic of Tanzania	22.31
+Tanzania	22.31
 Uganda	22.6
 Ukraine	8.21
 Uruguay	17.57
-United States of America	6.75
+United States	6.75
 Uzbekistan	12.52
-Saint Vincent and the Grenadines	26.82
-Venezuela (Bolivarian Republic of)	25.32
-United States Virgin Islands	25.74
-Viet Nam	24.07
+St. Vincent & Grenadines	26.82
+Venezuela	25.32
+U.S. Virgin Islands	25.74
+Vietnam	24.07
 Vanuatu	23.84
 Yemen	23.16
 South Africa	17.6
