@@ -13,3 +13,5 @@ doc/
 *.dta
 *.zip
 *.xlsx
+
+.*.swp
