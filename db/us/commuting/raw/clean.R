@@ -19,6 +19,7 @@ within_counts <- counts %>%
 
 commuting <- counts %>%
   filter(from_state != to_state) %>%
+  # e.g., Alabama -> Idaho and Idaho -> Alabama both become Alabama--Idaho
   mutate(
     state1 = pmin(from_state, to_state),
     state2 = pmax(from_state, to_state)
