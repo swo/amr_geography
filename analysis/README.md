@@ -6,14 +6,29 @@ author: swo
 
 # To do
 
+## Major
+
+- Analyses
+    - Primary: Δρ/Δτ ~ ε (robust regression; just use Huber?)
+        - How does -β_ε ε* / μ compare with predictions from dynamical models?
+        - Use the jackknifed models both for the plot as well as for that ratio
+    - Δρ/Δτ ~ (ε >? median)
+    - Δρ/Δτ ~ adjacent?
+    - Covariates
+        - Δρ ~ 0 + β_τ Δτ + β_ετ Δτ ε + β_x x + φ
+        - To see how much the value from #1 decreases when including those cofounders
+        - Look at β_τε ε* / β_τ
+- Methods
+    - Just do CIs with JK. If I really need p-values, then I can put them in using z-approximations
+    - Without permutations, simpler: data, cross-data, then jackknifed models. Pull out ratios & CIs.
+- Displays
+    - Figure out how to put rlm onto the ggplot
+        - Maybe run the N models, keep all the predictions, and then use the quantiles?
+
+## Minor
+
 - Pick "EU" or "Europe" in all places
-
-# 11 Sep notes
-
-## Thoughts
-
-- A limitation is that we do a pairwise analysis only. There might be some signal that arises only when considering the whole network.
-- But, doing a full hierarchical Bayesian model seems overkill. There isn't enough good data here to think that we're *really* going to learn a lot new that way.
+- A limitation is that we do a pairwise analysis only. There might be some signal that arises only when considering the whole network. (But full Bayesian seems like overkill.)
 
 # 25 July 2019 notes
 

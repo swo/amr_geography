@@ -83,13 +83,13 @@ did_cpy_map %>%
 ```
 
 ```{r ecdc}
-europe_temp <- read_tsv('../db/europe/temperature.tsv')
-europe_income <- read_tsv('../db/europe/income.tsv')
-europe_density <- read_tsv('../db/europe/density.tsv')
+eu_temp <- read_tsv('../db/europe/temperature.tsv')
+eu_income <- read_tsv('../db/europe/income.tsv')
+eu_density <- read_tsv('../db/europe/density.tsv')
 
-europe_data <- europe_temp %>%
-  left_join(europe_income, by = 'country') %>%
-  left_join(europe_density, by = 'country')
+eu_data <- eu_temp %>%
+  left_join(eu_income, by = 'country') %>%
+  left_join(eu_density, by = 'country')
 
 europe <- read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
@@ -102,7 +102,7 @@ europe <- read_tsv('../data/ecdc/data.tsv') %>%
     ),
     f_resistant = n_ns / n_isolates
   ) %>%
-  left_join(europe_data, by = 'country') %>%
+  left_join(eu_data, by = 'country') %>%
   rename(unit = country) %>%
   select(
     unit, bugdrug, use, f_resistant,
@@ -132,7 +132,7 @@ us_adjacency <- read_tsv('../db/us/adjacency.tsv') %>%
 
 eu_adjacency <- read_tsv('../db/europe_adjacency.tsv') %>%
   mutate(adjacent = TRUE) %>%
-  right_join(crossing(unit1 = europe_names, unit2 = europe_names)) %>%
+  right_join(crossing(unit1 = eu_units, unit2 = eu_units)) %>%
   replace_na(list(adjacent = FALSE))
 
 adjacency_db <- bind_rows(us_adjacency, eu_adjacency)
@@ -222,7 +222,7 @@ permute_p <- function(df, stat, n_trials, alternative) {
   (n_exceptional + 1) / (n_trials + 1)
 }
 
-adjacency_analysis <- function(unit_data, jackknife_stat, permute_stat = NULL, alternative = 'less', n_trials = 1e3 - 1, alpha = 0.05) {
+adjacency_analysis <- function(unit_data, jackknife_stat, permute_stat = NULL, alternative = 'less', n_trials = 1e1 - 1, alpha = 0.05) {
   if (is.null(permute_stat)) permute_stat <- jackknife_stat
   se_multiplier <- qnorm(1 - alpha / 2)
   
