@@ -276,30 +276,46 @@ analysis_f <- function(model_f, coef_f, ratio_f) {
       coef = map_dbl(model, coef_f),
       ratio = map_dbl(model, ratio_f)
     ) %>%
-    select(dataset, bugdrug, coef, ratio)
+    select(dataset, coef, ratio)
   
   l1o_results <- cross_data %>%
-    select(dataset, bugdrug, l1o_cross_data) %>%
+    select(dataset, l1o_cross_data) %>%
     unnest() %>%
     mutate(
       model = map(l1o_cross_data, model_f),
       coef = map_dbl(model, coef_f),
       ratio = map_dbl(model, ratio_f)
     ) %>%
-    group_by(dataset, bugdrug) %>%
+    group_by(dataset) %>%
     summarize(
       coef_se = jackknife.sd(coef),
       ratio_se = jackknife.sd(ratio)
-    ) %>%
-    ungroup()
+    )
   
   base_results %>%
-    left_join(l1o_results, by = c('dataset', 'bugdrug'))
+    left_join(l1o_results, by = 'dataset')
 }
+
+show_results <- function(df, caption) {
+  df %>%
+    mutate(
+      coef_hci = 1.96 * coef_se * 0.5,
+      coef_cil = coef - coef_hci,
+      coef_ciu = coef + coef_hci,
+      ratio_hci = 1.96 * ratio_se * 0.5,
+      ratio_cil = ratio - ratio_hci,
+      ratio_ciu = ratio + ratio_hci
+    ) %>%
+    mutate_if(is.numeric, sigfig) %>%
+    select(dataset, coef, coef_cil, coef_ciu, ratio, ratio_cil, ratio_ciu) %>%
+    kable(caption = caption)
+}
+
+rlm <- MASS::rlm
 ```
 
 ```{r adjacency_analysis}
-analysis_f(
+adjacency_results <- analysis_f(
   function(df) with(df, {
     list(
       overall_median = median(df$dr_du),
@@ -309,77 +325,79 @@ analysis_f(
   }),
   function(model) with(model, { adjacent_median - nonadjacent_median }),
   function(model) with(model, { (adjacent_median - nonadjacent_median) / overall_median })
-) %>%
-  mutate(
-    coef_hci = 1.96 * coef_se * 0.5,
-    coef_cil = coef - coef_hci,
-    coef_ciu = coef + coef_hci,
-    ratio_hci = 1.96 * ratio_se * 0.5,
-    ratio_cil = ratio - ratio_hci,
-    ratio_ciu = ratio + ratio_hci
-  ) %>%
-  mutate_if(is.numeric, sigfig) %>%
-  select(dataset, bugdrug, coef, coef_cil, coef_ciu, ratio, ratio_cil, ratio_ciu) %>%
-  kable(caption = 'Using adjacency and medians')
+)
+
+show_results(
+  adjacency_results,
+  'Comparing adjacent and non-adjacent pairs. "Coef" is difference in median Δρ/Δτ between the two groups. "Ratio" is that difference divided by overall median.'
+)
 ```
 
 ```{r adjacency_lorru}
-analysis_f(
+adjacency_lorru_results <- analysis_f(
   function(df) rlm(lorr_du ~ adjacent, data = df),
   function(model) coef(model)['adjacentTRUE'],
   function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
-) %>%
-  kable(caption = 'Using LORR /du')
+)
+
+show_results(
+  adjacency_lorru_results,
+  'As above, but using LOR(ρ)/Δτ'
+)
 ```
 
 ```{r adjacency_with_rlm}
-analysis_f(
+adjacency_rlm_results <- analysis_f(
   function(df) rlm(dr_du ~ adjacent, data = df),
   function(model) coef(model)['adjacentTRUE'],
   function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
-) %>%
-  kable(caption = 'Using adajency with rlm')
+)
+
+show_results(
+  adjacency_rlm_results,
+  'Using robust regression: Δρ/Δτ ~ Α. "Coef" is βΑ, "ratio" is βΑ/μ.'
+)
+```
+
+```{r}
+bisquare <- partial(MASS::rlm, psi = MASS::psi.bisquare, maxit = 30)
+
+adjacency_bisquare_results <- analysis_f(
+  function(df) bisquare(dr_du ~ adjacent, data = df),
+  function(model) coef(model)['adjacentTRUE'],
+  function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
+)
+
+show_results(
+  adjacency_bisquare_results,
+  "As above, but using Tukey's bisquare."
+)
 ```
 
 ```{r adjacency_with_covariates}
-analysis_f(
+adjacency_covariates_results <- analysis_f(
   function(df) rlm(dr_du ~ adjacent + d_income + d_temperature + d_density, data = df),
   function(model) coef(model)['adjacentTRUE'],
   function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
-) %>%
-  kable(caption = 'Using adjacency with rlm & covariates')
+)
+
+show_results(
+  adjacency_covariates_results,
+  'As above, but with Δρ/Δτ ~ Α + X, where X are the other covariates.'
+)
 ```
 
 ```{r commuting_analysis}
-analysis_f(
+commuting_results <- analysis_f(
   function(df) rlm(dr_du ~ f_commuting, data = df),
   function(model) coef(model)['f_commuting'] * 0.01,
   function(model) coef(model) %>% { .['f_commuting'] / .['(Intercept)'] * 0.01 }
-) %>%
-  kable(caption = 'Using commuting fraction')
-```
+)
 
-SWO: Stopped here
-
-## Using $\Delta \rho / \Delta \tau$
-
-```{r adjacency_results, eval = FALSE}
-
-
-adjacency_results_table <- function(df, metric, caption = NULL) {
-  df %>%
-    mutate(
-      adjacent = map_dbl(base_data, ~ median(.[[metric]][.$adjacent == 1])),
-      not_adjacent = map_dbl(base_data, ~ median(.[[metric]][.$adjacent == 0])),
-      sig = p.adjust(p_value, 'BH') < 0.05
-    ) %>%
-    select(dataset, bugdrug, adjacent, not_adjacent, estimate, cil, ciu, p_value, sig) %>%
-    mutate_if(is.numeric, sigfig) %>%
-    kable(caption = caption)
-}
-
-adjacency_results %>%
-  adjacency_results_table('dr_du', 'Median associations (dr/du) by adjacency, and differences in median associations (with jackknife CIs), and permutation test p-values')
+show_results(
+  commuting_results,
+  'Robust regression on Δρ/Δτ ~ C, where C is the commuting fraction. "Coef" is βC. "Ratio" is βC / μ.'
+)
 ```
 
 ```{r adjacency_plot}
@@ -410,26 +428,19 @@ plot_data <- cross_data %>%
     ymin = map_dbl(y, ~ quantile(., half_drop)),
     ymax = map_dbl(y, ~ quantile(., 1 - half_drop)),
     boxplot_data = pmap(list(cross_data, ymin, ymax), boxplot_data_f),
-    point_data = pmap(list(cross_data, ymin, ymax), ~ filter(..1, between(dr_du, ..2, ..3))),
-    # some plotting niceties
-    dataset = recode(dataset,
-      'europe' = 'ECDC',
-      'marketscan' = 'MarketScan/RO',
-      'nhsn' = 'Xponent/NHSN'
-    ),
-    label = str_c(dataset, ' ', bugdrug)
+    point_data = pmap(list(cross_data, ymin, ymax), ~ filter(..1, between(dr_du, ..2, ..3)))
   )
 
 point_data <- plot_data %>%
-  select(label, point_data) %>%
+  select(dataset, point_data) %>%
   unnest()
 
 boxplot_data <- plot_data %>%
-  select(label, boxplot_data) %>%
+  select(dataset, boxplot_data) %>%
   unnest()
 
 plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
-  facet_wrap(~ label, scales = 'free_y') +
+  facet_wrap(~ dataset, scales = 'free_y') +
   geom_boxplot(
     data = boxplot_data,
     aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
@@ -446,55 +457,4 @@ plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
 
 show(plot)
 ggsave('fig/adjacency_plot.pdf', plot = plot)
-```
-
-# Adjacency with covariates
-
-## $\Delta \rho / \Delta \tau$
-
-```{r adjacency_covariates_analysis, eval = FALSE}
-bisquare <- partial(MASS::rlm, psi = MASS::psi.bisquare, maxit = 30)
-
-model_f <- function(data) {
-  model <- bisquare(d_resistant ~ d_use * adjacent + d_income + d_density + d_temperature, data = data)
-  coef(model)['d_use:adjacentTRUE']
-}
-
-adjacency_covariates_results <- adjacency_analysis(unit_data, model_f)
-```
-
-
-```{r commute_plot, eval = FALSE}
-not_crazy <- function(x) between(x, quantile(x, 0.025), quantile(x, 0.975))
-
-plot <- unit_data %>%
-  filter(dataset != 'europe') %>%
-  mutate(
-    data = map(data, cross_units),
-    data = map(data, ~ filter(., not_crazy(dr_du))),
-    dataset = recode(dataset,
-      'europe' = 'ECDC',
-      'marketscan' = 'MarketScan/RO',
-      'nhsn' = 'Xponent/NHSN'
-    ),
-    label = str_c(dataset, ' ', bugdrug)
-  ) %>%
-  unnest() %>%
-  ggplot(aes(f_commuting, dr_du)) +
-  facet_wrap(~ label) +
-  geom_hline(yintercept = 0, color = 'gray', size = 1) +
-  geom_point(shape = 1, size = 0.75) +
-  scale_x_log10(
-    'Proportion of workers commuting between states',
-    breaks = scales::trans_breaks("log10", function(x) 10^x),
-    labels = scales::trans_format("log10", scales::math_format(10^.x))
-  ) +
-  ylab(expression(paste('Use-resistance association ', (Delta * rho / Delta * tau)))) +
-  cowplot::theme_cowplot() +
-  theme(
-    strip.background = element_blank()
-  )
-
-show(plot)
-ggsave('fig/commute_plot.pdf', plot = plot)
 ```
