@@ -119,8 +119,18 @@ named_bind_rows <- function(..., label = 'dataset') {
 }
 
 unit_data <- named_bind_rows(marketscan, nhsn, europe) %>%
-  select(dataset, bugdrug, unit, f_resistant, use, density, temperature, income) %>%
-  nest(-dataset, -bugdrug)
+  mutate(
+    label = str_c(
+      recode(dataset,
+        'europe' = 'ECDC',
+        'marketscan' = 'MarketScan/RO',
+        'nhsn' = 'Xponent/NHSN'
+      ),
+      ' ', bugdrug
+    )
+  ) %>%
+  select(label, dataset, bugdrug, unit, f_resistant, use, density, temperature, income) %>%
+  nest(-label, -dataset, -bugdrug)
 ```
 
 ```{r adjacency_db}
@@ -151,9 +161,28 @@ commuting_db <- bind_rows(us_commuting, eu_commuting) %>%
   mutate_at('dataset', fct_inorder)
 ```
 
-# Adjacency analysis
+# Use-resistance in different datasets
 
-```{r distance_analysis_helpers}
+```{r use_resistance_plots}
+unit_data %>%
+  unnest() %>%
+  ggplot(aes(use, f_resistant * 100)) +
+  facet_wrap(~ label, scales = 'free') +
+  geom_point() +
+  geom_smooth(method = 'lm') +
+  xlab('Treatments per person per year') +
+  scale_y_continuous(
+    name = 'Isolates resistant (%)'
+  ) +
+  theme_cowplot() +
+  theme(
+    strip.background = element_blank()
+  )
+```
+
+# Pairs data
+
+```{r cross_data}
 odds <- function(p) p / (1 - p)
 log_odds_ratio <- function(p, q) log(odds(p)) - log(odds(q))
 
@@ -183,6 +212,36 @@ leave_one_out_from_cross <- function(df) {
   map(units, ~ filter(df, unit1 != ., unit2 != .))
 }
 
+cross_data <- unit_data %>%
+  mutate(
+    cross_data = map(data, cross_units),
+    l1o_cross_data = map(cross_data, leave_one_out_from_cross)
+  )
+```
+
+## Commuting histogram
+
+```{r commuting_histogram}
+cross_data %>%
+  select(cross_data) %>%
+  unnest() %>%
+  select(dataset, unit1, unit2, adjacent, f_commuting) %>%
+  distinct() %>%
+  ggplot(aes(log10(f_commuting), fill = adjacent)) +
+  geom_histogram() +
+  theme_cowplot()
+```
+
+Some of the pairs had zero interactions and don't appear in this figure:
+
+```{r}
+commuting_db %>%
+  filter(dataset == 'US', unit1 > unit2) %>%
+  count(dataset, f_commuting > 0) %>%
+  kable(caption = 'Number of pairs with 0 commuting fraction')
+```
+
+```{r analysis_helpers}
 mapmap <- function(list_of_tibbles, f) {
   map(list_of_tibbles, function(df) {
     map(df, f)
@@ -195,46 +254,13 @@ mapmap_dbl <- function(list_of_tibbles, f) {
   })
 }
 
-cross_data <- unit_data %>%
-  mutate(
-    cross_data = map(data, cross_units),
-    l1o_cross_data = map(cross_data, leave_one_out_from_cross)
-  )
-```
-
-# Commuting histogram
-
-```{r commuting_histogram}
-commuting_hist_data <- cross_data %>%
-  select(cross_data) %>%
-  unnest() %>%
-  recode(dataset)
-
-
-  # filter(unit1 > unit2) %>%
-  # ggplot(aes(x = log10(f_commuting))) +
-  # facet_wrap(~ dataset, scales = 'free_y') +
-  # geom_histogram(aes(fill = adjacent)) +
-  # scale_x_continuous('Commuting fraction (log 10)') +
-  # ylab('Number of pairs of areas') +
-  # theme_half_open() +
-  # theme(strip.background = element_blank())
-```
-
-Many of the pairs had zero interactions and don't appear in this figure:
-
-```{r}
-commuting_db %>%
-  filter(unit1 > unit2) %>%
-  count(dataset, f_commuting > 0) %>%
-  kable(caption = 'Number of pairs with 0 commuting fraction')
-```
-
-```{r}
 jackknife.sd <- function(x) {
   n <- length(x)
   sqrt((n - 1) / n * sum((x - mean(x)) ** 2))
 }
+```
+
+```{r commuting_analysis}
 
 model_f1 <- function(df) rlm(dr_du ~ f_commuting, data = df)
 
@@ -263,7 +289,12 @@ results %>%
   )
 ```
 
-```{r}
+```{r adjacency_analysis}
+median_by_adjacency <- function(df, metric) {
+  df[[metric]] %>%
+    { median(.[!df$adjacent]) - median(.[df$adjacent]) }
+}
+
 median_diff <- function(df) median(df$dr_du[df$adjacent]) - median(df$dr_du[!df$adjacent])
 mds <- function(df) median_diff(df) / median(df$dr_du)
 
@@ -287,67 +318,8 @@ results %>%
   )
 ```
 
-```{r}
-model_f <- function(df) rlm(d_resistant ~ 0 + d_use + d_use * adjacent, data = df)
-# model_f <- function(df) rlm(d_resistant ~ 0 + d_use + d_use * f_commuting, data = df)
-slope_f <- function(model) coef(model)['d_use']
-ratio_1pct_f <- function(model) coef(model)['d_use:adjacentTRUE'] / coef(model)['d_use'] * 0.01
-# ratio_1pct_f <- function(model) coef(model)['d_use:f_commuting'] / coef(model)['d_use'] * 0.01
 
-results <- cross_data %>%
-  mutate(
-    model = map(cross_data, model_f),
-    slope = map_dbl(model, slope_f),
-    ratio_1pct = map_dbl(model, ratio_1pct_f),
-    l1o_model = mapmap(l1o_cross_data, model_f)
-  )
-
-results %>%
-  select(dataset, bugdrug, slope, ratio_1pct, l1o_model) %>%
-  unnest() %>%
-  mutate(
-    l1o_slope = map_dbl(l1o_model, slope_f),
-    l1o_ratio_1pct = map_dbl(l1o_model, ratio_1pct_f)
-  ) %>%
-  group_by(dataset, bugdrug) %>%
-  summarize(
-    slope = unique(slope),
-    slope_se = jackknife.sd(l1o_slope),
-    ratio_1pct = unique(ratio_1pct),
-    ratio_1pct_se = jackknife.sd(l1o_ratio_1pct)
-  )
-```
-
-```{r}
-model_f <- function(df) rlm(d_resistant ~ 0 + d_use + d_use * adjacent + d_temperature + d_income + d_density, data = df)
-slope_f <- function(model) coef(model)['d_use']
-ratio_1pct_f <- function(model) coef(model)['d_use:adjacentTRUE'] / coef(model)['d_use'] * 0.01
-
-results <- cross_data %>%
-  mutate(
-    model = map(cross_data, model_f),
-    slope = map_dbl(model, slope_f),
-    ratio_1pct = map_dbl(model, ratio_1pct_f),
-    l1o_model = mapmap(l1o_cross_data, model_f)
-  )
-
-results %>%
-  select(dataset, bugdrug, slope, ratio_1pct, l1o_model) %>%
-  unnest() %>%
-  mutate(
-    l1o_slope = map_dbl(l1o_model, slope_f),
-    l1o_ratio_1pct = map_dbl(l1o_model, ratio_1pct_f)
-  ) %>%
-  group_by(dataset, bugdrug) %>%
-  summarize(
-    slope = unique(slope),
-    slope_se = jackknife.sd(l1o_slope),
-    ratio_1pct = unique(ratio_1pct),
-    ratio_1pct_se = jackknife.sd(l1o_ratio_1pct)
-  )
-```
-
-```{r}
+```{r adjacency_with_covariates}
 model_f <- function(df) rlm(dr_du ~ adjacent + d_temperature + d_income + d_density, data = df)
 #model_f <- function(df) rlm(dr_du ~ adjacent, data = df)
 slope_f <- function(model) coef(model)['adjacentTRUE']
@@ -377,24 +349,7 @@ results %>%
   )
 ```
 
-```{r adjacency_analysis}
-median_by_adjacency <- function(df, metric) {
-  df[[metric]] %>%
-    { median(.[!df$adjacent]) - median(.[df$adjacent]) }
-}
-
-adjacency_results <- adjacency_analysis(
-  unit_data,
-  function(df) median_by_adjacency(df, 'dr_du'),
-  function(df) with(df, wilcox.test(dr_du[adjacent], dr_du[!adjacent])$statistic)
-)
-
-adjacency_results_lorru <- adjacency_analysis(
-  unit_data,
-  function(df) median_by_adjacency(df, 'lorr_du'),
-  function(df) with(df, wilcox.test(lorr_du[adjacent], lorr_du[!adjacent])$statistic)
-)
-```
+SWO: Stopped here
 
 ## Using $\Delta \rho / \Delta \tau$
 
