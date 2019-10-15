@@ -12,8 +12,8 @@ author: swo
     - Primary: Δρ/Δτ ~ ε (robust regression; just use Huber?)
         - How does -β_ε ε* / μ compare with predictions from dynamical models?
         - Use the jackknifed models both for the plot as well as for that ratio
-    - Δρ/Δτ ~ (ε >? median)
     - Δρ/Δτ ~ adjacent?
+        - Compare the difference in the median Δρ/Δτ in the adjacent vs. non-adjacent pairs, comapred with the median across all pairs, to get a sense of the decrease in Δρ/Δτ associated with adjacency
     - Covariates
         - Δρ ~ 0 + β_τ Δτ + β_ετ Δτ ε + β_x x + φ
         - To see how much the value from #1 decreases when including those cofounders
@@ -24,11 +24,19 @@ author: swo
 - Displays
     - Figure out how to put rlm onto the ggplot
         - Maybe run the N models, keep all the predictions, and then use the quantiles?
+- Discussion
+    - Resistance might also be more similar because you're drawing from the same pop's. E.g., a hospital in Kansas City might have equal numbers of people from the two states in it!
+    - But we dealt with the above
+    - In general, though, would be nice to know where people live and where they are "reporting" their infections, which becomes especially important at small length scales! (cf Mass APCD paper)
 
 ## Minor
 
 - Pick "EU" or "Europe" in all places
 - A limitation is that we do a pairwise analysis only. There might be some signal that arises only when considering the whole network. (But full Bayesian seems like overkill.)
+
+## Discarded
+
+- Δρ/Δτ ~ (ε >? median) : Don't do this, because the median is zero for Europe, which will lead to weird results
 
 # 25 July 2019 notes
 
