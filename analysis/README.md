@@ -8,26 +8,33 @@ author: swo
 
 ## Major
 
-- Analyses
-    - Primary: Δρ/Δτ ~ ε (robust regression; just use Huber?)
-        - How does -β_ε ε* / μ compare with predictions from dynamical models?
-        - Use the jackknifed models both for the plot as well as for that ratio
-    - Δρ/Δτ ~ adjacent?
-        - Compare the difference in the median Δρ/Δτ in the adjacent vs. non-adjacent pairs, comapred with the median across all pairs, to get a sense of the decrease in Δρ/Δτ associated with adjacency
-    - Covariates
-        - Δρ ~ 0 + β_τ Δτ + β_ετ Δτ ε + β_x x + φ
-        - To see how much the value from #1 decreases when including those cofounders
-        - Look at β_τε ε* / β_τ
-- Methods
-    - Just do CIs with JK. If I really need p-values, then I can put them in using z-approximations
-    - Without permutations, simpler: data, cross-data, then jackknifed models. Pull out ratios & CIs.
-- Displays
-    - Figure out how to put rlm onto the ggplot
-        - Maybe run the N models, keep all the predictions, and then use the quantiles?
-- Discussion
-    - Resistance might also be more similar because you're drawing from the same pop's. E.g., a hospital in Kansas City might have equal numbers of people from the two states in it!
-    - But we dealt with the above
-    - In general, though, would be nice to know where people live and where they are "reporting" their infections, which becomes especially important at small length scales! (cf Mass APCD paper)
+### Display items
+
+1. Dynamical model
+2. Use/resistance across datasets
+3. Adjacent vs. not pairs
+
+### Analyses
+
+- Δρ/Δτ ~ adjacent?
+    - Compare the difference in the median Δρ/Δτ in the adjacent vs. non-adjacent pairs, comapred with the median across all pairs, to get a sense of the decrease in Δρ/Δτ associated with adjacency
+- Δρ/Δτ ~ ε (robust regression; just use Huber)
+    - How does $-β_ε ε* / μ$ compare with predictions from dynamical models?
+    - Use the jackknifed models both for the plot as well as for that ratio
+- Covariates
+    - $Δρ/Δτ ~ β_ε ε + β_x x + φ$
+    - To see how much the value from #1 decreases when including those cofounders
+
+### Methods
+
+- Just do CIs with JK. If I really need p-values, then I can put them in using z-approximations
+- Without permutations, simpler: data, cross-data, then jackknifed models. Pull out ratios & CIs.
+
+###  Discussion
+
+- Resistance might also be more similar because you're drawing from the same pop's. E.g., a hospital in Kansas City might have equal numbers of people from the two states in it!
+- But we dealt with the above
+- In general, though, would be nice to know where people live and where they are "reporting" their infections, which becomes especially important at small length scales! (cf Mass APCD paper)
 
 ## Minor
 
