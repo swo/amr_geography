@@ -3,7 +3,7 @@ title: "Geography and associations between antibiotic use and resistance: simula
 author: "Scott Olesen"
 ---
 
-```{r global_options, echo = FALSE}
+```{r global_options, echo = FALSE, message = FALSE}
 library(knitr)
 library(cowplot)
 library(gridExtra)
@@ -24,11 +24,6 @@ logodds <- function(p) log(odds(p))
 
 annotate_text <- function(x, y, label) {
   annotate('text', x = x, y = y, label = label, parse = TRUE)
-}
-
-# approximately in
-`%ain%` <- function(x, table, tol = sqrt(.Machine$double.eps)) {
-  map_lgl(x, function(xx) min(abs(xx - table)) < tol)
 }
 ```
 
@@ -242,9 +237,7 @@ whn2_plot_f <- function(df) {
 }
 
 whn2_plot_data <- whn2 %>%
-  mutate(
-    pop = rerun(n(), c('intervention', 'control')),
-  ) %>%
+  mutate(pop = map(1:n(), ~ c('intervention', 'control'))) %>%
   unnest() %>%
   filter(epsilon %in% c(0.0, 0.01, 0.1))
 
