@@ -165,20 +165,38 @@ commuting_db <- bind_rows(us_commuting, eu_commuting) %>%
 # Use-resistance in different datasets
 
 ```{r use_resistance_plots}
-unit_data %>%
+round_up <- function(x, digits) ceiling(x * 10 ** digits) / 10 ** digits
+round_down <- function(x, digits) floor(x * 10 ** digits) / 10 ** digits
+
+breaker <- function(digits) {
+  function(x) {
+    lower <- round_up(x[1], digits)
+    upper <- round_down(x[2], digits)
+    round(seq(lower, upper, length.out = 3), digits)
+  }
+}
+
+obs_plot <- unit_data %>%
   unnest() %>%
   ggplot(aes(use, f_resistant * 100)) +
   facet_wrap(~ dataset, scales = 'free') +
+  geom_smooth(method = 'lm', color = 'gray50') +
   geom_point() +
-  geom_smooth(method = 'lm') +
-  xlab('Treatments per person per year') +
+  scale_x_continuous(
+    'Treatments per person per year',
+    breaks = breaker(2)
+  ) +
   scale_y_continuous(
-    name = 'Isolates resistant (%)'
+    name = 'Resistance (% isolates nonsusceptible)'
   ) +
   theme_cowplot() +
   theme(
-    strip.background = element_blank()
+    strip.background = element_blank(),
+    plot.margin = margin(1, 5, 1, 1, 'mm')
   )
+
+show(obs_plot)
+ggsave('fig/obs_plot.pdf', plot = obs_plot)
 ```
 
 # Pairs data
@@ -252,18 +270,6 @@ sigfig <- function(x, n = 2) {
   formatC(signif(x, digits = n), digits = n, format = "fg", flag = "#")
 }
 
-mapmap <- function(list_of_tibbles, f) {
-  map(list_of_tibbles, function(df) {
-    map(df, f)
-  })
-}
-
-mapmap_dbl <- function(list_of_tibbles, f) {
-  map(list_of_tibbles, function(df) {
-    map_dbl(df, f)
-  })
-}
-
 jackknife.sd <- function(x) {
   n <- length(x)
   sqrt((n - 1) / n * sum((x - mean(x)) ** 2))
@@ -318,13 +324,12 @@ rlm <- MASS::rlm
 adjacency_results <- analysis_f(
   function(df) with(df, {
     list(
-      overall_median = median(df$dr_du),
-      adjacent_median = median(df$dr_du[df$adjacent]),
-      nonadjacent_median = median(df$dr_du[!df$adjacent])
+      adj_med = median(df$dr_du[df$adjacent]),
+      nonadj_med = median(df$dr_du[!df$adjacent])
     )
   }),
-  function(model) with(model, { adjacent_median - nonadjacent_median }),
-  function(model) with(model, { (adjacent_median - nonadjacent_median) / overall_median })
+  function(model) with(model, { adj_med - nonadj_med }),
+  function(model) with(model, { (adj_med - nonadj_med) / nonadj_med })
 )
 
 show_results(
@@ -359,7 +364,7 @@ show_results(
 )
 ```
 
-```{r}
+```{r adjacency_with_rlm_bisquare, eval = FALSE}
 bisquare <- partial(MASS::rlm, psi = MASS::psi.bisquare, maxit = 30)
 
 adjacency_bisquare_results <- analysis_f(
@@ -390,13 +395,29 @@ show_results(
 ```{r commuting_analysis}
 commuting_results <- analysis_f(
   function(df) rlm(dr_du ~ f_commuting, data = df),
-  function(model) coef(model)['f_commuting'] * 0.01,
-  function(model) coef(model) %>% { .['f_commuting'] / .['(Intercept)'] * 0.01 }
+  function(model) coef(model)['f_commuting'] * 1e-4,
+  function(model) coef(model) %>% { .['f_commuting'] / .['(Intercept)'] * 1e-4 }
 )
 
 show_results(
   commuting_results,
-  'Robust regression on Δρ/Δτ ~ C, where C is the commuting fraction. "Coef" is βC. "Ratio" is βC / μ.'
+  'Robust regression on Δρ/Δτ ~ C, where C is the commuting fraction. "Coef" is β * 10^-4. "Ratio" is β * 10^-4 / μ.'
+)
+```
+
+```{r log_commuting_analysis, eval = FALSE}
+log_commuting_results <- analysis_f(
+  function(df) {
+    mutate(df, x = log10(f_commuting + 1e-6)) %>%
+      rlm(dr_du ~ x, data = .)
+  },
+  function(model) coef(model)['x'] * 0.01,
+  function(model) coef(model) %>% { .['x'] / .['(Intercept)'] * 0.01 }
+)
+
+show_results(
+  log_commuting_results,
+  'Robust regression on Δρ/Δτ ~ log10(C + 1e-6). "Coef" is β. "Ratio" is β / μ.'
 )
 ```
 
@@ -457,4 +478,29 @@ plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
 
 show(plot)
 ggsave('fig/adjacency_plot.pdf', plot = plot)
+```
+
+```{r commuting_plot}
+# swo: can include the rlm on the un-logged x values, as reported in the
+# data, but they look weird and curvy when log-ing the x-vals
+
+commute_plot <- cross_data %>%
+  select(dataset, cross_data) %>%
+  unnest() %>%
+  #filter(!is.na(f_commuting)) %>%
+  group_by(dataset) %>%
+  mutate(x = log10(f_commuting + 1e-6)) %>%
+  filter(between(ecdf(dr_du)(dr_du), 0.025, 0.975)) %>%
+  ungroup() %>%
+  ggplot(aes(x)) +
+  facet_wrap(~ dataset, scales = 'free') +
+  geom_point(aes(y = dr_du), shape = 1, size = 0.5) +
+  #geom_line(aes(y = y)) +
+  xlab('Commuting fraction (log10)') +
+  ylab(expression(paste('Use-resistance association ', (Delta * rho / Delta * tau)))) +
+  theme_cowplot() +
+  theme(strip.background = element_blank())
+
+show(commute_plot)
+ggsave('fig/commute_plot.pdf', plot = commute_plot)
 ```
