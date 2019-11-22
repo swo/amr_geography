@@ -316,21 +316,6 @@ analysis_f <- function(model_f, coef_f, ratio_f) {
     left_join(l1o_results, by = 'dataset')
 }
 
-show_results <- function(df, caption) {
-  df %>%
-    mutate(
-      coef_hci = 1.96 * coef_se * 0.5,
-      coef_cil = coef - coef_hci,
-      coef_ciu = coef + coef_hci,
-      ratio_hci = 1.96 * ratio_se * 0.5,
-      ratio_cil = ratio - ratio_hci,
-      ratio_ciu = ratio + ratio_hci
-    ) %>%
-    mutate_if(is.numeric, sigfig) %>%
-    select(dataset, coef, coef_cil, coef_ciu, ratio, ratio_cil, ratio_ciu) %>%
-    kable(caption = caption)
-}
-
 rlm <- MASS::rlm
 ```
 
@@ -345,23 +330,18 @@ adjacency_results <- analysis_f(
   function(model) with(model, { adj_med - nonadj_med }),
   function(model) with(model, { (adj_med - nonadj_med) / nonadj_med })
 )
-
-show_results(
-  adjacency_results,
-  'Comparing adjacent and non-adjacent pairs. "Coef" is difference in median Δρ/Δτ between the two groups. "Ratio" is that difference divided by overall median.'
-)
 ```
 
 ```{r adjacency_lorru}
 adjacency_lorru_results <- analysis_f(
-  function(df) rlm(lorr_du ~ adjacent, data = df),
-  function(model) coef(model)['adjacentTRUE'],
-  function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
-)
-
-show_results(
-  adjacency_lorru_results,
-  'As above, but using LOR(ρ)/Δτ'
+  function(df) with(df, {
+    list(
+      adj_med = median(df$lorr_du[df$adjacent]),
+      nonadj_med = median(df$lorr_du[!df$adjacent])
+    )
+  }),
+  function(model) with(model, { adj_med - nonadj_med }),
+  function(model) with(model, { (adj_med - nonadj_med) / nonadj_med })
 )
 ```
 
@@ -371,26 +351,6 @@ adjacency_rlm_results <- analysis_f(
   function(model) coef(model)['adjacentTRUE'],
   function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
 )
-
-show_results(
-  adjacency_rlm_results,
-  'Using robust regression: Δρ/Δτ ~ Α. "Coef" is βΑ, "ratio" is βΑ/μ.'
-)
-```
-
-```{r adjacency_with_rlm_bisquare, eval = FALSE}
-bisquare <- partial(MASS::rlm, psi = MASS::psi.bisquare, maxit = 30)
-
-adjacency_bisquare_results <- analysis_f(
-  function(df) bisquare(dr_du ~ adjacent, data = df),
-  function(model) coef(model)['adjacentTRUE'],
-  function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
-)
-
-show_results(
-  adjacency_bisquare_results,
-  "As above, but using Tukey's bisquare."
-)
 ```
 
 ```{r adjacency_with_covariates}
@@ -398,11 +358,6 @@ adjacency_covariates_results <- analysis_f(
   function(df) rlm(dr_du ~ adjacent + d_income + d_temperature + d_density, data = df),
   function(model) coef(model)['adjacentTRUE'],
   function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
-)
-
-show_results(
-  adjacency_covariates_results,
-  'As above, but with Δρ/Δτ ~ Α + X, where X are the other covariates.'
 )
 ```
 
@@ -412,6 +367,48 @@ commuting_results <- analysis_f(
   function(model) coef(model)['f_commuting'] * 1e-4,
   function(model) coef(model) %>% { .['f_commuting'] / .['(Intercept)'] * 1e-4 }
 )
+```
+
+### Tables
+
+```{r}
+show_results <- function(df, caption) {
+  df %>%
+    mutate(
+      coef_hci = 1.96 * coef_se * 0.5,
+      coef_cil = coef - coef_hci,
+      coef_ciu = coef + coef_hci,
+      coef_star = coef_cil > 0 | coef_ciu < 0,
+      ratio_hci = 1.96 * ratio_se * 0.5,
+      ratio_cil = ratio - ratio_hci,
+      ratio_ciu = ratio + ratio_hci,
+      ratio_star = ratio_cil > 0 | ratio_ciu < 0
+    ) %>%
+    mutate_if(is.numeric, sigfig) %>%
+    mutate_at(vars(ends_with('star')), ~ recode(as.numeric(.), `1` = '*', `0` = '')) %>%
+    mutate(
+      coef_display = str_glue('{coef} ({coef_cil} to {coef_ciu}){coef_star}'),
+      ratio_display = str_glue('{ratio} ({ratio_cil} to {ratio_ciu}){ratio_star}')
+    ) %>%
+    select(dataset, coef_display, ratio_display) %>%
+    # select(dataset, coef, coef_cil, coef_ciu, ratio, ratio_cil, ratio_ciu) %>%
+    kable(caption = caption)
+}
+
+show_results(
+  adjacency_results,
+  'Comparing adjacent and non-adjacent pairs. "Coef" is difference in median Δρ/Δτ between the two groups. "Ratio" is that difference divided by overall median.'
+)
+
+show_results(
+  adjacency_lorru_results,
+  'As above, but using LOR(ρ)/Δτ'
+)
+
+show_results(
+  adjacency_rlm_results,
+  'Using robust regression: Δρ/Δτ ~ Α. "Coef" is βΑ, "ratio" is βΑ/μ.'
+)
 
 show_results(
   commuting_results,
@@ -419,21 +416,7 @@ show_results(
 )
 ```
 
-```{r log_commuting_analysis, eval = FALSE}
-log_commuting_results <- analysis_f(
-  function(df) {
-    mutate(df, x = log10(f_commuting + 1e-6)) %>%
-      rlm(dr_du ~ x, data = .)
-  },
-  function(model) coef(model)['x'] * 0.01,
-  function(model) coef(model) %>% { .['x'] / .['(Intercept)'] * 0.01 }
-)
-
-show_results(
-  log_commuting_results,
-  'Robust regression on Δρ/Δτ ~ log10(C + 1e-6). "Coef" is β. "Ratio" is β / μ.'
-)
-```
+### Plots
 
 ```{r adjacency_plot}
 boxplot_data_f <- function(df, ymin, ymax) {
@@ -508,9 +491,11 @@ ggsave('fig/adjacency_plot100.pdf', plot = adjacency_plot100)
 commute_plot <- cross_data %>%
   select(dataset, cross_data) %>%
   unnest() %>%
-  #filter(!is.na(f_commuting)) %>%
   group_by(dataset) %>%
-  mutate(x = log10(f_commuting + 1e-6)) %>%
+  mutate(x = case_when(
+    f_commuting == 0 ~ -6,
+    TRUE ~ log10(f_commuting)
+  )) %>%
   filter(between(ecdf(dr_du)(dr_du), 0.025, 0.975)) %>%
   ungroup() %>%
   ggplot(aes(x)) +
