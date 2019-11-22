@@ -241,7 +241,7 @@ cross_data <- unit_data %>%
 ## Commuting histogram
 
 ```{r commuting_histogram}
-cross_data %>%
+commuting_histogram <- cross_data %>%
   select(cross_data) %>%
   unnest() %>%
   select(dataset, unit1, unit2, adjacent, f_commuting) %>%
@@ -251,9 +251,23 @@ cross_data %>%
   ) %>%
   ggplot(aes(log10(f_commuting), fill = adjacent)) +
   facet_wrap(~ dataset, scales = 'free') +
-  geom_histogram() +
+  geom_histogram(color = 'black') +
+  scale_fill_manual(
+    limits = c('TRUE', 'FALSE'),
+    labels = c('adjacent', 'not adj.'),
+    values = c('black', 'white')
+  ) +
+  xlab('Commuting fraction (log 10)') +
+  ylab('Number of states or countries') +
   theme_cowplot() +
-  theme(strip.background = element_blank())
+  theme(
+    strip.background = element_blank(),
+    legend.position = c(0.85, 0.75),
+    legend.title = element_blank()
+  )
+
+show(commuting_histogram)
+ggsave('fig/commuting_histogram.pdf', plot = commuting_histogram)
 ```
 
 Some of the pairs had zero interactions and don't appear in this figure:
@@ -440,44 +454,51 @@ boxplot_data_f <- function(df, ymin, ymax) {
     unnest()
 }
 
-f_to_keep <- 0.90
-half_drop <- (1 - f_to_keep) / 2
+boxplot_f <- function(cross_data, f_to_keep) {
+  half_drop <- (1 - f_to_keep) / 2
 
-plot_data <- cross_data %>%
-  mutate(
-    y = map(cross_data, ~ .$dr_du),
-    ymin = map_dbl(y, ~ quantile(., half_drop)),
-    ymax = map_dbl(y, ~ quantile(., 1 - half_drop)),
-    boxplot_data = pmap(list(cross_data, ymin, ymax), boxplot_data_f),
-    point_data = pmap(list(cross_data, ymin, ymax), ~ filter(..1, between(dr_du, ..2, ..3)))
-  )
+  plot_data <- cross_data %>%
+    mutate(
+      y = map(cross_data, ~ .$dr_du),
+      ymin = map_dbl(y, ~ quantile(., half_drop)),
+      ymax = map_dbl(y, ~ quantile(., 1 - half_drop)),
+      boxplot_data = pmap(list(cross_data, ymin, ymax), boxplot_data_f),
+      point_data = pmap(list(cross_data, ymin, ymax), ~ filter(..1, between(dr_du, ..2, ..3)))
+    )
 
-point_data <- plot_data %>%
-  select(dataset, point_data) %>%
-  unnest()
+  point_data <- plot_data %>%
+    select(dataset, point_data) %>%
+    unnest()
 
-boxplot_data <- plot_data %>%
-  select(dataset, boxplot_data) %>%
-  unnest()
+  boxplot_data <- plot_data %>%
+    select(dataset, boxplot_data) %>%
+    unnest()
 
-plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
-  facet_wrap(~ dataset, scales = 'free_y') +
-  geom_boxplot(
-    data = boxplot_data,
-    aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
-    stat = 'identity'
-  ) +
-  geom_jitter(data = point_data, aes(y = dr_du), size = 0.1, width = 0.2) +
-  scale_x_discrete(
-    '',
-    labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adj.')
-  ) +
-  ylab(expression(paste('Use-resistance association ', (Delta * rho / Delta * tau)))) +
-  theme_cowplot() +
-  theme(strip.background = element_blank())
+  plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
+    facet_wrap(~ dataset, scales = 'free_y') +
+    geom_boxplot(
+      data = boxplot_data,
+      aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
+      stat = 'identity'
+    ) +
+    geom_jitter(data = point_data, aes(y = dr_du), size = 0.1, width = 0.2) +
+    scale_x_discrete(
+      '',
+      labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adj.')
+    ) +
+    ylab(expression(paste('Use-resistance association ', (Delta * rho / Delta * tau)))) +
+    theme_cowplot() +
+    theme(strip.background = element_blank())
 
-show(plot)
-ggsave('fig/adjacency_plot.pdf', plot = plot)
+  plot
+}
+
+adjacency_plot <- boxplot_f(cross_data, 0.90)
+show(adjacency_plot)
+ggsave('fig/adjacency_plot.pdf', plot = adjacency_plot)
+
+adjacency_plot100 <- boxplot_f(cross_data, 1.0)
+ggsave('fig/adjacency_plot100.pdf', plot = adjacency_plot100)
 ```
 
 ```{r commuting_plot}
