@@ -197,6 +197,7 @@ obs_plot <- unit_data %>%
 
 show(obs_plot)
 ggsave('fig/obs_plot.pdf', plot = obs_plot)
+ggsave('fig/obs_plot.png', plot = obs_plot)
 ```
 
 # Pairs data
@@ -268,6 +269,7 @@ commuting_histogram <- cross_data %>%
 
 show(commuting_histogram)
 ggsave('fig/commuting_histogram.pdf', plot = commuting_histogram)
+ggsave('fig/commuting_histogram.png', plot = commuting_histogram)
 ```
 
 Some of the pairs had zero interactions and don't appear in this figure:
@@ -479,9 +481,7 @@ boxplot_f <- function(cross_data, f_to_keep) {
 adjacency_plot <- boxplot_f(cross_data, 0.90)
 show(adjacency_plot)
 ggsave('fig/adjacency_plot.pdf', plot = adjacency_plot)
-
-adjacency_plot100 <- boxplot_f(cross_data, 1.0)
-ggsave('fig/adjacency_plot100.pdf', plot = adjacency_plot100)
+ggsave('fig/adjacency_plot.png', plot = adjacency_plot)
 ```
 
 ```{r commuting_plot}
@@ -509,4 +509,5 @@ commute_plot <- cross_data %>%
 
 show(commute_plot)
 ggsave('fig/commute_plot.pdf', plot = commute_plot)
+ggsave('fig/commute_plot.png', plot = commute_plot)
 ```
