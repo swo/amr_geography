@@ -638,7 +638,7 @@ bind_rows(
     epsilon %in% c(0, 1e-4, 1e-3, 1e-2, 0.0175, 0.025)
   ) %>%
   group_by(model, delta_tau) %>%
-  mutate(pct_red = scales::percent(1 - dr_du / dr_du[epsilon == 0])) %>%
+  mutate(pct_red = scales::percent(1 - dr_du / dr_du[epsilon == 0], 0.1)) %>%
   ungroup() %>%
   select(epsilon, key, pct_red) %>%
   spread(key, pct_red) %>%
