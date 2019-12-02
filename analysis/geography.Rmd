@@ -19,9 +19,6 @@ knitr::opts_chunk$set(
 ```
 
 ```{r helpers}
-odds <- function(p) p / (1 - p)
-logodds <- function(p) log(odds(p))
-
 annotate_text <- function(x, y, label, parse = TRUE) {
   annotate('text', x = x, y = y, label = label, parse = parse)
 }
@@ -80,7 +77,7 @@ twopop_diagram
 # Within-host neutral (WHN) model
 
 ```{r whn_parameters}
-whn_base_parms = list(
+whn_base_parms <- list(
   beta = 4.0,
   u = 1.0,
   cost = 0.1683543
@@ -113,10 +110,10 @@ whn_ode_func <- function(t, state_vector, parms) {
   state <- whn_unpack(state_vector)
 
   with(c(state, parms), {
-    n_pop <- nrow(state)
-    stopifnot(dim(betaij) == rep(n_pop, 2))
+    n_pop <- nrow(state) # number of populations
+    stopifnot(dim(betaij) == rep(n_pop, 2)) # betaij is defined in the next function
 
-    N <- X + S + R + D
+    N <- X + S + R + D # total number of individuals
 
     dS <- (betaij %*% ((S + D) / N)) * X - (u + taui) * S - (1 - cost) * (betaij %*% (R / N)) * S
     dR <- (1 - cost) * (betaij %*% (R / N)) * X - u * R + taui * D
@@ -137,11 +134,14 @@ check_beta <- function(mat, const) {
   stopifnot(all(colSums(mat) == const))
 }
 
+# Run the simulation
+# taui: a vector of the antibiotic use rates in each population
 whn_sim <- function(taui, epsilon) {
   n_pop <- length(taui)
   stopifnot(between(epsilon, 0, 1 - 1 / n_pop))
 
   parms <- with(whn_base_parms, {
+    # Compare to the equations in the Supplement under "WHN model with 2 populations"
     betaij = matrix(beta * epsilon, ncol = n_pop, nrow = n_pop)
     diag(betaij) <- beta * (1 - epsilon)
 
@@ -154,7 +154,7 @@ whn_sim <- function(taui, epsilon) {
     ))
   })
 
-  # Starting simulation state
+  # Initial state of the simulation
   state <- tibble(
     X = rep(0.990 / n_pop, n_pop),
     S = rep(0.005 / n_pop, n_pop),
@@ -164,8 +164,10 @@ whn_sim <- function(taui, epsilon) {
 
   state_vector <- whn_pack(state)
 
+  # Run the simulation
   result <- rootSolve::runsteady(state_vector, func = whn_ode_func, parms = parms)
 
+  # Unpack the output state and clean it up
   result$y %>%
     whn_unpack() %>%
     mutate(
@@ -195,17 +197,17 @@ whn_repro %>%
 
 ## WHN two-population model
 
+whn_epsilon_values <- c(0, 1e-4, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)
+
 ```{r whn_double}
 whn2 <- tibble(
   delta_tau = round(seq(0.0, 0.15, length.out = 7), 3),
   taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
 ) %>%
-  crossing(epsilon = c(0, 1e-4, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)) %>%
+  crossing(epsilon = whn_epsilon_values) %>%
   mutate(
     results = map2(taui, epsilon, whn_sim),
-    max_rho = map_dbl(results, ~ max(.$rho)),
-    min_rho = map_dbl(results, ~ min(.$rho)),
-    delta_rho = max_rho - min_rho
+    delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho))
   )
 ```
 
@@ -221,7 +223,7 @@ whn2_plot_f <- function(df) {
   initial_resistance <- df %>%
     filter(epsilon == 0, pop == 'control') %>%
     pull(rho)
-  
+
   df %>%
     ggplot(aes(x = factor(epsilon), y = rho, fill = pop)) +
     geom_hline(yintercept = initial_resistance, linetype = 2) +
@@ -287,8 +289,6 @@ show(whn2_plot3)
 whn2_plot4 <- whn2 %>%
   filter(delta_tau %in% c(0.05, 0.10)) %>%
   mutate(
-    max_rho = map_dbl(results, ~ max(.$rho)),
-    min_rho = map_dbl(results, ~ min(.$rho)),
     delta_rho = max_rho - min_rho,
     dr_du = delta_rho / delta_tau
   ) %>%
@@ -351,9 +351,7 @@ ggsave(
 ```{r}
 whn2 %>%
   mutate(
-    max_rho = map_dbl(results, ~ max(.$rho)),
-    min_rho = map_dbl(results, ~ min(.$rho)),
-    delta_rho = max_rho - min_rho,
+    delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho))
     dr_du = delta_rho / delta_tau
   ) %>%
   filter(delta_tau %in% c(0.05, 0.10)) %>%
@@ -400,6 +398,7 @@ with(
 ## Single-population model
 
 ```{r dtype_helpers}
+# pack the list into a vector
 dtypes_pack <- function(lst) {
   stopifnot(setequal(names(lst), c('X_i', 'S_id', 'R_id')))
   stopifnot(all(dim(lst$S_id) == dim(lst$R_id)))
@@ -407,6 +406,7 @@ dtypes_pack <- function(lst) {
   c(lst$X_i, as.vector(lst$S_id), as.vector(lst$R_id))
 }
 
+# unpack the vector into a list
 dtypes_unpack <- function(x, n_pop, n_d) {
   stopifnot(length(x) == n_pop + 2 * (n_d * n_pop))
 
@@ -442,7 +442,7 @@ dtypes_df_to_list <- function(df) {
   stopifnot(nrow(filter(df, phenotype == 'X')) == n_pop)
 
   list(
-    X_i = df %>% filter(phenotype == 'X') %>% pull(values),
+    X_i = df %>% filter(phenotype == 'X') %>% pull(value),
     S_id = df %>% filter(phenotype == 'S') %>% pull(value) %>% matrix(nrow = n_pop, ncol = n_d),
     R_id = df %>% filter(phenotype == 'R') %>% pull(value) %>% matrix(nrow = n_pop, ncol = n_d)
   )
@@ -505,7 +505,7 @@ dtypes_sim <- function(tau_i, epsilon = 0) {
   parms <- with(dtypes_base_parms, {
     beta_ij = matrix(beta * epsilon, ncol = n_pop, nrow = n_pop)
     diag(beta_ij) <- beta * (1 - epsilon)
-    
+
     check_beta(beta_ij, beta)
 
     c(dtypes_base_parms, list(
@@ -575,11 +575,13 @@ dtype_repro_line %>%
 ## D-types two-population
 
 ```{r dtypes_double}
+
+dtypes_epsilon_values <- c(0, 1e-4, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)
 dtypes2 <- tibble(
   delta_tau = c(0.05, 0.10),
   taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
 ) %>%
-  crossing(epsilon = c(0, 1e-4, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)) %>%
+  crossing(epsilon = dtypes_epsilon_values) %>%
   mutate(results = map2(taui, epsilon, dtypes_sim))
 ```
 
