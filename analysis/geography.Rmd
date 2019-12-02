@@ -197,9 +197,9 @@ whn_repro %>%
 
 ## WHN two-population model
 
-whn_epsilon_values <- c(0, 1e-4, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)
-
 ```{r whn_double}
+whn_epsilon_values <- c(0, 1e-4, 1e-3, 0.01, 0.0175, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)
+
 whn2 <- tibble(
   delta_tau = round(seq(0.0, 0.15, length.out = 7), 3),
   taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
@@ -258,11 +258,6 @@ whn2_plot2 <- whn2_plot_data %>%
 
 ```{r whn_dr_vs_dtau}
 whn2_plot3 <- whn2 %>%
-  mutate(
-    max_rho = map_dbl(results, ~ max(.$rho)),
-    min_rho = map_dbl(results, ~ min(.$rho)),
-    delta_rho = max_rho - min_rho
-  ) %>%
   filter(epsilon %in% c(0.0, 0.01, 0.1)) %>%
   ggplot(aes(delta_tau, delta_rho, group = factor(epsilon))) +
   geom_point() +
@@ -287,11 +282,11 @@ show(whn2_plot3)
 
 ```{r whn_drdtau_vs_epsilon}
 whn2_plot4 <- whn2 %>%
-  filter(delta_tau %in% c(0.05, 0.10)) %>%
-  mutate(
-    delta_rho = max_rho - min_rho,
-    dr_du = delta_rho / delta_tau
+  filter(
+    delta_tau %in% c(0.05, 0.10),
+    epsilon %in% c(0, 1e-4, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)
   ) %>%
+  mutate(dr_du = delta_rho / delta_tau) %>%
   ggplot(aes(epsilon, dr_du, group = factor(delta_tau))) +
   geom_point(aes(shape = factor(delta_tau))) +
   geom_line() +
@@ -344,23 +339,6 @@ ggsave(
   'fig/whn2_plot.png', whn2_plot,
   width = 190, height = 100, unit = 'mm'
 )
-```
-
-## Reduction in $\Delta \rho / \Delta \tau$ against $\epsilon$
-
-```{r}
-whn2 %>%
-  mutate(
-    delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho))
-    dr_du = delta_rho / delta_tau
-  ) %>%
-  filter(delta_tau %in% c(0.05, 0.10)) %>%
-  group_by(delta_tau) %>%
-  mutate(pct_red = scales::percent(1 - dr_du / max(dr_du))) %>%
-  ungroup() %>%
-  select(delta_tau, epsilon, pct_red) %>%
-  spread(delta_tau, pct_red) %>%
-  kable(caption = 'Columns show Delta rho')
 ```
 
 # D-types model
@@ -577,15 +555,7 @@ dtype_repro_line %>%
 ```{r dtypes_double}
 
 dtypes_epsilon_values <- c(0, 1e-4, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)
-dtypes2 <- tibble(
-  delta_tau = c(0.05, 0.10),
-  taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
-) %>%
-  crossing(epsilon = dtypes_epsilon_values) %>%
-  mutate(results = map2(taui, epsilon, dtypes_sim))
-```
 
-```{r dtypes_plot}
 dtypes_simplify_results <- function(df) {
   df %>%
     group_by(pop, phenotype) %>%
@@ -598,12 +568,21 @@ dtypes_simplify_results <- function(df) {
     mutate(rho = R / (R + S))
 }
 
-dtypes2_plot <- dtypes2 %>%
+dtypes2 <- tibble(
+  delta_tau = c(0.05, 0.10),
+  taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
+) %>%
+  crossing(epsilon = dtypes_epsilon_values) %>%
   mutate(
-    results = map(results, dtypes_simplify_results),
+    raw_results = map2(taui, epsilon, dtypes_sim),
+    results = map(raw_results, dtypes_simplify_results),
     delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
     dr_du = delta_rho / delta_tau
-  ) %>%
+  )
+```
+
+```{r dtypes_plot}
+dtypes2_plot <- dtypes2 %>%
   ggplot(aes(epsilon, dr_du, group = factor(delta_tau))) +
   geom_point(aes(shape = factor(delta_tau))) +
   geom_line() +
@@ -642,21 +621,26 @@ ggsave(
 )
 ```
 
-## Reduction in $\Delta \rho/\Delta \tau$ against $\epsilon$
+# Reduction in $\Delta \rho / \Delta \tau$ against $\epsilon$
 
-```{r}
-dtypes2 %>%
+```{r reduction}
+bind_rows(
+  'WHN' = whn2,
+  'Dtypes' = dtypes2,
+  .id = 'model'
+) %>%
   mutate(
-    results = map(results, dtypes_simplify_results),
-    delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
-    dr_du = delta_rho / delta_tau
+    dr_du = delta_rho / delta_tau,
+    key = str_c(model, ' Δτ=', delta_tau)
   ) %>%
-  filter(delta_tau > 0) %>%
-  group_by(delta_tau) %>%
-  mutate(pct_red = scales::percent(1 - dr_du / max(dr_du))) %>%
+  filter(
+    delta_tau %in% c(0.05, 0.10),
+    epsilon %in% c(0, 1e-4, 1e-3, 1e-2, 0.0175, 0.025)
+  ) %>%
+  group_by(model, delta_tau) %>%
+  mutate(pct_red = scales::percent(1 - dr_du / dr_du[epsilon == 0])) %>%
   ungroup() %>%
-  select(delta_tau, epsilon, pct_red) %>%
-  spread(delta_tau, pct_red) %>%
-  kable(caption = 'Columns show Delta rho')
+  select(epsilon, key, pct_red) %>%
+  spread(key, pct_red) %>%
+  kable(caption = 'Percent reduction, compared to ε=0')
 ```
-
