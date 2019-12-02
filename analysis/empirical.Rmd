@@ -19,17 +19,17 @@ pdf.options(useDingbats = FALSE, useKerning = FALSE)
 # Load data
 
 ```{r state_data}
-state_temp <- read_tsv('../db/us/temperature.tsv')
-state_income <- read_tsv('../db/us/income.tsv')
-state_density <- read_tsv('../db/us/density.tsv')
+us_temp <- read_tsv('../db/us/temperature.tsv')
+us_income <- read_tsv('../db/us/income.tsv')
+us_density <- read_tsv('../db/us/density.tsv')
 
-state_data <- state_temp %>%
-  left_join(state_income, by = 'state') %>%
-  left_join(state_density, by = 'state')
+us_state_data <- us_temp %>%
+  left_join(us_income, by = 'state') %>%
+  left_join(us_density, by = 'state')
 ```
 
 ```{r marketscan_data}
-marketscan_res = read_tsv('../data/ms-medicare-ro/abg_state.tsv') %>%
+marketscan_res <- read_tsv('../data/ms-medicare-ro/abg_state.tsv') %>%
   rename(drug = drug_group) %>%
   mutate(bugdrug = case_when(
     # don't do Sp/bl, as they have negative correlation
@@ -45,7 +45,7 @@ marketscan_use <- read_tsv('../data/ms-medicare-ro/ineq_marketscan.tsv') %>%
 
 marketscan <- marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
-  left_join(state_data, by = 'state') %>%
+  left_join(us_state_data, by = 'state') %>%
   select(
     unit = state, bugdrug, use, f_resistant,
     density, income, temperature
@@ -62,7 +62,7 @@ nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
     use = rx_1k_year / 1e3,
     f_resistant = n_resistant / n_isolates
   ) %>%
-  left_join(state_data, by = 'state') %>%
+  left_join(us_state_data, by = 'state') %>%
   select(
     unit = state, bugdrug, use, f_resistant,
     density, income, temperature
@@ -87,10 +87,6 @@ eu_temp <- read_tsv('../db/europe/temperature.tsv')
 eu_income <- read_tsv('../db/europe/income.tsv')
 eu_density <- read_tsv('../db/europe/density.tsv')
 
-eu_data <- eu_temp %>%
-  left_join(eu_income, by = 'country') %>%
-  left_join(eu_density, by = 'country')
-
 europe <- read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
   mutate(use = cpy_per_did * did) %>%
@@ -102,7 +98,9 @@ europe <- read_tsv('../data/ecdc/data.tsv') %>%
     ),
     f_resistant = n_ns / n_isolates
   ) %>%
-  left_join(eu_data, by = 'country') %>%
+  left_join(eu_temp, by = 'country') %>%
+  left_join(eu_income, by = 'country') %>%
+  left_join(eu_density, by = 'country') %>%
   rename(unit = country) %>%
   select(
     unit, bugdrug, use, f_resistant,
@@ -113,52 +111,47 @@ eu_units <- unique(europe$unit)
 ```
 
 ```{r combine_data}
-named_bind_rows <- function(..., label = 'data_source') {
-  names <- map_chr(quos(...), quo_name)
-  map2_dfr(list(...), names, ~ mutate(.x, !!as.symbol(label) := .y))
-}
-
-unit_data <- named_bind_rows(marketscan, nhsn, europe) %>%
-  mutate(
-    dataset = str_c(
-      recode(data_source,
-        'europe' = 'ECDC',
-        'marketscan' = 'MarketScan/RO',
-        'nhsn' = 'Xponent/NHSN'
-      ),
-      ' ', bugdrug
-    )
-  ) %>%
+unit_data <- bind_rows(
+  'MarketScan/RO' = marketscan,
+  'Xponent/NHSN' = nhsn,
+  'ECDC' = europe,
+  .id = 'data_source'
+) %>%
+  mutate(dataset = str_c(data_source, ' ', bugdrug)) %>%
   select(dataset, unit, f_resistant, use, density, temperature, income) %>%
   nest(-dataset) %>%
   mutate_at('dataset', fct_inorder)
 ```
 
-```{r adjacency_db}
+```{r adjacency_data}
 us_adjacency <- read_tsv('../db/us/adjacency.tsv') %>%
   mutate(adjacent = TRUE) %>%
   complete(state1, state2) %>%
   replace_na(list(adjacent = FALSE)) %>%
   rename(unit1 = state1, unit2 = state2)
 
-eu_adjacency <- read_tsv('../db/europe_adjacency.tsv') %>%
+eu_adjacency <- read_tsv('../db/europe/adjacency.tsv') %>%
   mutate(adjacent = TRUE) %>%
-  right_join(crossing(unit1 = eu_units, unit2 = eu_units)) %>%
-  replace_na(list(adjacent = FALSE))
+  right_join(crossing(country1 = eu_units, country2 = eu_units)) %>%
+  replace_na(list(adjacent = FALSE)) %>%
+  rename(unit1 = country1, unit2 = country2)
 
 adjacency_db <- bind_rows(us_adjacency, eu_adjacency)
+```
 
-# swo: need to mirror this, based on how the crossing function is written
+```{r commuting_data}
 us_commuting <- read_tsv('../db/us/commuting.tsv') %>%
-  rename_all(~ str_replace(., '^state', 'unit')) %>%
-  mutate(dataset = 'US')
+  rename_all(~ str_replace(., '^state', 'unit'))
 
 eu_commuting <- read_tsv('../db/europe/commuting.tsv') %>%
   rename_all(~ str_replace(., '^country', 'unit')) %>%
-  filter(unit1 %in% eu_units, unit2 %in% eu_units) %>%
-  mutate(dataset = 'Europe')
+  filter(unit1 %in% eu_units, unit2 %in% eu_units)
 
-commuting_db <- bind_rows(us_commuting, eu_commuting) %>%
+commuting_db <- bind_rows(
+  'US' = us_commuting,
+  'Europe' = eu_commuting,
+  .id = 'dataset'
+) %>%
   mutate_at('dataset', fct_inorder)
 ```
 
@@ -393,7 +386,6 @@ show_results <- function(df, caption) {
       ratio_display = str_glue('{ratio} ({ratio_cil} to {ratio_ciu}){ratio_star}')
     ) %>%
     select(dataset, coef_display, ratio_display) %>%
-    # select(dataset, coef, coef_cil, coef_ciu, ratio, ratio_cil, ratio_ciu) %>%
     kable(caption = caption)
 }
 
