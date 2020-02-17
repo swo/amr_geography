@@ -1,0 +1,595 @@
+country1	country2	n	f
+Austria	Austria	299441961.390528	0.9416758601959235
+Austria	Belgium	414144	0.0013023872994752455
+Austria	Bulgaria	431393	0.0013566314235689148
+Austria	Croatia	270232.5	8.498188453905992e-4
+Austria	Cyprus	168364	5.294659231785328e-4
+Austria	Czechia	160746.5	5.055106437256065e-4
+Austria	Denmark	473722.5	0.0014897479318199999
+Austria	Estonia	5332	1.6767909424746007e-5
+Austria	Finland	157532	4.954017831018544e-4
+Austria	France	1016362	0.0031962239232471304
+Austria	Germany	6540953.5	0.02056978916719343
+Austria	Greece	782884	0.002461989497764976
+Austria	Hungary	104171	3.275937533168072e-4
+Austria	Iceland	12676	3.9863094498889793e-5
+Austria	Ireland	126484	3.9776298868709185e-4
+Austria	Italy	1173043	0.0036889495077517495
+Austria	Latvia	75225	2.3656526378029226e-4
+Austria	Lithuania	55351	1.7406612051183723e-4
+Austria	Luxembourg	68674	2.1596388068923614e-4
+Austria	Macedonia (the former Yugoslav Republic of)	0	0
+Austria	Malta	81268.5	2.555706764975564e-4
+Austria	Montenegro	0	0
+Austria	Netherlands (the)	745891	0.0023456550504000794
+Austria	Norway	157446.5	4.951329053344471e-4
+Austria	Poland	295787.5	9.301834225378955e-4
+Austria	Portugal	109454	3.442075690502906e-4
+Austria	Romania	504366	0.0015861146670895431
+Austria	Serbia	0	0
+Austria	Slovakia	55167.5	1.7348905536190457e-4
+Austria	Slovenia	53217.5	1.6735675540349222e-4
+Austria	Spain	1340022	0.004214059925575205
+Austria	Sweden	347709.5	0.0010934661294305554
+Austria	Switzerland	1277757.5	0.004018252443133889
+Austria	United Kingdom of Great Britain and Northern Ireland (the)	1541020	0.004846152247134675
+Belgium	Belgium	394608616.3846426	0.9548291065616906
+Belgium	Bulgaria	155750	3.7686615844704347e-4
+Belgium	Croatia	137989	3.3389010810882234e-4
+Belgium	Cyprus	55569.5	1.3446076399244291e-4
+Belgium	Czechia	250386.5	6.058568114414167e-4
+Belgium	Denmark	479539.5	0.001160335211483891
+Belgium	Estonia	48125	1.1644740850891793e-4
+Belgium	Finland	183782	4.446948079082796e-4
+Belgium	France	1744398.5	0.004220897345077271
+Belgium	Germany	1498982.5	0.003627067584939617
+Belgium	Greece	814394.5	0.001970579304496955
+Belgium	Hungary	423732.5	0.0010252997719689364
+Belgium	Iceland	20447.5	4.9476537880230636e-5
+Belgium	Ireland	422661.5	0.0010227082878232108
+Belgium	Italy	2961616	0.007166181988541246
+Belgium	Latvia	107401	2.5987674018215675e-4
+Belgium	Lithuania	112836	2.730277358236314e-4
+Belgium	Luxembourg	1185	2.867328396531278e-6
+Belgium	Macedonia (the former Yugoslav Republic of)	0	0
+Belgium	Malta	83030.5	2.0090777251324072e-4
+Belgium	Montenegro	0	0
+Belgium	Netherlands (the)	209362	5.065903862907859e-4
+Belgium	Norway	233103	5.640361613642451e-4
+Belgium	Poland	440871.5	0.00106677077735978
+Belgium	Portugal	818272.5	0.0019799628483971646
+Belgium	Romania	297375.5	7.195554561879215e-4
+Belgium	Serbia	0	0
+Belgium	Slovakia	64926.5	1.5710176973619241e-4
+Belgium	Slovenia	87136	2.1084179507185606e-4
+Belgium	Spain	4445967.5	0.010757847141607742
+Belgium	Sweden	426019.5	0.0010308335947899212
+Belgium	Switzerland	852506	0.002062797183133581
+Belgium	United Kingdom of Great Britain and Northern Ireland (the)	1290710.5	0.0031231146568363576
+Bulgaria	Bulgaria	258085266.28828374	0.9827887977986655
+Bulgaria	Croatia	611	2.326688245675513e-6
+Bulgaria	Cyprus	59406	2.2621807188641496e-4
+Bulgaria	Czechia	209359.5	7.972410601808554e-4
+Bulgaria	Denmark	78072	2.972982073917818e-4
+Bulgaria	Estonia	22876.5	8.71137211983566e-5
+Bulgaria	Finland	50796.5	1.9343309242464193e-4
+Bulgaria	France	202277	7.7027089733307e-4
+Bulgaria	Germany	1308251	0.004981820334031483
+Bulgaria	Greece	92446.5	3.5203630917158977e-4
+Bulgaria	Hungary	36752	1.3995163077752285e-4
+Bulgaria	Iceland	0	0
+Bulgaria	Ireland	28183	1.0732087533203436e-4
+Bulgaria	Italy	337390	0.0012847812556603297
+Bulgaria	Latvia	19787	7.534890395610701e-5
+Bulgaria	Lithuania	29170	1.110793717288948e-4
+Bulgaria	Luxembourg	24978	9.511623404334365e-5
+Bulgaria	Macedonia (the former Yugoslav Republic of)	0	0
+Bulgaria	Malta	15820.5	6.024447036122661e-5
+Bulgaria	Montenegro	0	0
+Bulgaria	Netherlands (the)	206844	7.87662035169404e-4
+Bulgaria	Norway	114092	4.3446238187497656e-4
+Bulgaria	Poland	244681.5	9.31747250383393e-4
+Bulgaria	Portugal	580.5	2.210544233411842e-6
+Bulgaria	Romania	42835.5	1.6311760122362268e-4
+Bulgaria	Serbia	0	0
+Bulgaria	Slovakia	82738.5	3.150682412681235e-4
+Bulgaria	Slovenia	3505.5	1.3348945409518023e-5
+Bulgaria	Spain	268121.5	0.0010210067798083259
+Bulgaria	Sweden	42575	1.6212561711887886e-4
+Bulgaria	Switzerland	44720	1.702937779813567e-4
+Bulgaria	United Kingdom of Great Britain and Northern Ireland (the)	952877.5	0.003628557903140211
+Croatia	Croatia	151003869.12715366	0.9721994020762141
+Croatia	Cyprus	92	5.923182333539829e-7
+Croatia	Czechia	38993.5	2.510495764379188e-4
+Croatia	Denmark	130583	8.40724911587643e-4
+Croatia	Estonia	328.5	2.1149623875737324e-6
+Croatia	Finland	100558	6.474167055392371e-4
+Croatia	France	464204.5	0.0029886607538583583
+Croatia	Germany	1443158.5	0.009291403186628086
+Croatia	Greece	19199	1.2360780176264258e-4
+Croatia	Hungary	25716	1.65565822705772e-4
+Croatia	Iceland	1430.5	9.209904704487745e-6
+Croatia	Ireland	78744	5.069729018176742e-4
+Croatia	Italy	158608	0.0010211566343022666
+Croatia	Latvia	3330.5	2.144256387158087e-5
+Croatia	Lithuania	2453.5	1.579622592971736e-5
+Croatia	Luxembourg	3545	2.2823566709129017e-5
+Croatia	Macedonia (the former Yugoslav Republic of)	0	0
+Croatia	Malta	4063	2.6158575892578616e-5
+Croatia	Montenegro	0	0
+Croatia	Netherlands (the)	105127	6.768330317152626e-4
+Croatia	Norway	250633.5	0.001613639042818755
+Croatia	Poland	61839	3.981344264388799e-4
+Croatia	Portugal	24033.5	1.547334811012277e-4
+Croatia	Romania	79.5	5.11840212517844e-7
+Croatia	Serbia	0	0
+Croatia	Slovakia	4762.5	3.066212593856895e-5
+Croatia	Slovenia	970.5	6.248313537717831e-6
+Croatia	Spain	139050.5	8.952407229020435e-4
+Croatia	Sweden	218214.5	0.001404917686219812
+Croatia	Switzerland	150965.5	9.719523723630512e-4
+Croatia	United Kingdom of Great Britain and Northern Ireland (the)	887358.5	0.005713028468170003
+Cyprus	Cyprus	30677295.488201134	0.8656106122837238
+Cyprus	Czechia	23256.5	6.562205984656985e-4
+Cyprus	Denmark	60747.5	0.0017140911489387923
+Cyprus	Estonia	2485	7.01183835567373e-5
+Cyprus	Finland	54799.5	0.0015462584948561068
+Cyprus	France	63922	0.0018036649149753567
+Cyprus	Germany	265299.5	0.007485864023505282
+Cyprus	Greece	966685.5	0.027276629644964336
+Cyprus	Hungary	61085	0.001723614269441971
+Cyprus	Iceland	0	0
+Cyprus	Ireland	7077	1.9968925570665186e-4
+Cyprus	Italy	116633	0.0032909929293251272
+Cyprus	Latvia	7930	2.2375806100801882e-4
+Cyprus	Lithuania	12954	3.65518527402002e-4
+Cyprus	Luxembourg	385	1.08634115369593e-5
+Cyprus	Macedonia (the former Yugoslav Republic of)	0	0
+Cyprus	Malta	22705	6.406591141471711e-4
+Cyprus	Montenegro	0	0
+Cyprus	Netherlands (the)	71187	0.0020086589015104457
+Cyprus	Norway	132470.5	0.003737874176640953
+Cyprus	Poland	93713	0.0026442672347092647
+Cyprus	Portugal	9	2.5394988008476286e-7
+Cyprus	Romania	110060	0.003105524866903222
+Cyprus	Serbia	0	0
+Cyprus	Slovakia	3243	9.150660679054288e-5
+Cyprus	Slovenia	3221.5	9.089994874367372e-5
+Cyprus	Spain	19694.5	5.55712879258818e-4
+Cyprus	Sweden	229765	0.0064831993552972814
+Cyprus	Switzerland	94981	0.0026800459511478734
+Cyprus	United Kingdom of Great Britain and Northern Ireland (the)	2338459.5	0.06598350106756383
+Czechia	Czechia	372577053.59861225	0.9795855174732
+Czechia	Denmark	222023	5.837464042545705e-4
+Czechia	Estonia	792.5	2.083653609633899e-6
+Czechia	Finland	181742	4.778389581351218e-4
+Czechia	France	952068	0.002503192334153851
+Czechia	Germany	1081850	0.0028444172335425027
+Czechia	Greece	589920.5	0.0015510283649489394
+Czechia	Hungary	65267	1.7160103487694092e-4
+Czechia	Iceland	2730	7.17775943760321e-6
+Czechia	Ireland	106490	2.799852023847494e-4
+Czechia	Italy	884877	0.002326532687863742
+Czechia	Latvia	26391	6.938763711274223e-5
+Czechia	Lithuania	3351.5	8.811817126420205e-6
+Czechia	Luxembourg	94.5	2.484609036093419e-7
+Czechia	Macedonia (the former Yugoslav Republic of)	0	0
+Czechia	Malta	12070.5	3.173595065625991e-5
+Czechia	Montenegro	0	0
+Czechia	Netherlands (the)	519541	0.0013659854637259375
+Czechia	Norway	133416	3.5077947000998895e-4
+Czechia	Poland	155040.5	4.076349494819489e-4
+Czechia	Portugal	94812	2.492812189736394e-4
+Czechia	Romania	78229.5	2.0568224612600011e-4
+Czechia	Serbia	0	0
+Czechia	Slovakia	57672	1.516321400313012e-4
+Czechia	Slovenia	278.5	7.322366312719758e-7
+Czechia	Spain	664876	0.0017481025581816381
+Czechia	Sweden	184600.5	4.853545718173155e-4
+Czechia	Switzerland	356036.5	9.360968307715074e-4
+Czechia	United Kingdom of Great Britain and Northern Ireland (the)	1390305.5	0.003655413342042729
+Denmark	Denmark	198496179.21516582	0.9076975962742853
+Denmark	Estonia	117844.5	5.38887800294608e-4
+Denmark	Finland	837000	0.0038274937637869134
+Denmark	France	1286352	0.005882322888930494
+Denmark	Germany	2492433	0.011397576779159747
+Denmark	Greece	675398	0.0030885085221913425
+Denmark	Hungary	135844.5	6.211994941394879e-4
+Denmark	Iceland	421672.5	0.0019282543179336168
+Denmark	Ireland	252812	0.001156076885795098
+Denmark	Italy	1229875.5	0.005624063090184363
+Denmark	Latvia	168912	7.724129350403525e-4
+Denmark	Lithuania	205215.5	9.384241893457746e-4
+Denmark	Luxembourg	63050.5	2.8832185848703316e-4
+Denmark	Macedonia (the former Yugoslav Republic of)	0	0
+Denmark	Malta	67037	3.0655161223773394e-4
+Denmark	Montenegro	0	0
+Denmark	Netherlands (the)	1256204	0.005744459947484081
+Denmark	Norway	2643052.5	0.01208634045533024
+Denmark	Poland	457114.5	0.0020903260431141854
+Denmark	Portugal	298144	0.0013633743138715478
+Denmark	Romania	30290	1.3851228925341173e-4
+Denmark	Serbia	0	0
+Denmark	Slovakia	9732.5	4.4505475574738514e-5
+Denmark	Slovenia	18277	8.357837935571495e-5
+Denmark	Spain	2353306.5	0.01076136911950921
+Denmark	Sweden	1710197	0.007820511771024
+Denmark	Switzerland	671393.5	0.003070196456746797
+Denmark	United Kingdom of Great Britain and Northern Ireland (the)	2783619.5	0.012729135336924309
+Estonia	Estonia	46772602.94618924	0.9705289966059343
+Estonia	Finland	212181	0.00440274434300265
+Estonia	France	12266.5	2.5452921554447385e-4
+Estonia	Germany	272095	0.00564595662198456
+Estonia	Greece	16279.5	3.377987498028176e-4
+Estonia	Hungary	59	1.2242468281191827e-6
+Estonia	Iceland	1362.5	2.82718017510574e-5
+Estonia	Ireland	21671.5	4.496824599251673e-4
+Estonia	Italy	53121.5	0.0011022682691514097
+Estonia	Latvia	197055.5	0.004088891031159994
+Estonia	Lithuania	37438.5	7.768468622803395e-4
+Estonia	Luxembourg	0	0
+Estonia	Malta	361	7.4907305923902545e-6
+Estonia	Montenegro	0	0
+Estonia	Netherlands (the)	87071.5	0.0018067289439759225
+Estonia	Norway	133276	0.0027654698349900376
+Estonia	Poland	25537.5	5.299017520863327e-4
+Estonia	Portugal	2244	4.656287936100756e-5
+Estonia	Romania	0	0
+Estonia	Serbia	0	0
+Estonia	Slovakia	0	0
+Estonia	Slovenia	0	0
+Estonia	Spain	64011.5	0.0013282351836974757
+Estonia	Sweden	138294.5	0.0028696034401920053
+Estonia	Switzerland	1483.5	3.078254524601369e-5
+Estonia	United Kingdom of Great Britain and Northern Ireland (the)	144483	0.0029980144824939643
+Finland	Finland	192262283.85077158	0.9541844730092381
+Finland	France	592559	0.0029408295054933215
+Finland	Germany	1648408	0.008180935372665397
+Finland	Greece	377512	0.0018735660554945494
+Finland	Hungary	215322	0.0010686282560586084
+Finland	Iceland	59854.5	2.9705376112176173e-4
+Finland	Ireland	36226	1.7978714299504532e-4
+Finland	Italy	484684	0.002405453310202908
+Finland	Latvia	285811.5	0.001418462789712593
+Finland	Lithuania	100474	4.986455420218679e-4
+Finland	Luxembourg	291	1.444212957863363e-6
+Finland	Macedonia (the former Yugoslav Republic of)	0	0
+Finland	Malta	1358	6.739660470029027e-6
+Finland	Montenegro	0	0
+Finland	Netherlands (the)	494631.5	0.0024548220675855398
+Finland	Norway	365731	0.0018150977638911533
+Finland	Poland	227752	0.0011303174899632187
+Finland	Portugal	122816	6.095273492541127e-4
+Finland	Romania	638	3.1663500588207065e-6
+Finland	Serbia	0	0
+Finland	Slovakia	1016	5.042338024705075e-6
+Finland	Slovenia	31618.5	1.569204378288754e-4
+Finland	Spain	1406488.5	0.006980305555964964
+Finland	Sweden	1500929.5	0.007449009734499582
+Finland	Switzerland	260364.5	0.0012921710813320123
+Finland	United Kingdom of Great Britain and Northern Ireland (the)	1017060.5	0.005047601213164917
+France	France	2324162666.194793	0.9767774308961723
+France	Germany	7237593	0.003041748152674099
+France	Greece	1713484	7.201270908210265e-4
+France	Hungary	446763.5	1.8776160124052497e-4
+France	Iceland	197584	8.303876261043681e-5
+France	Ireland	1560814.5	6.559645757977752e-4
+France	Italy	9780645.5	0.004110518563503811
+France	Latvia	130396	5.48016159676417e-5
+France	Lithuania	79757	3.351952885618577e-5
+France	Luxembourg	119070.5	5.004184034843922e-5
+France	Macedonia (the former Yugoslav Republic of)	0	0
+France	Malta	236583	9.94288989729177e-5
+France	Montenegro	0	0
+France	Netherlands (the)	2869517.5	0.0012059740793231946
+France	Norway	779747.5	3.2770501431584324e-4
+France	Poland	944875.5	3.971034716420246e-4
+France	Portugal	3951861	0.0016608513212023413
+France	Romania	704461	2.9606430554756925e-4
+France	Serbia	0	0
+France	Slovakia	32012.5	1.3453915236388616e-5
+France	Slovenia	76892	3.231545334967258e-5
+France	Spain	9329219.5	0.003920797450204257
+France	Sweden	1127036.5	4.7366039951006944e-4
+France	Switzerland	3359710.5	0.0014119878261867962
+France	United Kingdom of Great Britain and Northern Ireland (the)	10578195	0.004445705236516669
+Germany	Germany	2852885452.5220113	0.9733711845401751
+Germany	Greece	4344859	0.0014824151273761703
+Germany	Hungary	1395500	4.761282955910527e-4
+Germany	Iceland	290592	9.914659525073106e-5
+Germany	Ireland	1499516.5	5.116175101079619e-4
+Germany	Italy	11311720	0.003859426702832836
+Germany	Latvia	621541	2.1206252738800323e-4
+Germany	Lithuania	373585.5	1.2746300779113666e-4
+Germany	Luxembourg	331514.5	1.1310887413021858e-4
+Germany	Macedonia (the former Yugoslav Republic of)	0	0
+Germany	Malta	579580.5	1.9774609503605167e-4
+Germany	Montenegro	0	0
+Germany	Netherlands (the)	3488963.5	0.0011903935826831915
+Germany	Norway	1816476.5	6.197605588865645e-4
+Germany	Poland	3218652	0.0010981664570840078
+Germany	Portugal	3105646	0.0010596101301964676
+Germany	Romania	1493765	5.096551655059612e-4
+Germany	Serbia	0	0
+Germany	Slovakia	2187.5	7.463494422109837e-7
+Germany	Slovenia	215389	7.348821028954587e-5
+Germany	Spain	22997967.5	0.007846637812850894
+Germany	Sweden	2856529.5	9.74614490964215e-4
+Germany	Switzerland	5902512.5	0.0020138683026369644
+Germany	United Kingdom of Great Britain and Northern Ireland (the)	12200768.5	0.004162759663780727
+Greece	Greece	389848395.2628457	0.9686250218612295
+Greece	Hungary	125876	3.1275399548482964e-4
+Greece	Iceland	4067	1.0104948517881106e-5
+Greece	Ireland	56488	1.4035120036342953e-4
+Greece	Italy	2236253	0.0055562383668446465
+Greece	Latvia	32606.5	8.101475383533078e-5
+Greece	Lithuania	76653	1.9045355759555947e-4
+Greece	Luxembourg	52336.5	1.3003630147678498e-4
+Greece	Macedonia (the former Yugoslav Republic of)	0	0
+Greece	Malta	19400	4.820162312438984e-5
+Greece	Montenegro	0	0
+Greece	Netherlands (the)	1211607	0.0030103826798387936
+Greece	Norway	753830.5	0.0018729821474572346
+Greece	Poland	698661	0.0017359069182324395
+Greece	Portugal	3584	8.90487717926872e-6
+Greece	Romania	239702	5.955683229980666e-4
+Greece	Serbia	0	0
+Greece	Slovakia	87288	2.168774886227701e-4
+Greece	Slovenia	48002.5	1.1926795948600633e-4
+Greece	Spain	357263	8.87662705272623e-4
+Greece	Sweden	806876.5	0.002004781286645708
+Greece	Switzerland	858363	0.002132705661336115
+Greece	United Kingdom of Great Britain and Northern Ireland (the)	4958820.5	0.012320783344458679
+Hungary	Hungary	351059992.49189425	0.9875568203671791
+Hungary	Iceland	3245	9.128416654214704e-6
+Hungary	Ireland	163423	4.5972056544891506e-4
+Hungary	Italy	717151.5	0.0020173983655454716
+Hungary	Latvia	22431.5	6.31014108409914e-5
+Hungary	Lithuania	0	0
+Hungary	Luxembourg	3.5	9.84574985816686e-9
+Hungary	Macedonia (the former Yugoslav Republic of)	0	0
+Hungary	Malta	35141.5	9.885554818307734e-5
+Hungary	Montenegro	0	0
+Hungary	Netherlands (the)	613086.5	0.0017246560915482904
+Hungary	Norway	129029.5	3.629691946640974e-4
+Hungary	Poland	186462.5	5.245323236938395e-4
+Hungary	Portugal	72843	2.0491255911955674e-4
+Hungary	Romania	85296.5	2.3994514365060845e-4
+Hungary	Serbia	0	0
+Hungary	Slovakia	335.5	9.437854506899948e-7
+Hungary	Slovenia	16	4.5009142208762786e-8
+Hungary	Spain	322409	9.069595331490626e-4
+Hungary	Sweden	335637.5	9.441722480058513e-4
+Hungary	Switzerland	439463	0.0012362407914055951
+Hungary	United Kingdom of Great Britain and Northern Ireland (the)	1297368	0.003649588800568635
+Iceland	Iceland	11403110.246415721	0.8935798109977908
+Iceland	Ireland	6821	5.345127565290158e-4
+Iceland	Italy	23916	0.001874125067460481
+Iceland	Latvia	1800	1.4105306578980037e-4
+Iceland	Lithuania	3993.5	3.1294189901753767e-4
+Iceland	Luxembourg	0	0
+Iceland	Macedonia (the former Yugoslav Republic of)	0	0
+Iceland	Malta	0	0
+Iceland	Montenegro	0	0
+Iceland	Netherlands (the)	137192	0.010750751223241274
+Iceland	Norway	289366	0.022675534130739652
+Iceland	Poland	13085.5	0.0010254166068846848
+Iceland	Portugal	1804.5	1.4140569845427488e-4
+Iceland	Romania	217	1.700473070910371e-5
+Iceland	Serbia	0	0
+Iceland	Slovakia	1391	1.0900267472978462e-4
+Iceland	Slovenia	1729	1.3548930597253602e-4
+Iceland	Spain	107602	0.00843199554728561
+Iceland	Sweden	148036	0.011600517581810493
+Iceland	Switzerland	19427.5	0.001522393575350748
+Iceland	United Kingdom of Great Britain and Northern Ireland (the)	601663.5	0.047148045138234194
+Ireland	Ireland	163320412.9430524	0.9049769436045759
+Ireland	Italy	964281.5	0.005343193229303907
+Ireland	Latvia	107754.5	5.970799137254296e-4
+Ireland	Lithuania	164587.5	9.119980167907989e-4
+Ireland	Luxembourg	0	0
+Ireland	Macedonia (the former Yugoslav Republic of)	0	0
+Ireland	Malta	59361	3.289260379720126e-4
+Ireland	Netherlands (the)	805390.5	0.004462760165517734
+Ireland	Norway	129595.5	7.181033734944148e-4
+Ireland	Poland	893216	0.004949411228470025
+Ireland	Portugal	684339.5	0.003792002836251884
+Ireland	Romania	75294	4.1721259923290904e-4
+Ireland	Serbia	0	0
+Ireland	Slovakia	96975	5.373494808432459e-4
+Ireland	Slovenia	0	0
+Ireland	Spain	3043457	0.01686414064365808
+Ireland	Sweden	150044	8.314108327264138e-4
+Ireland	Switzerland	318313	0.0017638084588363612
+Ireland	United Kingdom of Great Britain and Northern Ireland (the)	9656120.5	0.053505659578600914
+Italy	Italy	2114595064.153796	0.9842754306472665
+Italy	Latvia	238588	1.1105497711035526e-4
+Italy	Lithuania	218712.5	1.0180357637956886e-4
+Italy	Luxembourg	161307.5	7.50834103987989e-5
+Italy	Macedonia (the former Yugoslav Republic of)	0	0
+Italy	Malta	730774.5	3.4015183232321536e-4
+Italy	Montenegro	0	0
+Italy	Netherlands (the)	3527297.5	0.001641842603667885
+Italy	Norway	492358	2.2917668290148833e-4
+Italy	Poland	1282923.5	5.971592868326859e-4
+Italy	Portugal	1242521.5	5.783534659816264e-4
+Italy	Romania	2172903.5	0.001011416116717986
+Italy	Serbia	0	0
+Italy	Slovakia	192697.5	8.96944374894072e-5
+Italy	Slovenia	2217.5	1.0321743413005381e-6
+Italy	Spain	9635668.5	0.004485091222988881
+Italy	Sweden	796371.5	3.706851086552521e-4
+Italy	Switzerland	2059687.5	9.587177400664947e-4
+Italy	United Kingdom of Great Britain and Northern Ireland (the)	11028280	0.005133306716878421
+Latvia	Latvia	71702338.59898122	0.9769914637068626
+Latvia	Lithuania	216070	0.0029440956834585197
+Latvia	Luxembourg	75.5	1.028737094928117e-6
+Latvia	Macedonia (the former Yugoslav Republic of)	0	0
+Latvia	Malta	5431.5	7.400775537883533e-5
+Latvia	Montenegro	0	0
+Latvia	Netherlands (the)	139339	0.0018985854049031641
+Latvia	Norway	364039	0.004960270507291878
+Latvia	Poland	65628	8.942246101449333e-4
+Latvia	Portugal	1322.5	1.8019931232350128e-5
+Latvia	Romania	4	5.45026275458605e-8
+Latvia	Serbia	0	0
+Latvia	Slovakia	1127	1.5356115311046197e-5
+Latvia	Slovenia	0	0
+Latvia	Spain	95578.5	0.001302319846723007
+Latvia	Sweden	205388	0.002798546416597299
+Latvia	Switzerland	47992	6.539225252952343e-4
+Latvia	United Kingdom of Great Britain and Northern Ireland (the)	546623.5	0.00744810425707867
+Lithuania	Lithuania	105291978.60190743	0.9868412732879395
+Lithuania	Luxembourg	0	0
+Lithuania	Macedonia (the former Yugoslav Republic of)	0	0
+Lithuania	Malta	21227	1.9894848578430656e-4
+Lithuania	Montenegro	0	0
+Lithuania	Netherlands (the)	75406	7.067371516960203e-4
+Lithuania	Norway	276145	0.0025881485658315983
+Lithuania	Poland	95005.5	8.904320142356874e-4
+Lithuania	Portugal	1875.5	1.7577984881917697e-5
+Lithuania	Romania	57	5.342282795357551e-7
+Lithuania	Serbia	0	0
+Lithuania	Slovakia	0	0
+Lithuania	Slovenia	967.5	9.067822113172685e-6
+Lithuania	Spain	148183	0.0013888341955516983
+Lithuania	Sweden	48986.5	4.591223441311977e-4
+Lithuania	Switzerland	302	2.8304726389438254e-6
+Lithuania	United Kingdom of Great Britain and Northern Ireland (the)	735828	0.0068964934469164145
+Luxembourg	Luxembourg	19026819.12658371	0.9429201781374082
+Luxembourg	Macedonia (the former Yugoslav Republic of)	0	0
+Luxembourg	Malta	3552.5	1.7605275535273297e-4
+Luxembourg	Montenegro	0	0
+Luxembourg	Netherlands (the)	124045	0.006147350890282833
+Luxembourg	Norway	459	2.274685846781265e-5
+Luxembourg	Poland	628	3.1122063437443013e-5
+Luxembourg	Portugal	190390.5	0.009435263087398877
+Luxembourg	Romania	0	0
+Luxembourg	Serbia	0	0
+Luxembourg	Slovakia	36	1.7840673308088352e-6
+Luxembourg	Slovenia	0	0
+Luxembourg	Spain	293410	0.014540644320350566
+Luxembourg	Sweden	228.5	1.1323871808050523e-5
+Luxembourg	Switzerland	169084	0.008379367793402252
+Luxembourg	United Kingdom of Great Britain and Northern Ireland (the)	369958	0.01833416615476042
+Macedonia (the former Yugoslav Republic of)	Macedonia (the former Yugoslav Republic of)	73065261.41274436	1
+Macedonia (the former Yugoslav Republic of)	Malta	0	0
+Macedonia (the former Yugoslav Republic of)	Montenegro	0	0
+Macedonia (the former Yugoslav Republic of)	Netherlands (the)	0	0
+Macedonia (the former Yugoslav Republic of)	Norway	0	0
+Macedonia (the former Yugoslav Republic of)	Poland	0	0
+Macedonia (the former Yugoslav Republic of)	Portugal	0	0
+Macedonia (the former Yugoslav Republic of)	Romania	0	0
+Macedonia (the former Yugoslav Republic of)	Serbia	0	0
+Macedonia (the former Yugoslav Republic of)	Slovakia	0	0
+Macedonia (the former Yugoslav Republic of)	Slovenia	0	0
+Macedonia (the former Yugoslav Republic of)	Spain	0	0
+Macedonia (the former Yugoslav Republic of)	Sweden	0	0
+Macedonia (the former Yugoslav Republic of)	Switzerland	0	0
+Macedonia (the former Yugoslav Republic of)	United Kingdom of Great Britain and Northern Ireland (the)	0	0
+Malta	Malta	14969122.023454081	0.898572524661403
+Malta	Montenegro	0	0
+Malta	Netherlands (the)	103102.5	0.006189078663313931
+Malta	Norway	35649	0.0021399526225695624
+Malta	Poland	47679.5	0.002862124353216232
+Malta	Portugal	165	9.904686883895139e-6
+Malta	Romania	7737.5	4.644697864493251e-4
+Malta	Serbia	0	0
+Malta	Slovakia	2522	1.513916383102033e-4
+Malta	Slovenia	5316	3.191110028774943e-4
+Malta	Spain	166756.5	0.010010126777904605
+Malta	Sweden	80861	0.004853956885567544
+Malta	Switzerland	81262	0.004878028276115678
+Malta	United Kingdom of Great Britain and Northern Ireland (the)	1158607	0.06954933064538846
+Montenegro	Montenegro	21997692.547397748	1
+Montenegro	Netherlands (the)	0	0
+Montenegro	Norway	0	0
+Montenegro	Poland	0	0
+Montenegro	Portugal	0	0
+Montenegro	Romania	0	0
+Montenegro	Serbia	0	0
+Montenegro	Slovakia	0	0
+Montenegro	Slovenia	0	0
+Montenegro	Spain	0	0
+Montenegro	Sweden	0	0
+Montenegro	Switzerland	0	0
+Montenegro	United Kingdom of Great Britain and Northern Ireland (the)	0	0
+Netherlands (the)	Netherlands (the)	594485574.6900054	0.9667234391933914
+Netherlands (the)	Norway	1620907	0.002635839886392094
+Netherlands (the)	Poland	633793.5	0.0010306440696696648
+Netherlands (the)	Portugal	1529747.5	0.0024876007547679105
+Netherlands (the)	Romania	419252.5	6.817679619926382e-4
+Netherlands (the)	Serbia	0	0
+Netherlands (the)	Slovakia	371	6.033021005224031e-7
+Netherlands (the)	Slovenia	23423.5	3.809015296923587e-5
+Netherlands (the)	Spain	5527743.5	0.008988946805118761
+Netherlands (the)	Sweden	1036317.5	0.0016852089610731144
+Netherlands (the)	Switzerland	1485298	0.0024153191463658335
+Netherlands (the)	United Kingdom of Great Britain and Northern Ireland (the)	8186532.5	0.013312539766158813
+Norway	Norway	178962227.66621068	0.9523104851978639
+Norway	Poland	1340383.5	0.007132573604397615
+Norway	Portugal	198510.5	0.001056332573846047
+Norway	Romania	17321	9.217011952308507e-5
+Norway	Serbia	0	0
+Norway	Slovakia	18566.5	9.879779020410824e-5
+Norway	Slovenia	884	4.704023189100352e-6
+Norway	Spain	2951081.5	0.015703569919598474
+Norway	Sweden	1473264.5	0.007839672366151964
+Norway	Switzerland	227438	0.0012102642828988755
+Norway	United Kingdom of Great Britain and Northern Ireland (the)	2734566.5	0.01455143012232691
+Poland	Poland	1348522116.5395098	0.9943913314715637
+Poland	Portugal	136560	1.0069844503123368e-4
+Poland	Romania	81324	5.9967782247510606e-5
+Poland	Serbia	0	0
+Poland	Slovakia	538	3.9671765836851e-7
+Poland	Slovenia	208	1.5337783074470274e-7
+Poland	Spain	1162587	8.572840005384218e-4
+Poland	Sweden	702797	5.182378813167541e-4
+Poland	Switzerland	303034.5	2.234556454365655e-4
+Poland	United Kingdom of Great Britain and Northern Ireland (the)	5219025	0.0038484746783767894
+Portugal	Portugal	371555419.4969284	0.9738238308063542
+Portugal	Romania	55892	1.464894836552874e-4
+Portugal	Serbia	0	0
+Portugal	Slovakia	704.5	1.8464510347661558e-6
+Portugal	Slovenia	0	0
+Portugal	Spain	2745318	0.0071953091012947525
+Portugal	Sweden	163275.5	4.279350119616202e-4
+Portugal	Switzerland	1545904.5	0.00405172031749419
+Portugal	United Kingdom of Great Britain and Northern Ireland (the)	5476233	0.014352868828205209
+Romania	Romania	709293602.3246379	0.9971895849666081
+Romania	Serbia	0	0
+Romania	Slovakia	140	1.9682475837619125e-7
+Romania	Slovenia	157	2.207249076075859e-7
+Romania	Spain	1032764.5	0.0014519544512286283
+Romania	Sweden	295	4.147378837212601e-7
+Romania	Switzerland	141819.5	1.993827772895161e-4
+Romania	United Kingdom of Great Britain and Northern Ireland (the)	823851.5	0.0011582455173240196
+Serbia	Serbia	254434401.7690643	1
+Serbia	Slovakia	0	0
+Serbia	Slovenia	0	0
+Serbia	Spain	0	0
+Serbia	Sweden	0	0
+Serbia	Switzerland	0	0
+Serbia	United Kingdom of Great Britain and Northern Ireland (the)	0	0
+Slovakia	Slovakia	191701157.4496595	0.9971834990018171
+Slovakia	Slovenia	35.5	1.8466249596776956e-7
+Slovakia	Spain	104139.5	5.417087323615645e-4
+Slovakia	Sweden	444	2.3095816397095687e-6
+Slovakia	Switzerland	1226.5	6.379959191675194e-6
+Slovakia	United Kingdom of Great Britain and Northern Ireland (the)	435606	0.0022659180624939783
+Slovenia	Slovenia	72942216.07930188	0.9968325834835583
+Slovenia	Spain	6380	8.718945247990292e-5
+Slovenia	Sweden	262	3.58050729619664e-6
+Slovenia	Switzerland	86055	0.001176032654100007
+Slovenia	United Kingdom of Great Britain and Northern Ireland (the)	139075.5	0.001900613902565633
+Spain	Spain	1655528017.8849201	0.9760726636952215
+Spain	Sweden	2834419	0.0016711278054314749
+Spain	Switzerland	4902340.5	0.0028903410262360076
+Spain	United Kingdom of Great Britain and Northern Ireland (the)	32846669.5	0.019365867473111052
+Sweden	Sweden	338556878.93055695	0.9909886263435511
+Sweden	Switzerland	506472	0.0014824923751273705
+Sweden	United Kingdom of Great Britain and Northern Ireland (the)	2572133	0.007528881281321551
+Switzerland	Switzerland	284816820.69226635	0.9808625981599061
+Switzerland	United Kingdom of Great Britain and Northern Ireland (the)	5557000.5	0.019137401840093986
+Turkey	United Kingdom of Great Britain and Northern Ireland (the)	0	NaN
+United Kingdom of Great Britain and Northern Ireland (the)	United Kingdom of Great Britain and Northern Ireland (the)	2264110024.5167913	1
