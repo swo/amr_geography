@@ -55,9 +55,9 @@ marketscan <- marketscan_use %>%
 ```{r nhsn_ims}
 nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
   rename(state_abbreviation = state) %>%
-  filter(state_abbreviation %in% state.abb) %>%
+  filter(state_abbreviation %in% datasets::state.abb) %>%
   mutate(
-    state = state.name[match(state_abbreviation, state.abb)],
+    state = datasets::state.name[match(state_abbreviation, datasets::state.abb)],
     bugdrug = 'Ec/q',
     use = rx_1k_year / 1e3,
     f_resistant = n_resistant / n_isolates

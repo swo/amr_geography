@@ -2,6 +2,12 @@
 
 - Consider including a graph that shows reduction in dr/du ~ epsilon for different u, models, etc. as a supplemental
 
+## Methods
+
+For flights, say that flights relate to contacts by some proportion α. Then, a
+fraction β of internal contacts are represented by internal flights. Then c_ij
+(contacts) = α * t_ij (flights) and c_ii = α / β * t_ii.
+
 ## Framing
 
 - Use/resistance is important, but it's sometimes hard to detect use/res relationships (cite Turnidge)
