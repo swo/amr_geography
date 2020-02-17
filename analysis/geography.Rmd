@@ -80,6 +80,7 @@ twopop_diagram
 whn_base_parms <- list(
   beta = 4.0,
   u = 1.0,
+  k = 1.0,
   cost = 0.1683543
 )
 
@@ -94,64 +95,64 @@ whn_base_parms %>%
 # The ODE function only takes a vector, so we need to "unpack" the
 # vector into a sensible data frame, compute the ODEs, then "pack"
 # the data frame back into a vector.
+whn_compartments <- c("X", "S", "R", "SR", "RS")
+
 whn_unpack <- function(x) {
-  matrix(x, ncol = 4) %>%
+  matrix(x, ncol = length(whn_compartments)) %>%
     as_tibble() %>%
-    setNames(c('X', 'S', 'R', 'D'))
+    setNames(whn_compartments)
 }
 
 # data frame to vector
 whn_pack <- function(df) {
-  stopifnot(names(df) == c('X', 'S', 'R', 'D'))
+  stopifnot(all(names(df) == whn_compartments))
   unlist(df)
 }
 
-whn_ode_func <- function(t, state_vector, parms) {
+whn_ode_func <- function(time_, state_vector, parms) {
   state <- whn_unpack(state_vector)
 
   with(c(state, parms), {
-    n_pop <- nrow(state) # number of populations
-    stopifnot(dim(betaij) == rep(n_pop, 2)) # betaij is defined in the next function
+    N <- X + S + R + SR + RS # total number of individuals
 
-    N <- X + S + R + D # total number of individuals
+    Stot <- S + SR
+    Rtot <- R + RS
+    dS <- (betaij %*% (Stot / N))*X - (u + taui)*S - k*(1 - cost)*(betaij %*% (Rtot / N))*S
+    dR <- (1 - cost)*(betaij %*% (Rtot / N))*X - u*R - k*(betaij %*% (Stot / N))*R + taui*(SR + RS)
+    dSR <- k*(1 - cost)*(betaij %*% (Rtot / N))*S - (u + taui)*SR
+    dRS <- k*(betaij %*% (Stot / N))*R - (u + taui)*RS
+    dX <- -(dS + dR + dSR + dRS)
 
-    dS <- (betaij %*% ((S + D) / N)) * X - (u + taui) * S - (1 - cost) * (betaij %*% (R / N)) * S
-    dR <- (1 - cost) * (betaij %*% (R / N)) * X - u * R + taui * D
-    dD <- (1 - cost) * (betaij %*% (R / N)) * S - (u + taui) * D
-    dX <- -(dS + dR + dD)
-
-    list(c(dX, dS, dR, dD))
+    list(c(dX, dS, dR, dSR, dRS))
   })
 }
 
 # Check that:
 # - All entries in the transmission matrix are nonnegative
-# - All rows add up to the overall constant
-# - All columns add up to the overall constant
-check_beta <- function(mat, const) {
+# - All rows add up to 1
+check_transmission_matrix <- function(mat, size) {
   stopifnot(all(mat >= 0))
-  stopifnot(all(rowSums(mat) == const))
-  stopifnot(all(colSums(mat) == const))
+  stopifnot(all(rowSums(mat) == 1.0))
+  stopifnot(all(dim(mat) == c(size, size)))
+  stopifnot(ncol(mat) == size)
+  stopifnot(nrow(mat) == size)
 }
 
 # Run the simulation
-# taui: a vector of the antibiotic use rates in each population
-whn_sim <- function(taui, epsilon) {
-  n_pop <- length(taui)
-  stopifnot(between(epsilon, 0, 1 - 1 / n_pop))
+whn_sim <- function(parms) {
+  # Check that all the required parameters have been input
+  parm_names <- c("beta", "cost", "k", "u", "taui", "transmission_matrix")
+  stopifnot(all(parm_names %in% names(parms)))
+  
+  n_pop <- length(parms$taui)
 
-  parms <- with(whn_base_parms, {
-    # Compare to the equations in the Supplement under "WHN model with 2 populations"
-    betaij = matrix(beta * epsilon, ncol = n_pop, nrow = n_pop)
-    diag(betaij) <- beta * (1 - epsilon)
-
-    check_beta(betaij, beta)
+  new_parms <- with(parms, {
+    # check the transmission matrix is square with right row sums
+    check_transmission_matrix(transmission_matrix, n_pop)
+    betaij <- transmission_matrix * beta
 
     # Add transmission matrix beta_ij to the parameter list
-    c(whn_base_parms, list(
-      taui = taui, epsilon = epsilon,
-      betaij = betaij
-    ))
+    `$<-`(parms, "betaij", betaij)
   })
 
   # Initial state of the simulation
@@ -159,21 +160,22 @@ whn_sim <- function(taui, epsilon) {
     X = rep(0.990 / n_pop, n_pop),
     S = rep(0.005 / n_pop, n_pop),
     R = S,
-    D = 0
+    SR = 0,
+    RS = 0
   )
 
   state_vector <- whn_pack(state)
 
   # Run the simulation
-  result <- rootSolve::runsteady(state_vector, func = whn_ode_func, parms = parms)
+  result <- rootSolve::runsteady(state_vector, func = whn_ode_func, parms = new_parms)
 
   # Unpack the output state and clean it up
   result$y %>%
     whn_unpack() %>%
     mutate(
-      tau = taui,
-      pop = seq_along(taui),
-      rho = R / (S + R + D)
+      tau = parms$taui,
+      pop = seq_along(parms$taui),
+      rho = (R + RS) / (S + SR + R + RS)
     )
 }
 ```
@@ -181,7 +183,14 @@ whn_sim <- function(taui, epsilon) {
 To make sure I got the equations right, I reproduce the $k = 1$ line in Davies *et al.* Figure 2g.
 
 ```{r davies_repro}
-whn_repro <- whn_sim(taui = seq(0, 3 / 12, length.out = 16), epsilon = 0.0)
+identity_matrix <- function(n) `diag<-`(matrix(0, ncol = n, nrow = n), 1)
+
+n_repro_pop <- 16
+repro_parms <- whn_base_parms %>%
+  `$<-`("transmission_matrix", identity_matrix(n_repro_pop)) %>%
+  `$<-`("taui", seq(0, 3 / 12, length.out = n_repro_pop))
+
+whn_repro <- whn_sim(repro_parms)
 
 whn_repro %>%
   ggplot(aes(tau, rho)) +
@@ -198,15 +207,32 @@ whn_repro %>%
 ## WHN two-population model
 
 ```{r whn_double}
+whn_2pop_sim <- function(tau1, tau2, epsilon) {
+  stopifnot(between(epsilon, 0, 0.5))
+  
+  transmission_matrix <- matrix(
+    c(1 - epsilon, epsilon, epsilon, 1 - epsilon),
+    nrow = 2, ncol = 2
+  )
+  
+  parms <- whn_base_parms %>%
+    `$<-`("transmission_matrix", transmission_matrix) %>%
+    `$<-`("taui", c(tau1, tau2))
+  
+  whn_sim(parms)
+}
+
 whn_epsilon_values <- c(0, 1e-4, 1e-3, 0.01, 0.0175, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)
 
 whn2 <- tibble(
+  base_tau = 0.125,
   delta_tau = round(seq(0.0, 0.15, length.out = 7), 3),
-  taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
+  tau1 = base_tau - delta_tau / 2,
+  tau2 = base_tau + delta_tau / 2
 ) %>%
   crossing(epsilon = whn_epsilon_values) %>%
   mutate(
-    results = map2(taui, epsilon, whn_sim),
+    results = pmap(list(tau1, tau2, epsilon), whn_2pop_sim),
     delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho))
   )
 ```
