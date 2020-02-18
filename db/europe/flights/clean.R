@@ -20,7 +20,13 @@ flights <- flights_raw %>%
   mutate_at(c("partner", "geo"), ~ countrycode(., "eurostat", "iso3c")) %>%
   filter_at(c("partner", "geo"), ~ !is.na(.)) %>%
   # keep only the 2 country names and the number of passenders in that year
-  select(country1 = partner, country2 = geo, !!c("n" = year))
+  select(country1 = geo, country2 = partner, !!c("n" = year)) %>%
+  replace_na(list(n = 0))
+
+# Turkey appears in "partner" but never in "geo" (as it's not an EU country)
+flights %<>% filter(country2 != "TUR")
+# check that all countries appear in both columns
+with(flights, { stopifnot(setequal(country1, country2)) })
 
 # load population
 population_raw <- read_tsv("demo_pjan.tsv.gz", na = ":")
