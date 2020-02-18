@@ -373,15 +373,19 @@ ggsave(
 
 ```{r}
 eu_flights <- read_tsv("../db/europe/flights.tsv") %>%
-  mutate_at(vars(starts_with("country")), ~ countrycode(., "country.name", "iso3c")) %>%
   replace_na(list(n = 0))
 
-eu_names <- eu_flights$country1 %>% unique() %>% sort()
+eu_names <- with(eu_flights, {
+  intersect(unique(country1), unique(country2))
+}) %>%
+  sort()
 
 null_matrix <- identity_matrix(length(eu_names))
 
 eu_flights_matrix <- eu_flights %>%
-  spread(country2, n) %T>%
+  filter(country1 %in% eu_names, country2 %in% eu_names) %>%
+  arrange(country1, country2) %>%
+  spread(country2, n, fill = 0) %T>%
   {
     stopifnot(all(names(.) == c("country1", eu_names)))
     stopifnot(all(.$country1 == eu_names))
@@ -392,44 +396,44 @@ eu_flights_matrix <- eu_flights %>%
 
 symmetrize <- function(mat) 0.5 * (mat + t(mat))
 scale_rows <- function(mat) t(scale(t(mat), center = FALSE, scale = rowSums(mat)))
+grow_diagonal <- function(mat, f) `diag<-`(mat, diag(mat) * 1 / f)
 
-eu_matrix <- eu_flights_matrix %>%
-  symmetrize() %>%
-  scale_rows()
+eu_matrix_f <- function(f) {
+  eu_flights_matrix %>%
+    symmetrize() %>%
+    grow_diagonal(f) %>%
+    scale_rows()
+}
 
 taui <- sample(seq(0, 3 / 12, length.out = length(eu_names)))
+
 null_parms <- whn_base_parms %>%
   `$<-`("transmission_matrix", identity_matrix(length(eu_names))) %>%
   `$<-`("taui", taui)
 
-mat_parms <- whn_base_parms %>%
-  `$<-`("transmission_matrix", eu_matrix) %>%
-  `$<-`("taui", taui)
-
-null_sim <- whn_sim(null_parms)
-mat_sim <- whn_sim(mat_parms)
+results <- tibble(internal_f = c(0.1, 0.01, 0.001)) %>%
+  mutate(parms = map(internal_f, ~ `$<-`(null_parms, "transmission_matrix", eu_matrix_f(.)))) %>%
+  bind_rows(tibble(internal_f = NA, parms = list(null_parms))) %>%
+  mutate(sim = map(parms, whn_sim))
 ```
 
 ```{r}
-results <- bind_rows(
-  null = null_sim,
-  interaction = mat_sim,
-  .id = "sim"
-)
-
 results %>%
-  ggplot(aes(tau, rho, color = sim)) +
+  select(internal_f, sim) %>%
+  unnest() %>%
+  ggplot(aes(tau, rho, color = factor(internal_f))) +
   geom_point() +
   geom_line()
 
 results %>%
-  filter(between(tau, 0.05, 0.20)) %>%
-  nest(-sim) %>%
   mutate(
-    model = map(data, ~ lm(rho ~ tau, data = .)),
+    model_data = map(sim, ~ filter(., between(tau, 0.05, 0.20))),
+    model = map(model_data, ~ lm(rho ~ tau, data = .)),
     slope = map_dbl(model, ~ coef(.)["tau"]),
     reduction = 1 - slope / max(slope)
-  )
+  ) %>%
+  select(internal_f, slope, reduction) %>%
+  arrange(reduction)
 ```
 
 # D-types model
