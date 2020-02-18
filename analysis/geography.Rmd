@@ -130,9 +130,11 @@ whn_ode_func <- function(time_, state_vector, parms) {
 # Check that:
 # - All entries in the transmission matrix are nonnegative
 # - All rows add up to 1
+all_nearly_equal <- function(x, y, tol = 1e-12) all(abs(x - y) < tol)
+
 check_transmission_matrix <- function(mat, size) {
   stopifnot(all(mat >= 0))
-  stopifnot(all(rowSums(mat) == 1.0))
+  stopifnot(all_nearly_equal(rowSums(mat), 1.0))
   stopifnot(all(dim(mat) == c(size, size)))
   stopifnot(ncol(mat) == size)
   stopifnot(nrow(mat) == size)
@@ -365,6 +367,69 @@ ggsave(
   'fig/whn2_plot.png', whn2_plot,
   width = 190, height = 100, unit = 'mm'
 )
+```
+
+## WHN with commuting
+
+```{r}
+eu_flights <- read_tsv("../db/europe/flights.tsv") %>%
+  mutate_at(vars(starts_with("country")), ~ countrycode(., "country.name", "iso3c")) %>%
+  replace_na(list(n = 0))
+
+eu_names <- eu_flights$country1 %>% unique() %>% sort()
+
+null_matrix <- identity_matrix(length(eu_names))
+
+eu_flights_matrix <- eu_flights %>%
+  spread(country2, n) %T>%
+  {
+    stopifnot(all(names(.) == c("country1", eu_names)))
+    stopifnot(all(.$country1 == eu_names))
+  } %>%
+  select(-country1) %>%
+  as.matrix() %>%
+  `rownames<-`(eu_names)
+
+symmetrize <- function(mat) 0.5 * (mat + t(mat))
+scale_rows <- function(mat) t(scale(t(mat), center = FALSE, scale = rowSums(mat)))
+
+eu_matrix <- eu_flights_matrix %>%
+  symmetrize() %>%
+  scale_rows()
+
+taui <- sample(seq(0, 3 / 12, length.out = length(eu_names)))
+null_parms <- whn_base_parms %>%
+  `$<-`("transmission_matrix", identity_matrix(length(eu_names))) %>%
+  `$<-`("taui", taui)
+
+mat_parms <- whn_base_parms %>%
+  `$<-`("transmission_matrix", eu_matrix) %>%
+  `$<-`("taui", taui)
+
+null_sim <- whn_sim(null_parms)
+mat_sim <- whn_sim(mat_parms)
+```
+
+```{r}
+results <- bind_rows(
+  null = null_sim,
+  interaction = mat_sim,
+  .id = "sim"
+)
+
+results %>%
+  ggplot(aes(tau, rho, color = sim)) +
+  geom_point() +
+  geom_line()
+
+results %>%
+  filter(between(tau, 0.05, 0.20)) %>%
+  nest(-sim) %>%
+  mutate(
+    model = map(data, ~ lm(rho ~ tau, data = .)),
+    slope = map_dbl(model, ~ coef(.)["tau"]),
+    reduction = 1 - slope / max(slope)
+  )
 ```
 
 # D-types model
