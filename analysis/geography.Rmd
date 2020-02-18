@@ -209,16 +209,14 @@ whn_repro %>%
 ## WHN two-population model
 
 ```{r whn_double}
+epsilon_matrix <- function(eps) {
+  stopifnot(between(eps, 0, 0.5))
+  matrix(c(1 - eps, eps, eps, 1 - eps), nrow = 2, ncol = 2)
+}
+
 whn_2pop_sim <- function(tau1, tau2, epsilon) {
-  stopifnot(between(epsilon, 0, 0.5))
-  
-  transmission_matrix <- matrix(
-    c(1 - epsilon, epsilon, epsilon, 1 - epsilon),
-    nrow = 2, ncol = 2
-  )
-  
   parms <- whn_base_parms %>%
-    `$<-`("transmission_matrix", transmission_matrix) %>%
+    `$<-`("transmission_matrix", epsilon_matrix(epsilon)) %>%
     `$<-`("taui", c(tau1, tau2))
   
   whn_sim(parms)
@@ -596,23 +594,22 @@ dtypes_ode_func <- function(t, state_vector, parms) {
   })
 }
 
-dtypes_sim <- function(tau_i, epsilon = 0) {
-  n_pop <- length(tau_i)
-  stopifnot(between(epsilon, 0, 1 - 1 / n_pop))
-
-  parms <- with(dtypes_base_parms, {
-    beta_ij = matrix(beta * epsilon, ncol = n_pop, nrow = n_pop)
-    diag(beta_ij) <- beta * (1 - epsilon)
-
-    check_beta(beta_ij, beta)
-
-    c(dtypes_base_parms, list(
-      n_pop = n_pop, tau_i = tau_i, epsilon = epsilon, beta_ij = beta_ij
-    ))
-  })
+dtypes_sim <- function(parms) {
+  stopifnot(
+    setequal(
+      names(parms),
+      c(names(dtypes_base_parms), "tau_i", "transmission_matrix")
+    )
+  )
+  
+  n_pop <- length(parms$tau_i)
+  check_transmission_matrix(parms$transmission_matrix, n_pop)
+  #stopifnot(between(epsilon, 0, 1 - 1 / n_pop))
+  
+  parms$beta_ij <- with(parms, { beta * transmission_matrix })
+  parms$n_pop <- n_pop
 
   n_d <- parms$n_d
-
   state <- list(
     X_i = rep(0.9 / n_pop, n_pop),
     S_id = matrix(0.05 / (n_pop * n_d), nrow = n_pop, ncol = n_d),
@@ -634,16 +631,20 @@ dtypes_sim <- function(tau_i, epsilon = 0) {
   result$y %>%
     dtypes_unpack(n_pop = n_pop, n_d = n_d) %>%
     dtypes_list_to_df() %>%
-    left_join(tibble(pop = 1:n_pop, tau = tau_i), by = 'pop')
+    left_join(tibble(pop = 1:n_pop, tau = parms$tau_i), by = 'pop')
 }
 ```
 
 To ensure I got the equations right, I reproduce Figure 3 with $\tau = 0.075$.
 
 ```{r dtypes_repro_bars}
-dtype_repro_bars <- dtypes_sim(0.075, 0)
+dtypes_repro_parms <- dtypes_base_parms %>%
+  `$<-`("tau_i", 0.075) %>%
+  `$<-`("transmission_matrix", identity_matrix(1))
 
-dtype_repro_bars %>%
+dtypes_repro_bars <- dtypes_sim(dtypes_repro_parms)
+
+dtypes_repro_bars %>%
   mutate(mu_d = dtypes_base_parms$mu_d[dtype]) %>%
   ggplot(aes(mu_d, value, fill = phenotype)) +
   geom_col() +
@@ -655,9 +656,14 @@ dtype_repro_bars %>%
 Next, I show the jagged line in Figure 4. It may not look exactly right because I ran a limited number of simulations:
 
 ```{r dtypes_repro_line}
-dtype_repro_line <- dtypes_sim(seq(0.04, 0.20, length.out = 50), 0)
+dtypes_line_n <- 50
+dtypes_line_parms <- dtypes_base_parms %>%
+  inset2("tau_i", seq(0.04, 0.20, length.out = dtypes_line_n)) %>%
+  inset2("transmission_matrix", identity_matrix(dtypes_line_n))
 
-dtype_repro_line %>%
+dtypes_repro_line <- dtypes_sim(dtypes_line_parms)
+
+dtypes_repro_line %>%
   group_by(tau) %>%
   summarize(
     f_res = sum(value[phenotype == 'R']),
@@ -673,7 +679,6 @@ dtype_repro_line %>%
 ## D-types two-population
 
 ```{r dtypes_double}
-
 dtypes_epsilon_values <- c(0, 1e-4, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)
 
 dtypes_simplify_results <- function(df) {
@@ -688,14 +693,24 @@ dtypes_simplify_results <- function(df) {
     mutate(rho = R / (R + S))
 }
 
+dtypes_2pop_sim <- function(tau1, tau2, epsilon) {
+  parms <- dtypes_base_parms %>%
+    `$<-`("transmission_matrix", epsilon_matrix(epsilon)) %>%
+    `$<-`("tau_i", c(tau1, tau2))
+  
+  dtypes_sim(parms) %>%
+    dtypes_simplify_results
+}
+
 dtypes2 <- tibble(
+  base_tau = 0.125,
   delta_tau = c(0.05, 0.10),
-  taui = map(delta_tau, ~ 0.125 + c(-0.5, 0.5) * .)
+  tau1 = base_tau - delta_tau / 2,
+  tau2 = base_tau + delta_tau / 2
 ) %>%
   crossing(epsilon = dtypes_epsilon_values) %>%
   mutate(
-    raw_results = map2(taui, epsilon, dtypes_sim),
-    results = map(raw_results, dtypes_simplify_results),
+    results = pmap(list(tau1, tau2, epsilon), dtypes_2pop_sim),
     delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
     dr_du = delta_rho / delta_tau
   )
