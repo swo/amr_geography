@@ -18,7 +18,7 @@ whn_compartments <- c("X", "S", "R", "SR", "RS")
 
 whn_unpack <- function(x) {
   matrix(x, ncol = length(whn_compartments)) %>%
-    as_tibble() %>%
+    as_tibble(.name_repair = "minimal") %>%
     setNames(whn_compartments)
 }
 

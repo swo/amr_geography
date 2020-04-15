@@ -16,7 +16,8 @@ dtypes2 <- tibble(
     results = pmap(list(tau1, tau2, epsilon), dtypes_2pop_sim),
     delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
     dr_du = delta_rho / delta_tau
-  )
+  ) %>%
+  select(base_tau, delta_tau, tau1, tau2, epsilon, delta_rho, dr_du)
 
 write_tsv(dtypes2, "results/dtypes2.tsv")
 
@@ -41,6 +42,8 @@ dtypes_commuting <- crossing(
   mutate(
     sim_raw = map(parms, dtypes_sim),
     sim = map(sim_raw, dtypes_simplify_results)
-  )
+  ) %>%
+  select(trans_data_nm, internal_f, sim) %>%
+  unnest(cols = c(sim))
 
 write_tsv(dtypes_commuting, "results/dtypes_commuting.tsv")

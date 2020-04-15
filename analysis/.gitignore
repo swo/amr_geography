@@ -6,3 +6,5 @@ old/
 fig/
 work/
 cache_memo/
+
+*.tsv

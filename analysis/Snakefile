@@ -1,3 +1,6 @@
+rule all:
+    input: expand("results/{model}{result}.tsv", model=["whn", "dtypes"], result=["2", "_commuting"])
+
 rule sim:
     output: "results/{x}2.tsv", "results/{x}_commuting.tsv"
     input: "{x}_model.R", "utils.R", script="{x}_sims.R"
