@@ -1,3 +1,9 @@
+# To do
+
+- Change `...2.tsv` to `..._2.tsv`
+- Make Snakefile outputs for the analytics too
+- Fit the dr/du curve
+
 # Spillover paper
 
 - Consider including a graph that shows reduction in dr/du ~ epsilon for different u, models, etc. as a supplemental
