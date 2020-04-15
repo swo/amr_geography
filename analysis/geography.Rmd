@@ -6,10 +6,16 @@ author: "Scott Olesen"
 ```{r global_options, echo = FALSE, message = FALSE}
 library(knitr)
 library(cowplot)
+library(grid)
 library(gridExtra)
 library(patchwork)
 library(magrittr)
 library(tidyverse)
+library(memoise)
+
+set.seed(5)
+
+memoise <- function(x) memoise::memoise(x, cache = cache_filesystem("cache_memo/"))
 
 pdf.options(useDingbats = FALSE, useKerning = FALSE)
 
@@ -24,57 +30,6 @@ knitr::opts_chunk$set(
 annotate_text <- function(x, y, label, parse = TRUE, ...) {
   annotate('text', x = x, y = y, label = label, parse = parse, ...)
 }
-```
-
-# Diagram
-
-```{r two_pop_diagram}
-dummy_data = tibble(
-  x = 2.0 * c(-1, 1),
-  y = 1.6 * c(-1, 1)
-)
-
-circle_data_f = function(cx, cy, r, n = 1e2) {
-  tibble(
-    theta = seq(0, 2 * pi, length.out = n),
-    x = cx + r * cos(theta),
-    y = cy + r * sin(theta)
-  )
-}
-
-circle_data = bind_rows(
-  circle_data_f(-1, 0, 0.5) %>% mutate(fill = 'white'),
-  circle_data_f(1, 0, 0.5) %>% mutate(fill = 'black')
-)
-
-line_data = tibble(
-  x = c(-1, -1, 1, 0),
-  xend = c(1, -1, 1, 0),
-  y = 1.0 * c(0, 1, 1, -1),
-  yend = c(0, 0, 0, 0),
-  linetype = c('a', rep('b', 3))
-)
-
-twopop_diagram <- ggplot(data = NULL, aes(x, y)) +
-  #geom_blank(data = dummy_data) +
-  geom_segment(
-    data = line_data,
-    aes(xend = xend, yend = yend, linetype = linetype)
-  ) +
-  annotate_text(-1, 1.4, 'intervention\npopulation', parse = FALSE, size = 3) +
-  annotate_text(1, 1.4, 'control\npopulation', parse = FALSE, size = 3) +
-  annotate_text(
-    0, -1.4,
-    "paste('interaction strength (', epsilon, ')', )",
-    size = 3
-  ) +
-  geom_polygon(data = circle_data, aes(fill = fill), color = 'black') +
-  scale_fill_manual(values = c('white', 'black')) +
-  guides(fill = 'none', linetype = 'none') +
-  coord_fixed() +
-  theme_void()
-
-twopop_diagram
 ```
 
 # Within-host neutral (WHN) model
@@ -183,6 +138,8 @@ whn_sim <- function(parms) {
       rho = (R + RS) / (S + SR + R + RS)
     )
 }
+
+memo_whn_sim <- memoise(whn_sim)
 ```
 
 To make sure I got the equations right, I reproduce the $k = 1$ line in Davies *et al.* Figure 2g.
@@ -195,7 +152,7 @@ repro_parms <- whn_base_parms %>%
   inset2("transmission_matrix", identity_matrix(n_repro_pop)) %>%
   inset2("taui", seq(0, 3 / 12, length.out = n_repro_pop))
 
-whn_repro <- whn_sim(repro_parms)
+whn_repro <- memo_whn_sim(repro_parms)
 
 whn_repro %>%
   ggplot(aes(tau, rho)) +
@@ -222,7 +179,7 @@ whn_2pop_sim <- function(tau1, tau2, epsilon) {
     `$<-`("transmission_matrix", epsilon_matrix(epsilon)) %>%
     `$<-`("taui", c(tau1, tau2))
   
-  whn_sim(parms)
+  memo_whn_sim(parms)
 }
 
 whn_epsilon_values <- c(0, 1e-4, 1e-3, 0.01, 0.0175, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)
@@ -244,7 +201,6 @@ whn2 <- tibble(
 whn2_plot_data <- whn2 %>%
   unnest(cols = c(results)) %>%
   mutate(pop = recode(pop, `1` = "intervention", `2` = "control")) %>%
-  #mutate(pop = map(1:n(), ~ c('intervention', 'control'))) %>%
   filter(epsilon %in% c(0.0, 0.01, 0.1))
 ```
 
@@ -345,20 +301,21 @@ whn2_plot4
 ```
 
 ```{r whn_double_results}
-whn2_plot_nolabel <- gridExtra::grid.arrange(
-  grobs = list(
-    twopop_diagram, whn2_plot1, whn2_plot2,
-    whn2_plot3, whn2_plot4
-  ),
-  layout_matrix = rbind(rep(1:3, each = 2), rep(4:5, each = 3))
-)
+diagram <- ggdraw() +
+  draw_grob(x = 0.2, circleGrob(gp = gpar(fill = "black")), scale = 0.5) +
+  draw_grob(x = -0.5, circleGrob(gp = gpar(fill = "white")), scale = 0.5) +
+  draw_grob(x = -0.5, y = -0.5, textGrob("control\npopulation", gp = gpar(fontsize = 11))) +
+  draw_grob(x = 0.2, y = -0.5, textGrob("intervention\npopulation", gp = gpar(fontsize = 11))) +
+  draw_grob(x = 0, y = 0, linesGrob(x = unit(c(0.2, 0.5), "npc"), y = 0.5)) +
+  draw_grob(x = -0.15, y = 0.1, textGrob(expression(epsilon), gp = gpar(fontsize = 11))) +
+  draw_grob(x = -0.15, y = 0.35, textGrob("interaction\nstrength", gp = gpar(fontsize = 11)))
 
-whn2_plot <- ggdraw(whn2_plot_nolabel) +
-  annotate_text(0.015, 0.98, 'bold("a)")') +
-  annotate_text(0.350, 0.98, 'bold("b)")') +
-  annotate_text(0.680, 0.98, 'bold("c)")') +
-  annotate_text(0.015, 0.48, 'bold("d)")') +
-  annotate_text(0.550, 0.48, 'bold("e)")')
+whn2_plot <- (diagram | whn2_plot1 | whn2_plot2) /
+  (whn2_plot3 | whn2_plot4) +
+  plot_annotation(
+    tag_levels = "a",
+    theme = theme(plot.margin = margin())
+  )
 
 ggsave(
   'fig/whn2_plot.pdf', whn2_plot,
@@ -367,54 +324,6 @@ ggsave(
 
 ggsave(
   'fig/whn2_plot.png', whn2_plot,
-  width = 190, height = 100, unit = 'mm'
-)
-```
-
-```{r}
-layout <- "
-  AABBCC
-  AABBCC
-  DDDEEE
-"
-
-# A <- twopop_diagram +
-#   theme(plot.background = element_rect(color = "red"))
-
-A <- tibble(x = c(-0.5, 0.5), y = c(-1, 1)) %>%
-  ggplot(aes(x, y)) +
-  geom_blank() +
-  annotate("point", 0, 0, color = "red") +
-  annotate("point", -1, -1) +
-  annotate("point", 1, 1) +
-  cowplot::theme_nothing() +
-  #theme_void() +
-  theme(
-    axis.text = element_blank(),
-    panel.grid = element_blank(),
-    panel.background = element_blank(),
-    panel.border = element_blank(),
-    plot.background = element_rect(color = "red"),
-    plot.margin = margin(0, 0, 0, 0, "null")
-    )
-
-A <- ggdraw() +
-  draw_grob(grid::circleGrob(gp = grid::gpar(fill = "black")), scale = 0.5) +
-  draw_grob(x = -0.6, y = 0, grid::textGrob("foo", gp = grid::gpar(col = "red")))
-
-B <- whn2_plot1 +
-  theme(plot.background = element_rect(color = "red"))
-
-patch <- (A | B | whn2_plot2) /
-  (whn2_plot3 | whn2_plot4) +
-  #plot_layout(design = layout) +
-  plot_annotation(
-    tag_levels = "a",
-    theme = theme(plot.margin = margin())
-  )
-
-ggsave(
-  '~/tmp/whn2_plot.pdf', patch,
   width = 190, height = 100, unit = 'mm'
 )
 ```
