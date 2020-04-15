@@ -8,6 +8,19 @@ For flights, say that flights relate to contacts by some proportion α. Then, a
 fraction β of internal contacts are represented by internal flights. Then c_ij
 (contacts) = α * t_ij (flights) and c_ii = α / β * t_ii.
 
+Show that US commuting and EU flights are pretty similarly distributed, if you
+allow that *internal* flights represent a small fraction (0.1%) of all internal
+contacts. Seems reasonable. Commuting seems like an easier thing to imagine.
+
+(Compare US flight pattern? Point isn't exactly what the network is, it's what
+effect it could have.)
+
+## (new) framing
+
+- Not a big problem in terms of X-sectional observations across large populations, like states. Could become problematic for smaller units, like cities or states.
+- However, hard to say it's *not* a problem, even for states, because very challenging to observe this effect, with so many unknowns.
+- Frame this as an opinion piece or something?
+
 ## Framing
 
 - Use/resistance is important, but it's sometimes hard to detect use/res relationships (cite Turnidge)

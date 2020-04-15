@@ -1,0 +1,37 @@
+---
+title: "Power calculation"
+output: html_notebook
+---
+
+We have
+$$
+d = \Delta \rho |_{\varepsilon=0} (1 - e^{-\varepsilon/\varepsilon_0}) \sqrt{2n_\mathrm{iso}}
+$$
+
+```{r}
+f <- function(dr0, eps, eps0, niso) {
+  d <- dr0 * (1 - exp(-eps / eps0)) * sqrt(2 * niso)
+  print(d)
+  
+  power.t.test(
+    n = NULL,
+    delta = d,
+    sd = 1,
+    power = 0.8,
+    type = "two.sample",
+    alternative = "one.sided"
+  )$n
+}
+
+base <- list(dr0 = 0.2, eps = 1e-4, eps0 = 1e-2, niso = 100)
+
+crossing(
+  name = names(base),
+  multiplier = c(1, 0.5, 2.0)
+) %>%
+  mutate(
+    parms = map2(name, multiplier, ~ modify_in(base, .x, function(xx) xx * .y)),
+    n_per_group = map_dbl(parms, ~ do.call(f, .)),
+    n_demes = 4 * n_per_group
+  )
+```

@@ -7,6 +7,8 @@ author: "Scott Olesen"
 library(knitr)
 library(cowplot)
 library(gridExtra)
+library(patchwork)
+library(magrittr)
 library(tidyverse)
 
 pdf.options(useDingbats = FALSE, useKerning = FALSE)
@@ -19,8 +21,8 @@ knitr::opts_chunk$set(
 ```
 
 ```{r helpers}
-annotate_text <- function(x, y, label, parse = TRUE) {
-  annotate('text', x = x, y = y, label = label, parse = parse)
+annotate_text <- function(x, y, label, parse = TRUE, ...) {
+  annotate('text', x = x, y = y, label = label, parse = parse, ...)
 }
 ```
 
@@ -28,8 +30,8 @@ annotate_text <- function(x, y, label, parse = TRUE) {
 
 ```{r two_pop_diagram}
 dummy_data = tibble(
-  x = c(-2, 2),
-  y = c(-2, 2)
+  x = 2.0 * c(-1, 1),
+  y = 1.6 * c(-1, 1)
 )
 
 circle_data_f = function(cx, cy, r, n = 1e2) {
@@ -54,16 +56,17 @@ line_data = tibble(
 )
 
 twopop_diagram <- ggplot(data = NULL, aes(x, y)) +
-  geom_blank(data = dummy_data) +
+  #geom_blank(data = dummy_data) +
   geom_segment(
     data = line_data,
     aes(xend = xend, yend = yend, linetype = linetype)
   ) +
-  annotate_text(-1, 1.4, 'intervention\npopulation', parse = FALSE) +
-  annotate_text(1, 1.4, 'control\npopulation', parse = FALSE) +
+  annotate_text(-1, 1.4, 'intervention\npopulation', parse = FALSE, size = 3) +
+  annotate_text(1, 1.4, 'control\npopulation', parse = FALSE, size = 3) +
   annotate_text(
     0, -1.4,
-    "paste('interaction strength (', epsilon, ')', )"
+    "paste('interaction strength (', epsilon, ')', )",
+    size = 3
   ) +
   geom_polygon(data = circle_data, aes(fill = fill), color = 'black') +
   scale_fill_manual(values = c('white', 'black')) +
@@ -189,8 +192,8 @@ identity_matrix <- function(n) `diag<-`(matrix(0, ncol = n, nrow = n), 1)
 
 n_repro_pop <- 16
 repro_parms <- whn_base_parms %>%
-  `$<-`("transmission_matrix", identity_matrix(n_repro_pop)) %>%
-  `$<-`("taui", seq(0, 3 / 12, length.out = n_repro_pop))
+  inset2("transmission_matrix", identity_matrix(n_repro_pop)) %>%
+  inset2("taui", seq(0, 3 / 12, length.out = n_repro_pop))
 
 whn_repro <- whn_sim(repro_parms)
 
@@ -239,8 +242,9 @@ whn2 <- tibble(
 
 ```{r whn_barchart_data}
 whn2_plot_data <- whn2 %>%
-  mutate(pop = map(1:n(), ~ c('intervention', 'control'))) %>%
-  unnest() %>%
+  unnest(cols = c(results)) %>%
+  mutate(pop = recode(pop, `1` = "intervention", `2` = "control")) %>%
+  #mutate(pop = map(1:n(), ~ c('intervention', 'control'))) %>%
   filter(epsilon %in% c(0.0, 0.01, 0.1))
 ```
 
@@ -367,6 +371,54 @@ ggsave(
 )
 ```
 
+```{r}
+layout <- "
+  AABBCC
+  AABBCC
+  DDDEEE
+"
+
+# A <- twopop_diagram +
+#   theme(plot.background = element_rect(color = "red"))
+
+A <- tibble(x = c(-0.5, 0.5), y = c(-1, 1)) %>%
+  ggplot(aes(x, y)) +
+  geom_blank() +
+  annotate("point", 0, 0, color = "red") +
+  annotate("point", -1, -1) +
+  annotate("point", 1, 1) +
+  cowplot::theme_nothing() +
+  #theme_void() +
+  theme(
+    axis.text = element_blank(),
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    panel.border = element_blank(),
+    plot.background = element_rect(color = "red"),
+    plot.margin = margin(0, 0, 0, 0, "null")
+    )
+
+A <- ggdraw() +
+  draw_grob(grid::circleGrob(gp = grid::gpar(fill = "black")), scale = 0.5) +
+  draw_grob(x = -0.6, y = 0, grid::textGrob("foo", gp = grid::gpar(col = "red")))
+
+B <- whn2_plot1 +
+  theme(plot.background = element_rect(color = "red"))
+
+patch <- (A | B | whn2_plot2) /
+  (whn2_plot3 | whn2_plot4) +
+  #plot_layout(design = layout) +
+  plot_annotation(
+    tag_levels = "a",
+    theme = theme(plot.margin = margin())
+  )
+
+ggsave(
+  '~/tmp/whn2_plot.pdf', patch,
+  width = 190, height = 100, unit = 'mm'
+)
+```
+
 ## WHN with commuting
 
 ```{r}
@@ -445,8 +497,8 @@ results %>%
   unnest() %>%
   ggplot(aes(tau, rho, color = factor(internal_f))) +
   facet_wrap(~ trans_data_nm) +
-  geom_point() +
-  geom_line()
+  geom_smooth(method = "lm", se = FALSE) +
+  geom_point()
 
 results %>%
   mutate(
