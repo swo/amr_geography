@@ -1,5 +1,6 @@
-source("utils.R")
+#!/usr/bin/env Rscript --vanilla
 
+source("utils.R")
 
 ## WHN two-population model
 
@@ -113,12 +114,7 @@ whn2_plot <- (diagram | whn2_plot1 | whn2_plot2) /
   )
 
 ggsave(
-  'fig/whn2_plot.pdf', whn2_plot,
-  width = 190, height = 100, unit = 'mm'
-)
-
-ggsave(
-  'fig/whn2_plot.png', whn2_plot,
+  'fig/whn2.pdf', whn2_plot,
   width = 190, height = 100, unit = 'mm'
 )
 
@@ -127,17 +123,17 @@ ggsave(
 whn_commuting <- read_tsv("results/whn_commuting.tsv")
 
 whn_commuting_plot <- whn_commuting %>%
-  select(trans_data_nm, internal_f, sim) %>%
-  unnest() %>%
   ggplot(aes(tau, rho, color = factor(internal_f))) +
   facet_wrap(~ trans_data_nm) +
   geom_smooth(method = "lm", se = FALSE) +
   geom_point()
 
 whn_commuting_table <- whn_commuting %>%
+  select(trans_data_nm, internal_f, rho, tau) %>%
+  filter(between(tau, 0.05, 0.20)) %>%
+  nest(data = c(rho, tau)) %>%
   mutate(
-    model_data = map(sim, ~ filter(., between(tau, 0.05, 0.20))),
-    model = map(model_data, ~ lm(rho ~ tau, data = .)),
+    model = map(data, ~ lm(rho ~ tau, data = .)),
     slope = map_dbl(model, ~ coef(.)["tau"]),
     reduction = 1 - slope / max(slope)
   ) %>%

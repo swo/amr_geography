@@ -1,5 +1,14 @@
+MODELS = ["whn", "dtypes"]
+
 rule all:
-    input: expand("results/{model}{result}.tsv", model=["whn", "dtypes"], result=["2", "_commuting"])
+    input:
+        expand("results/{model}{result}.tsv", model=MODELS, result=["2", "_commuting"]),
+        expand("fig/{model}2.pdf", model=MODELS)
+
+rule fig:
+    output: "fig/{x}2.pdf"
+    input: "results/{x}2.tsv", "utils.R", script="{x}_figs.R"
+    shell: "./{input.script}"
 
 rule sim:
     output: "results/{x}2.tsv", "results/{x}_commuting.tsv"

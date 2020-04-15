@@ -6,7 +6,7 @@ library(memoise)
 
 set.seed(5)
 
-memoise <- partial(memoise::memoise, cache = cache_filesystem("cache_memo/"))
+my_memoise <- partial(memoise::memoise, cache = cache_filesystem("cache/"))
 
 # Check that:
 # - All entries in the transmission matrix are nonnegative

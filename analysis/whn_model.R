@@ -47,7 +47,7 @@ whn_ode_func <- function(time_, state_vector, parms) {
 }
 
 # Run the simulation
-whn_sim <- function(parms) {
+whn_sim_nomemo <- function(parms) {
   # Check that all the required parameters have been input
   parm_names <- c("beta", "cost", "k", "u", "taui", "transmission_matrix")
   stopifnot(all(parm_names %in% names(parms)))
@@ -87,4 +87,4 @@ whn_sim <- function(parms) {
     )
 }
 
-memo_whn_sim <- memoise(whn_sim)
+whn_sim <- my_memoise(whn_sim_nomemo)

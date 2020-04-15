@@ -113,7 +113,7 @@ dtypes_ode_func <- function(t, state_vector, parms) {
   })
 }
 
-dtypes_sim <- function(parms) {
+dtypes_sim_nomemo <- function(parms) {
   stopifnot(
     setequal(
       names(parms),
@@ -152,7 +152,7 @@ dtypes_sim <- function(parms) {
     left_join(tibble(pop = 1:n_pop, tau = parms$tau_i), by = 'pop')
 }
 
-memo_dtypes_sim <- memoise(dtypes_sim)
+dtypes_sim <- my_memoise(dtypes_sim_nomemo)
 
 dtypes_epsilon_values <- c(0, 1e-4, 0.001, 0.005, 0.01, 0.0175, 0.025, 0.05, 0.075, 0.1)
 

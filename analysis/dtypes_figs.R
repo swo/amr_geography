@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript --vanilla
+
 source("utils.R")
 
 # Two-population ------------------------------------------------------
@@ -31,12 +33,7 @@ dtypes2_plot <- dtypes2 %>%
   theme(legend.position = c(0.5, 0.75))
 
 ggsave(
-  'fig/dtypes2_plot.pdf', dtypes2_plot,
-  width = 88, height = 80, unit = 'mm'
-)
-
-ggsave(
-  'fig/dtypes2_plot.png', dtypes2_plot,
+  'fig/dtypes2.pdf', dtypes2_plot,
   width = 88, height = 80, unit = 'mm'
 )
 
@@ -45,16 +42,16 @@ ggsave(
 dtypes_commuting <- read_tsv("results/dtypes_commuting.tsv")
 
 dtypes_commuting_plot <- dtypes_commuting %>%
-  select(trans_data_nm, internal_f, sim) %>%
-  unnest() %>%
   ggplot(aes(tau, rho, color = factor(internal_f))) +
   facet_wrap(~ trans_data_nm) +
   geom_point() +
   geom_line()
 
 dtypes_commuting_table <- dtypes_commuting %>%
+  select(trans_data_nm, internal_f, tau, rho) %>%
+  nest(data = c(tau, rho)) %>%
   mutate(
-    model = map(sim, ~ lm(rho ~ tau, data = .)),
+    model = map(data, ~ lm(rho ~ tau, data = .)),
     slope = map_dbl(model, ~ coef(.)["tau"]),
     reduction = 1 - slope / max(slope)
   ) %>%

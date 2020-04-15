@@ -9,7 +9,7 @@ whn_2pop_sim <- function(tau1, tau2, epsilon) {
     `$<-`("transmission_matrix", epsilon_matrix(epsilon)) %>%
     `$<-`("taui", c(tau1, tau2))
 
-  memo_whn_sim(parms)
+  whn_sim(parms)
 }
 
 whn_epsilon_values <- c(0, 1e-4, 1e-3, 0.01, 0.0175, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)

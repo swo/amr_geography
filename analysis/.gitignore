@@ -1,10 +1,12 @@
+#old
 *.html
 *.pdf
 *_cache/
 *_files/
 old/
-fig/
 work/
-cache_memo/
 
-*.tsv
+#new
+cache/
+results/
+fig/
