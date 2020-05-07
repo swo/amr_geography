@@ -3,7 +3,8 @@ MODELS = ["whn", "dtypes"]
 rule all:
     input:
         expand("results/{model}{result}.tsv", model=MODELS, result=["2", "_commuting"]),
-        expand("fig/{model}2.pdf", model=MODELS)
+        expand("fig/{model}2.pdf", model=MODELS),
+        "results/power.tsv"
 
 rule fig:
     output: "fig/{x}2.pdf"
@@ -16,6 +17,6 @@ rule sim:
     shell: "./{input.script}"
 
 rule power:
-    output: "power.tsv"
+    output: "result/spower.tsv"
     input: "power.R"
     shell: "./{input}"

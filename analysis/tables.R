@@ -1,3 +1,5 @@
+#!/usr/bin/env Rscript --vanilla
+
 source("utils.R")
 
 whn2 <- read_tsv("results/whn2.tsv")
@@ -28,6 +30,8 @@ epsilon0 <- data %>%
     ciu = map_dbl(ci, last)
   ) %>%
   select(sim, estimate, cil, ciu)
+
+write_tsv(epsilon0, "results/epsilon0.tsv")
 
 # Reduction in $\Delta \rho / \Delta \tau$ against $\epsilon$
 # Percent reduction, compared to ε=0 ----------------------------------

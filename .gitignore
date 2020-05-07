@@ -10,7 +10,6 @@ doc/
 
 # data files
 *.csv
-*.tsv
 *.dta
 *.zip
 *.xlsx
