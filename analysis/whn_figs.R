@@ -1,4 +1,4 @@
-#!/usr/bin/env Rscript --vanilla
+#!/usr/bin/env Rscript
 
 source("utils.R")
 
@@ -119,25 +119,3 @@ ggsave(
   "fig/whn_2pop.pdf", whn_2pop_plot,
   width = 190, height = 100, unit = "mm"
 )
-
-# WHN with commuting --------------------------------------------------
-
-whn_commuting <- read_rds("results/whn_commuting.rds")
-
-whn_commuting_plot <- whn_commuting %>%
-  ggplot(aes(tau, rho, color = factor(internal_f))) +
-  facet_wrap(~ trans_data_nm) +
-  geom_smooth(method = "lm", se = FALSE) +
-  geom_point()
-
-whn_commuting_table <- whn_commuting %>%
-  select(trans_data_nm, internal_f, rho, tau) %>%
-  filter(between(tau, 0.05, 0.20)) %>%
-  nest(data = c(rho, tau)) %>%
-  mutate(
-    model = map(data, ~ lm(rho ~ tau, data = .)),
-    slope = map_dbl(model, ~ coef(.)["tau"]),
-    reduction = 1 - slope / max(slope)
-  ) %>%
-  select(trans_data_nm, internal_f, slope, reduction) %>%
-  arrange(reduction)

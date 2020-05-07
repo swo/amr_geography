@@ -4,14 +4,23 @@ SIMS = ["2pop", "commuting"]
 rule all:
     input:
         expand("fig/{model}_2pop.pdf", model=MODELS),
-        "results/power.tsv"
+        "fig/commuting.pdf",
+        "results/power.tsv",
+        "results/commuting_reduction.tsv"
 
-# rule tables:
-#     pass
+rule tables:
+    output: expand("results/{x}.tsv", x=["2pop_reduction", "epsilon0"])
+    input: expand("results/{model}_{sim}.rds", model=MODELS, sim=SIMS), script="tables.R"
+    shell: "./{input.script}"
 
-rule fig:
-    output: expand("fig/{{model}}_{sim}.pdf", sim=SIMS)
-    input: expand("results/{{model}}_{sim}.rds", sim=SIMS), "utils.R", script="{model}_figs.R"
+rule commuting_analysis:
+    output: "fig/commuting.pdf", "results/commuting.tsv"
+    input: expand("results/{model}_commuting.rds", model=MODELS), "utils.R", script="commuting_analysis.R"
+    shell: "./{input.script}"
+
+rule twopop_fig:
+    output: "fig/{model}_2pop.pdf"
+    input: "results/{model}_2pop.rds", "utils.R", script="{model}_figs.R"
     shell: "./{input.script}"
 
 rule sim:
@@ -21,5 +30,5 @@ rule sim:
 
 rule power:
     output: "results/power.tsv"
-    input: "power.R"
-    shell: "./{input}"
+    input: script="power.R"
+    shell: "./{input.script}"

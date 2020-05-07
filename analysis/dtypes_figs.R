@@ -40,24 +40,3 @@ ggsave(
   "fig/dtypes_2pop.pdf", dtypes_2pop_plot,
   width = 88, height = 80, unit = "mm"
 )
-
-# Commuting -----------------------------------------------------------
-
-dtypes_commuting <- read_rds("results/dtypes_commuting.rds")
-
-dtypes_commuting_plot <- dtypes_commuting %>%
-  ggplot(aes(tau, rho, color = factor(internal_f))) +
-  facet_wrap(~ trans_data_nm) +
-  geom_point() +
-  geom_line()
-
-dtypes_commuting_table <- dtypes_commuting %>%
-  select(trans_data_nm, internal_f, tau, rho) %>%
-  nest(data = c(tau, rho)) %>%
-  mutate(
-    model = map(data, ~ lm(rho ~ tau, data = .)),
-    slope = map_dbl(model, ~ coef(.)["tau"]),
-    reduction = 1 - slope / max(slope)
-  ) %>%
-  select(trans_data_nm, internal_f, slope, reduction) %>%
-  arrange(reduction)

@@ -2,18 +2,20 @@
 
 source("utils.R")
 
-whn2 <- read_tsv("results/whn2.tsv")
-dtypes2 <- read_tsv("results/dtypes2.tsv")
+whn_2pop <- read_rds("results/whn_2pop.rds")
+dtypes2 <- read_rds("results/dtypes_2pop.rds")
 
 data <- bind_rows(
-  "WHN" = whn2,
-  "Dtypes" = dtypes2,
+  "WHN" = whn_2pop,
+  "Dtypes" = dtypes_2pop,
   .id = "sim"
 ) %>%
-  mutate(dr_du = if_else(delta_rho == 0, 0, delta_rho / delta_tau))
+  mutate(
+    delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
+    dr_du = if_else(delta_rho == 0, 0, delta_rho / delta_tau)
+  )
 
-# Estimates of epsilon0
-
+# Estimates of epsilon0 -------------------------------------------------------
 epsilon0 <- data %>%
   select(sim, epsilon, dr_du) %>%
   filter(is.finite(dr_du)) %>%
@@ -33,17 +35,17 @@ epsilon0 <- data %>%
 
 write_tsv(epsilon0, "results/epsilon0.tsv")
 
-# Reduction in $\Delta \rho / \Delta \tau$ against $\epsilon$
-# Percent reduction, compared to ε=0 ----------------------------------
+# Percent reduction, compared to ε=0, in 2-pop models -------------------------
 
-    # key = str_c(model, ' Δτ=', delta_tau)
-  # ) %>%
-  # filter(
-    # delta_tau %in% c(0.05, 0.10),
-    # epsilon %in% c(0, 1e-4, 1e-3, 1e-2, 1e-1)
-  # ) %>%
-  # group_by(model, delta_tau) %>%
-  # mutate(pct_red = scales::percent(1 - dr_du / dr_du[epsilon == 0], 0.1)) %>%
-  # ungroup() %>%
-  # select(epsilon, key, pct_red) %>%
-  # spread(key, pct_red)
+twopop_reduction <- data %>%
+  filter(
+    delta_tau %in% c(0.05, 0.10),
+    epsilon %in% c(0, 1e-4, 1e-3, 1e-2, 1e-1)
+  ) %>%
+  group_by(sim, delta_tau) %>%
+  mutate(reduction = 1 - dr_du / dr_du[epsilon == 0]) %>%
+  ungroup() %>%
+  select(sim, delta_tau, epsilon, reduction)
+
+write_tsv(twopop_reduction, "results/2pop_reduction.tsv")
+
