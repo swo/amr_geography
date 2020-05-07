@@ -41,4 +41,4 @@ results <- tibble(name = names(all_parms)) %>%
   bind_rows(base_results) %>%
   unnest_wider(col = parms)
 
-print(results)
+write_tsv(results, "power.tsv")
