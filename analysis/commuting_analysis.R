@@ -39,4 +39,4 @@ commuting_reduction <- commuting %>%
   select(model, trans_data_nm, internal_f, slope, reduction) %>%
   arrange(model, reduction)
 
-write_tsv(commuting_table, "results/commuting_reduction.tsv")
+write_tsv(commuting_reduction, "results/commuting_reduction.tsv")

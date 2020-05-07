@@ -14,13 +14,13 @@ rule tables:
     shell: "./{input.script}"
 
 rule commuting_analysis:
-    output: "fig/commuting.pdf", "results/commuting.tsv"
+    output: "fig/commuting.pdf", "results/commuting_reduction.tsv"
     input: expand("results/{model}_commuting.rds", model=MODELS), "utils.R", script="commuting_analysis.R"
     shell: "./{input.script}"
 
 rule twopop_fig:
-    output: "fig/{model}_2pop.pdf"
-    input: "results/{model}_2pop.rds", "utils.R", script="{model}_figs.R"
+    output: expand("fig/{model}_2pop.pdf", model=MODELS)
+    input: expand("results/{model}_2pop.rds", model=MODELS), "utils.R", script="2pop_figs.R"
     shell: "./{input.script}"
 
 rule sim:
