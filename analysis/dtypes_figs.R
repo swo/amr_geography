@@ -4,9 +4,13 @@ source("utils.R")
 
 # Two-population ------------------------------------------------------
 
-dtypes2 <- read_tsv("results/dtypes2.tsv")
+dtypes_2pop <- read_rds("results/dtypes_2pop.rds")
 
-dtypes2_plot <- dtypes2 %>%
+dtypes_2pop_plot <- dtypes_2pop %>%
+  mutate(
+    delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
+    dr_du = delta_rho / delta_tau
+  ) %>%
   ggplot(aes(epsilon, dr_du, group = factor(delta_tau))) +
   geom_point(aes(shape = factor(delta_tau))) +
   geom_line() +
@@ -33,13 +37,13 @@ dtypes2_plot <- dtypes2 %>%
   theme(legend.position = c(0.5, 0.75))
 
 ggsave(
-  'fig/dtypes2.pdf', dtypes2_plot,
-  width = 88, height = 80, unit = 'mm'
+  "fig/dtypes_2pop.pdf", dtypes_2pop_plot,
+  width = 88, height = 80, unit = "mm"
 )
 
 # Commuting -----------------------------------------------------------
 
-dtypes_commuting <- read_tsv("results/dtypes_commuting.tsv")
+dtypes_commuting <- read_rds("results/dtypes_commuting.rds")
 
 dtypes_commuting_plot <- dtypes_commuting %>%
   ggplot(aes(tau, rho, color = factor(internal_f))) +

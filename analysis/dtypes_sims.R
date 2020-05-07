@@ -5,7 +5,7 @@ source("dtypes_model.R")
 
 # D-types two-population ----------------------------------------------
 
-dtypes2 <- tibble(
+dtypes_2pop <- tibble(
   base_tau = 0.125,
   delta_tau = c(0.05, 0.10),
   tau1 = base_tau - delta_tau / 2,
@@ -13,13 +13,12 @@ dtypes2 <- tibble(
 ) %>%
   crossing(epsilon = dtypes_epsilon_values) %>%
   mutate(
-    results = pmap(list(tau1, tau2, epsilon), dtypes_2pop_sim),
-    delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)),
-    dr_du = delta_rho / delta_tau
+    simulation_id = 1:n(),
+    results = pmap(list(tau1, tau2, epsilon), dtypes_2pop_sim)
   ) %>%
-  select(base_tau, delta_tau, tau1, tau2, epsilon, delta_rho, dr_du)
+  select(simulation_id, everything())
 
-write_tsv(dtypes2, "results/dtypes2.tsv")
+write_rds(dtypes_2pop, "results/dtypes_2pop.rds")
 
 # D-types with commuting ----------------------------------------------
 
@@ -40,10 +39,10 @@ dtypes_commuting <- crossing(
   ) %>%
   bind_rows(crossing(trans_data_nm = c("eu_flights", "us_commuting"), internal_f = NA, parms = list(null_parms))) %>%
   mutate(
+    simulation_id = 1:n(),
     sim_raw = map(parms, dtypes_sim),
     sim = map(sim_raw, dtypes_simplify_results)
   ) %>%
-  select(trans_data_nm, internal_f, sim) %>%
-  unnest(cols = c(sim))
+  select(simulation_id, everything())
 
-write_tsv(dtypes_commuting, "results/dtypes_commuting.tsv")
+write_rds(dtypes_commuting, "results/dtypes_commuting.rds")

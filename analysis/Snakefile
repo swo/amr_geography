@@ -1,22 +1,25 @@
 MODELS = ["whn", "dtypes"]
+SIMS = ["2pop", "commuting"]
 
 rule all:
     input:
-        expand("results/{model}{result}.tsv", model=MODELS, result=["2", "_commuting"]),
-        expand("fig/{model}2.pdf", model=MODELS),
+        expand("fig/{model}_2pop.pdf", model=MODELS),
         "results/power.tsv"
 
+# rule tables:
+#     pass
+
 rule fig:
-    output: "fig/{x}2.pdf"
-    input: "results/{x}2.tsv", "utils.R", script="{x}_figs.R"
+    output: expand("fig/{{model}}_{sim}.pdf", sim=SIMS)
+    input: expand("results/{{model}}_{sim}.rds", sim=SIMS), "utils.R", script="{model}_figs.R"
     shell: "./{input.script}"
 
 rule sim:
-    output: "results/{x}2.tsv", "results/{x}_commuting.tsv"
-    input: "{x}_model.R", "utils.R", script="{x}_sims.R"
+    output: expand("results/{{model}}_{sim}.rds", sim=SIMS)
+    input: "{model}_model.R", "utils.R", script="{model}_sims.R"
     shell: "./{input.script}"
 
 rule power:
-    output: "result/spower.tsv"
+    output: "results/power.tsv"
     input: "power.R"
     shell: "./{input}"
