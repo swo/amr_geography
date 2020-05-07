@@ -5,8 +5,7 @@ rule all:
     input:
         expand("fig/{model}_2pop.pdf", model=MODELS),
         "fig/commuting.pdf",
-        "results/power.tsv",
-        "results/commuting_reduction.tsv"
+        expand("results/{x}.tsv", x=["power", "2pop_reduction", "commuting_reduction", "epsilon0"])
 
 rule tables:
     output: expand("results/{x}.tsv", x=["2pop_reduction", "epsilon0"])

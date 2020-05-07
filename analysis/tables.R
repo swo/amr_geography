@@ -3,7 +3,7 @@
 source("utils.R")
 
 whn_2pop <- read_rds("results/whn_2pop.rds")
-dtypes2 <- read_rds("results/dtypes_2pop.rds")
+dtypes_2pop <- read_rds("results/dtypes_2pop.rds")
 
 data <- bind_rows(
   "WHN" = whn_2pop,
