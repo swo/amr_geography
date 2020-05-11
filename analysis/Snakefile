@@ -7,7 +7,12 @@ rule all:
         "fig/commuting.pdf",
         expand("results/{x}.tsv", x=["power", "2pop_reduction", "commuting_reduction", "epsilon0"])
 
-rule tables:
+rule empirical:
+    output: "fig/cross_sectional.pdf"
+    input: script="empirical_analysis.R"
+    shell: "./{input.script}"
+
+rule simulation_tables:
     output: expand("results/{x}.tsv", x=["2pop_reduction", "epsilon0"])
     input: expand("results/{model}_{sim}.rds", model=MODELS, sim=SIMS), script="tables.R"
     shell: "./{input.script}"

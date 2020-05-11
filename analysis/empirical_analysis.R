@@ -96,7 +96,9 @@ unit_data <- bind_rows(
 ) %>%
   mutate(dataset = str_c(data_source, ' ', bugdrug)) %>%
   select(dataset, unit, f_resistant, use, density, temperature, income) %>%
-  nest(-dataset) %>%
+  group_by(dataset) %>%
+  nest() %>%
+  ungroup() %>%
   mutate_at('dataset', fct_inorder)
 
 # Load adjacency data ---------------------------------------------------------
@@ -118,7 +120,8 @@ adjacency_db <- bind_rows(us_adjacency, eu_adjacency)
 # Load commuting/flight data --------------------------------------------------
 
 us_commuting <- read_tsv('../db/us/commuting.tsv') %>%
-  rename_all(~ str_replace(., '^state', 'unit'))
+  #rename_all(~ str_replace(., '^state', 'unit'))
+  rename(unit1 = from_state, unit2 = to_state)
 
 eu_commuting <- read_tsv('../db/europe/commuting.tsv') %>%
   rename_all(~ str_replace(., '^country', 'unit')) %>%
@@ -127,9 +130,9 @@ eu_commuting <- read_tsv('../db/europe/commuting.tsv') %>%
 commuting_db <- bind_rows(
   'US' = us_commuting,
   'Europe' = eu_commuting,
-  .id = 'dataset'
+  .id = 'setting'
 ) %>%
-  mutate_at('dataset', fct_inorder)
+  mutate_at('setting', fct_inorder)
 
 
 # Use-resistance in different datasets ----------------------------------------
@@ -146,7 +149,7 @@ breaker <- function(digits) {
 }
 
 obs_plot <- unit_data %>%
-  unnest() %>%
+  unnest(cols = c(data)) %>%
   ggplot(aes(use, f_resistant * 100)) +
   facet_wrap(~ dataset, scales = 'free') +
   geom_smooth(method = 'lm', color = 'gray50') +
@@ -164,7 +167,7 @@ obs_plot <- unit_data %>%
     plot.margin = margin(1, 5, 1, 1, 'mm')
   )
 
-ggsave('fig/obs_plot.pdf')
+ggsave('fig/cross_sectional.pdf')
 
 # Pairs data ------------------------------------------------------------------
 
@@ -206,8 +209,8 @@ cross_data <- unit_data %>%
 # Commuting histogram ---------------------------------------------------------
 
 commuting_histogram <- cross_data %>%
-  select(cross_data) %>%
-  unnest() %>%
+  select(dataset1 = dataset, cross_data) %>%
+  unnest(cols = c(cross_data)) %>%
   select(dataset, unit1, unit2, adjacent, f_commuting) %>%
   filter(
     unit1 < unit2,
