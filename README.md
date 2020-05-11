@@ -1,12 +1,13 @@
 # To do
 
-- Change `...2.tsv` to `..._2.tsv`
-- Make Snakefile outputs for the analytics too
-- Fit the dr/du curve
+7 May: Analyses should be done. Now it's about stitching together the new manuscript.
 
-# Spillover paper
+Include a point that says that, given that adjacent US states have epsilon ~
+10^{-2.5} and non-adjacent have 10^-4, we expect 0.4% reduction in dr/du vs.
+ε=0 and 29%, respectively. So basically we should be getting a big decline. Use
+that in the power calculations?
 
-- Consider including a graph that shows reduction in dr/du ~ epsilon for different u, models, etc. as a supplemental
+But not sure if I can read off ε as easily from the commuting data as I thought I could...
 
 ## Methods
 
