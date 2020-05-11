@@ -1,24 +1,9 @@
----
-title: "Geography and associations between antibiotic use and resistance: observational data"
-author: "Scott Olesen"
----
+#!/usr/bin/env Rscript
 
-```{r global_options, echo = FALSE, message = FALSE}
-library(knitr)
-library(cowplot)
-library(tidyverse)
+source("utils.R")
 
-knitr::opts_chunk$set(
-  echo = FALSE, warning = FALSE, message = FALSE,
-  cache = TRUE, autodep = TRUE
-)
+# Load US data --------------------------------------------------------
 
-pdf.options(useDingbats = FALSE, useKerning = FALSE)
-```
-
-# Load data
-
-```{r state_data}
 us_temp <- read_tsv('../db/us/temperature.tsv')
 us_income <- read_tsv('../db/us/income.tsv')
 us_density <- read_tsv('../db/us/density.tsv')
@@ -26,9 +11,7 @@ us_density <- read_tsv('../db/us/density.tsv')
 us_state_data <- us_temp %>%
   left_join(us_income, by = 'state') %>%
   left_join(us_density, by = 'state')
-```
 
-```{r marketscan_data}
 marketscan_res <- read_tsv('../data/ms-medicare-ro/abg_state.tsv') %>%
   rename(drug = drug_group) %>%
   mutate(bugdrug = case_when(
@@ -41,7 +24,7 @@ marketscan_res <- read_tsv('../data/ms-medicare-ro/abg_state.tsv') %>%
 
 marketscan_use <- read_tsv('../data/ms-medicare-ro/ineq_marketscan.tsv') %>%
   rename(drug = drug_group, use = total_use) %>%
-  filter(drug %in% c('quinolone', 'beta_lactam', 'macrolide'))
+  filter(drug %in% c('quinolone', 'macrolide'))
 
 marketscan <- marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
@@ -50,9 +33,7 @@ marketscan <- marketscan_use %>%
     unit = state, bugdrug, use, f_resistant,
     density, income, temperature
   )
-```
 
-```{r nhsn_ims}
 nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
   rename(state_abbreviation = state) %>%
   filter(state_abbreviation %in% datasets::state.abb) %>%
@@ -67,22 +48,17 @@ nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
     unit = state, bugdrug, use, f_resistant,
     density, income, temperature
   )
-```
 
-For the European data, we convert to "treatments" per person per year, assuming a certain conversion from DDD to treatments. This is just an *ad hoc* adjustment to get the European data to the same scales as used in the simulations and the US data.
+# Load European data --------------------------------------------------
 
-```{r ecdc_convert}
+# Conversion from DID (defined daily doses per 1k inhabitants per day)
+# to CPY (claims per person per year)
 did_cpy_map <- tibble(
   drug = c('beta_lactam', 'quinolone', 'macrolide'),
   ddd_per_tx = c(10, 10, 7),
   cpy_per_did = 365 / (1e3 * ddd_per_tx)
 )
 
-did_cpy_map %>%
-  kable(caption = 'DDD to treatment conversion')
-```
-
-```{r ecdc}
 eu_temp <- read_tsv('../db/europe/temperature.tsv')
 eu_income <- read_tsv('../db/europe/income.tsv')
 eu_density <- read_tsv('../db/europe/density.tsv')
@@ -108,9 +84,10 @@ europe <- read_tsv('../data/ecdc/data.tsv') %>%
   )
 
 eu_units <- unique(europe$unit)
-```
 
-```{r combine_data}
+
+# Build combined use/resistance dataset ---------------------------------------
+
 unit_data <- bind_rows(
   'MarketScan/RO' = marketscan,
   'Xponent/NHSN' = nhsn,
@@ -121,9 +98,9 @@ unit_data <- bind_rows(
   select(dataset, unit, f_resistant, use, density, temperature, income) %>%
   nest(-dataset) %>%
   mutate_at('dataset', fct_inorder)
-```
 
-```{r adjacency_data}
+# Load adjacency data ---------------------------------------------------------
+
 us_adjacency <- read_tsv('../db/us/adjacency.tsv') %>%
   mutate(adjacent = TRUE) %>%
   complete(state1, state2) %>%
@@ -137,9 +114,9 @@ eu_adjacency <- read_tsv('../db/europe/adjacency.tsv') %>%
   rename(unit1 = country1, unit2 = country2)
 
 adjacency_db <- bind_rows(us_adjacency, eu_adjacency)
-```
 
-```{r commuting_data}
+# Load commuting/flight data --------------------------------------------------
+
 us_commuting <- read_tsv('../db/us/commuting.tsv') %>%
   rename_all(~ str_replace(., '^state', 'unit'))
 
@@ -153,11 +130,10 @@ commuting_db <- bind_rows(
   .id = 'dataset'
 ) %>%
   mutate_at('dataset', fct_inorder)
-```
 
-# Use-resistance in different datasets
 
-```{r use_resistance_plots}
+# Use-resistance in different datasets ----------------------------------------
+
 round_up <- function(x, digits) ceiling(x * 10 ** digits) / 10 ** digits
 round_down <- function(x, digits) floor(x * 10 ** digits) / 10 ** digits
 
@@ -188,16 +164,12 @@ obs_plot <- unit_data %>%
     plot.margin = margin(1, 5, 1, 1, 'mm')
   )
 
-show(obs_plot)
-ggsave('fig/obs_plot.pdf', plot = obs_plot)
-ggsave('fig/obs_plot.png', plot = obs_plot)
-```
+ggsave('fig/obs_plot.pdf')
 
-# Pairs data
+# Pairs data ------------------------------------------------------------------
 
-```{r cross_data}
 odds <- function(p) p / (1 - p)
-log_odds_ratio <- function(p, q) log(odds(p)) - log(odds(q))
+log_odds_ratio <- function(p, q) log(odds(p) / odds(q))
 
 cross_units <- function(df) {
   df %>%
@@ -230,11 +202,9 @@ cross_data <- unit_data %>%
     cross_data = map(data, cross_units),
     l1o_cross_data = map(cross_data, leave_one_out_from_cross)
   )
-```
 
-## Commuting histogram
+# Commuting histogram ---------------------------------------------------------
 
-```{r commuting_histogram}
 commuting_histogram <- cross_data %>%
   select(cross_data) %>%
   unnest() %>%
@@ -260,21 +230,15 @@ commuting_histogram <- cross_data %>%
     legend.title = element_blank()
   )
 
-show(commuting_histogram)
-ggsave('fig/commuting_histogram.pdf', plot = commuting_histogram)
-ggsave('fig/commuting_histogram.png', plot = commuting_histogram)
-```
+ggsave('fig/commuting_histogram.pdf')
 
-Some of the pairs had zero interactions and don't appear in this figure:
-
-```{r}
+cat('Number of pairs with 0 commuting fraction\n')
 commuting_db %>%
   filter(unit1 < unit2, !is.na(f_commuting)) %>%
-  count(dataset, f_commuting == 0) %>%
-  kable(caption = 'Number of pairs with 0 commuting fraction')
-```
+  count(dataset, f_commuting == 0)
 
-```{r analysis_helpers}
+# Adjacency analysis ----------------------------------------------------------
+
 sigfig <- function(x, n = 2) {
   formatC(signif(x, digits = n), digits = n, format = "fg", flag = "#")
 }
@@ -312,9 +276,7 @@ analysis_f <- function(model_f, coef_f, ratio_f) {
 }
 
 rlm <- MASS::rlm
-```
 
-```{r adjacency_analysis}
 adjacency_results <- analysis_f(
   function(df) with(df, {
     list(
@@ -325,9 +287,7 @@ adjacency_results <- analysis_f(
   function(model) with(model, { adj_med - nonadj_med }),
   function(model) with(model, { (adj_med - nonadj_med) / nonadj_med })
 )
-```
 
-```{r adjacency_lorru}
 adjacency_lorru_results <- analysis_f(
   function(df) with(df, {
     list(
@@ -338,35 +298,27 @@ adjacency_lorru_results <- analysis_f(
   function(model) with(model, { adj_med - nonadj_med }),
   function(model) with(model, { (adj_med - nonadj_med) / nonadj_med })
 )
-```
 
-```{r adjacency_with_rlm}
 adjacency_rlm_results <- analysis_f(
   function(df) rlm(dr_du ~ adjacent, data = df),
   function(model) coef(model)['adjacentTRUE'],
   function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
 )
-```
 
-```{r adjacency_with_covariates}
 adjacency_covariates_results <- analysis_f(
   function(df) rlm(dr_du ~ adjacent + d_income + d_temperature + d_density, data = df),
   function(model) coef(model)['adjacentTRUE'],
   function(model) coef(model) %>% { .['adjacentTRUE'] / .['(Intercept)'] }
 )
-```
 
-```{r commuting_analysis}
 commuting_results <- analysis_f(
   function(df) rlm(dr_du ~ f_commuting, data = df),
   function(model) coef(model)['f_commuting'] * 1e-4,
   function(model) coef(model) %>% { .['f_commuting'] / .['(Intercept)'] * 1e-4 }
 )
-```
 
-### Tables
+# Tables ----------------------------------------------------------------------
 
-```{r}
 show_results <- function(df, caption) {
   df %>%
     mutate(
@@ -385,34 +337,45 @@ show_results <- function(df, caption) {
       coef_display = str_glue('{coef} ({coef_cil} to {coef_ciu}){coef_star}'),
       ratio_display = str_glue('{ratio} ({ratio_cil} to {ratio_ciu}){ratio_star}')
     ) %>%
-    select(dataset, coef_display, ratio_display) %>%
-    kable(caption = caption)
+    select(dataset, coef_display, ratio_display)
 }
 
-show_results(
-  adjacency_results,
-  'Comparing adjacent and non-adjacent pairs. "Coef" is difference in median Δρ/Δτ between the two groups. "Ratio" is that difference divided by overall median.'
-)
+bind_rows(
+  "adjacency" = adjacency_results,
+  "adjacency_lorru" = adjacency_lorru_results,
+  "adjacency_rlm" = adjacency_rlm_results,
+  "commuting" = commuting_results,
+  .id = "model_type"
+) %>%
+  nest(-model_type) %>%
+  mutate(results = map(data, show_results)) %>%
+  select(model_type, results) %>%
+  unnest() %>%
+  write_tsv("results/empirical.tsv")
 
-show_results(
-  adjacency_lorru_results,
-  'As above, but using LOR(ρ)/Δτ'
-)
+# show_results(
+#   adjacency_results,
+#   'Comparing adjacent and non-adjacent pairs. "Coef" is difference in median Δρ/Δτ between the two groups. "Ratio" is that difference divided by overall median.'
+# )
+# 
+# show_results(
+#   adjacency_lorru_results,
+#   'As above, but using LOR(ρ)/Δτ'
+# )
 
-show_results(
-  adjacency_rlm_results,
-  'Using robust regression: Δρ/Δτ ~ Α. "Coef" is βΑ, "ratio" is βΑ/μ.'
-)
+# show_results(
+#   adjacency_rlm_results,
+#   'Using robust regression: Δρ/Δτ ~ Α. "Coef" is βΑ, "ratio" is βΑ/μ.'
+# )
 
-show_results(
-  commuting_results,
-  'Robust regression on Δρ/Δτ ~ C, where C is the commuting fraction. "Coef" is β * 10^-4. "Ratio" is β * 10^-4 / μ.'
-)
-```
+# show_results(
+#   commuting_results,
+#   'Robust regression on Δρ/Δτ ~ C, where C is the commuting fraction. "Coef" is β * 10^-4. "Ratio" is β * 10^-4 / μ.'
+# )
+# ```
 
-### Plots
+# Plots -----------------------------------------------------------------------
 
-```{r adjacency_plot}
 boxplot_data_f <- function(df, ymin, ymax) {
   df %>%
     nest(-adjacent) %>%
@@ -471,12 +434,8 @@ boxplot_f <- function(cross_data, f_to_keep) {
 }
 
 adjacency_plot <- boxplot_f(cross_data, 0.90)
-show(adjacency_plot)
 ggsave('fig/adjacency_plot.pdf', plot = adjacency_plot)
-ggsave('fig/adjacency_plot.png', plot = adjacency_plot)
-```
 
-```{r commuting_plot}
 # swo: can include the rlm on the un-logged x values, as reported in the
 # data, but they look weird and curvy when log-ing the x-vals
 
@@ -499,7 +458,4 @@ commute_plot <- cross_data %>%
   theme_cowplot() +
   theme(strip.background = element_blank())
 
-show(commute_plot)
 ggsave('fig/commute_plot.pdf', plot = commute_plot)
-ggsave('fig/commute_plot.png', plot = commute_plot)
-```
