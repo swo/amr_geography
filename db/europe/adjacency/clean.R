@@ -1,33 +1,31 @@
 #!/usr/bin/env Rscript
 
-units <- read_tsv('../../europe_units.tsv') %$%
-  unit
+library(tidyverse)
+library(countrycode)
 
-codes <- read_csv('COW country codes.csv') %>%
-  select(country = StateNme, code = CCode) %>%
-  distinct()
+units <- read_tsv("../../../data/ecdc/data.tsv") %>%
+  pull(country) %>%
+  unique() %>%
+  countrycode(., origin = "country.name", destination = "iso3c")
 
-pairs <- read_csv('DirectContiguity320/contdird.csv') %>%
-  select(code1 = state1no, code2 = state2no, year, contiguity_type = conttype)
-
-adjacency <- pairs %>%
-  left_join(codes, by = c('code1' = 'code')) %>% rename(unit1 = country) %>%
-  left_join(codes, by = c('code2' = 'code')) %>% rename(unit2 = country) %>%
+adjacency <- read_csv("contdird.csv") %>%
   # require land/river contiguity (not large water bodies)
-  filter(contiguity_type == 1) %>%
-  filter(between(year, 2011, 2015)) %>%
-  select(year, unit1, unit2)
+  filter(conttype == 1, year == 2011) %>%
+  select(unit1 = state1ab, unit2 = state2ab) %>%
+  mutate_at(c("unit1", "unit2"), ~ countrycode(., origin = "cowc", destination = "iso3c")) %>%
+  # keep only European pairs
+  filter(unit1 %in% units, unit2 %in% units) %>%
+  # make it look nice
+  filter(unit1 < unit2) %>%
+  arrange(unit1)
 
 # make sure we got all the units, except for the islands
-my_units <- adjacency %$%
-  c(unit1, unit2) %>%
+my_units <- adjacency %>%
+  { c(.$unit1, .$unit2) } %>%
   unique()
 
+# make sure Iceland and Malta are missing (i.e., are adjacent to nothing)
 missing_units <- setdiff(units, my_units)
-stopifnot(setequal(missing_units, c('Iceland', 'Malta')))
+stopifnot(setequal(missing_units, c("ISL", "MLT")))
 
-adjacency %>%
-  filter(unit1 %in% units, unit2 %in% units) %>%
-  select(-year) %>%
-  distinct() %>%
-  write_tsv('../../europe_adjacency.tsv')
+write_tsv(adjacency, "../adjacency.tsv")
