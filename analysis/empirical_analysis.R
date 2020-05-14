@@ -4,14 +4,6 @@ source("utils.R")
 
 # Load US data --------------------------------------------------------
 
-us_temp <- read_tsv('../db/us/temperature.tsv')
-us_income <- read_tsv('../db/us/income.tsv')
-us_density <- read_tsv('../db/us/density.tsv')
-
-us_state_data <- us_temp %>%
-  left_join(us_income, by = 'state') %>%
-  left_join(us_density, by = 'state')
-
 marketscan_res <- read_tsv('../data/ms-medicare-ro/abg_state.tsv') %>%
   rename(drug = drug_group) %>%
   mutate(bugdrug = case_when(
@@ -28,11 +20,7 @@ marketscan_use <- read_tsv('../data/ms-medicare-ro/ineq_marketscan.tsv') %>%
 
 marketscan <- marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
-  left_join(us_state_data, by = 'state') %>%
-  select(
-    unit = state, bugdrug, use, f_resistant,
-    density, income, temperature
-  )
+  select(unit = state, bugdrug, use, f_resistant)
 
 nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
   rename(state_abbreviation = state) %>%
@@ -43,11 +31,7 @@ nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
     use = rx_1k_year / 1e3,
     f_resistant = n_resistant / n_isolates
   ) %>%
-  left_join(us_state_data, by = 'state') %>%
-  select(
-    unit = state, bugdrug, use, f_resistant,
-    density, income, temperature
-  )
+  select(unit = state, bugdrug, use, f_resistant)
 
 # Load European data --------------------------------------------------
 
@@ -58,10 +42,6 @@ did_cpy_map <- tibble(
   ddd_per_tx = c(10, 10, 7),
   cpy_per_did = 365 / (1e3 * ddd_per_tx)
 )
-
-eu_temp <- read_tsv('../db/europe/temperature.tsv')
-eu_income <- read_tsv('../db/europe/income.tsv')
-eu_density <- read_tsv('../db/europe/density.tsv')
 
 europe <- read_tsv('../data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
@@ -74,14 +54,7 @@ europe <- read_tsv('../data/ecdc/data.tsv') %>%
     ),
     f_resistant = n_ns / n_isolates
   ) %>%
-  left_join(eu_temp, by = 'country') %>%
-  left_join(eu_income, by = 'country') %>%
-  left_join(eu_density, by = 'country') %>%
-  rename(unit = country) %>%
-  select(
-    unit, bugdrug, use, f_resistant,
-    density, temperature, income
-  )
+  select(unit = country, bugdrug, use, f_resistant)
 
 eu_units <- unique(europe$unit)
 
@@ -95,7 +68,7 @@ unit_data <- bind_rows(
   .id = 'data_source'
 ) %>%
   mutate(dataset = str_c(data_source, ' ', bugdrug)) %>%
-  select(dataset, unit, f_resistant, use, density, temperature, income) %>%
+  select(dataset, unit, f_resistant, use) %>%
   group_by(dataset) %>%
   nest() %>%
   ungroup() %>%
@@ -111,9 +84,8 @@ us_adjacency <- read_tsv('../db/us/adjacency.tsv') %>%
 
 eu_adjacency <- read_tsv('../db/europe/adjacency.tsv') %>%
   mutate(adjacent = TRUE) %>%
-  right_join(crossing(country1 = eu_units, country2 = eu_units)) %>%
-  replace_na(list(adjacent = FALSE)) %>%
-  rename(unit1 = country1, unit2 = country2)
+  right_join(crossing(unit1 = eu_units, unit2 = eu_units)) %>%
+  replace_na(list(adjacent = FALSE))
 
 adjacency_db <- bind_rows(us_adjacency, eu_adjacency)
 
