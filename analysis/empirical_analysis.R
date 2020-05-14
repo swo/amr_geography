@@ -209,15 +209,15 @@ cross_data <- unit_data %>%
 # Commuting histogram ---------------------------------------------------------
 
 commuting_histogram <- cross_data %>%
-  select(dataset1 = dataset, cross_data) %>%
+  select(cross_data) %>%
   unnest(cols = c(cross_data)) %>%
-  select(dataset, unit1, unit2, adjacent, f_commuting) %>%
+  select(setting, unit1, unit2, adjacent, f_commuting) %>%
   filter(
     unit1 < unit2,
     !is.na(f_commuting)
   ) %>%
   ggplot(aes(log10(f_commuting), fill = adjacent)) +
-  facet_wrap(~ dataset, scales = 'free') +
+  facet_wrap(~ setting, scales = 'free') +
   geom_histogram(color = 'black') +
   scale_fill_manual(
     limits = c('TRUE', 'FALSE'),

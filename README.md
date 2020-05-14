@@ -1,6 +1,14 @@
 # To do
 
-7 May: Analyses should be done. Now it's about stitching together the new manuscript.
+## 14 May
+
+Use a Mantel test! This will compare the matrix of interactions (ε) against the
+matrix of use/resistance associations (Δρ/Δτ). If we use Spearman metric, then
+no need to worry about whether its log odds of Δρ/Δτ or whatever
+
+## 7 May
+
+Analyses should be done. Now it's about stitching together the new manuscript.
 
 Include a point that says that, given that adjacent US states have epsilon ~
 10^{-2.5} and non-adjacent have 10^-4, we expect 0.4% reduction in dr/du vs.
@@ -29,6 +37,28 @@ effect it could have.)
 - Frame this as an opinion piece or something?
 
 ## Framing
+
+### From email
+
+Now, reading this, I'm tempted to zoom out even more and say:
+Use/resistance is important, but it's sometimes hard to detect use/res relationships
+Spillover could be a reason for this
+If you look across many demes for a use-resistance relationship, it's also going to be weaker than you would expect because of spillover
+Simulations suggest that the cross-sectional use-resistance relationship measured across states is X% weaker than it would be if those populations were totally isolated. (This is a new simulation, joining ~50 populations with the known commuting network, and comparing that "measured" use/res association against if you set ε=0.)
+This might be part of the enduring puzzle of why observational use-resistance associations look so weak.
+But it's really hard to think about power in this case, so let's imagine you did something simpler, with pairs of demes.
+If you observationally compare pairs of states (or Census tracts, or demes of any kind) with high contrast in use, we expect dilution of the contrast in resistance.
+But you won't find it in a reasonable study.
+Also, we checked, and we didn't find it.
+If you performed a trial randomizing demes to higher/lower use and compare resistance, we come to the same theoretical conclusion: spillover is likely important, but it's very difficult to measure, unless you sample to a crazy level.
+Conclusions
+Spillover is a likely cause for the apparently weak use/res associations (cf. our eLife thing)
+Spillover will likely dilute the results of any geographical- or population-based stewardship trials
+However, spillover is very difficult to detect when measuring prevalence of resistance alone.
+Path forward to quantifying this likely has to do with sequencing and figuring out population structure, measuring how much particular strains have moved around, and use that as the proxy to estimate the effect of spillover. (But that's way harder!)
+I like this framing because it addresses a long-standing puzzle. I can cite the comment on the Goossens plot, which says measuring use/res is hard because "human population densities might also help to spread resistance more widely,3 as might the number of children in day-care centres,4 and rates of vaccine uptake.5" Now we can actually put a number on that!
+
+### From this document
 
 - Use/resistance is important, but it's sometimes hard to detect use/res relationships (cite Turnidge)
 - Spillover could be a reason for this
