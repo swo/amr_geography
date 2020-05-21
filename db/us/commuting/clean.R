@@ -25,6 +25,8 @@ counts <- raw %>%
     c(from_unit, to_unit),
     names_from = to_unit, values_from = n,
     values_fill = list(n = 0)
-  )
+  ) %>%
+  arrange(from_unit) %>%
+  select_at(c("from_unit", .$from_unit))
 
 write_tsv(counts, "../commuting.tsv")

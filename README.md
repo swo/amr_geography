@@ -10,6 +10,13 @@
     - Get a CI on the Spearman correlations between ε and Δρ/Δτ
     - Test using Mantel
 
+## 21 May
+
+Cannot use commuting data from Europe. It's laughably sparse. Just use the
+flights data instead. The cleaning procedure below should iron out any kinks.
+(Well, someone might say that rail is important for adjacent countries or
+something, but that should have been covered by adjacency!)
+
 ## Commuting & Mantel tests (21 May)
 
 To clean the commuting data:

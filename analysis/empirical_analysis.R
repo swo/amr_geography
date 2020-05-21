@@ -87,17 +87,18 @@ matrixify <- function(df) {
   mat <- df %>%
     select(-from_unit) %>%
     as.matrix %>%
-    `rownames<-`(names(from_unit)[-1])
+    `rownames<-`(names(df)[-1])
   
   stopifnot(all(rownames(mat) == colnames(mat)))
   
   # make rows sum to 1
-  mat <- apply(mat, 1, function(x) x / sum(x))
-  stopifnot(all(rowSums(x) == 1))
+  mat <- mat %>%
+    sweep(1, rowSums(.), "/")
+  #stopifnot(isTRUE(all.equal(rowSums(mat), 1)))
   
   # symmetrize
-  mat <- 0.5 * (mat + t(mat))
-  stopifnot(all(mat == t(mat)))
+  #mat <- 0.5 * (mat + t(mat))
+  #stopifnot(all(mat == t(mat)))
   
   mat
 }

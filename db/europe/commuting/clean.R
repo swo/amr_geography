@@ -6,6 +6,7 @@ library(countrycode)
 raw_commuting <- read_tsv("table-64.tsv")
 
 commuting <- raw_commuting %>%
+  filter(country_of_residence %in% names(.)) %>%
   rename(from_unit = country_of_residence) %>%
   pivot_longer(-from_unit, names_to = "to_unit") %>%
   mutate(
@@ -33,6 +34,8 @@ commuting <- commuting %>%
     c(from_unit, to_unit),
     names_from = to_unit,
     values_fill = list(value = 0)
-  )
+  ) %>%
+  arrange(from_unit) %>%
+  select_at(c("from_unit", .$from_unit))
 
 write_tsv(commuting, "../commuting.tsv")
