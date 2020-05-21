@@ -155,14 +155,9 @@ cross_units <- function(df) {
     mutate(
       d_resistant = f_resistant1 - f_resistant2,
       d_use = use1 - use2,
-      d_income = income1 - income2,
-      d_density = density1 - density2,
-      d_temperature = temperature1 - temperature2,
-      dr_du = d_resistant / d_use,
-      lor_resistant = log_odds_ratio(f_resistant1, f_resistant2),
-      lorr_du = lor_resistant / d_use
+      dr_du = d_resistant / d_use
     ) %>%
-    select(unit1, unit2, starts_with('d_'), dr_du, starts_with('lor')) %>%
+    select(unit1, unit2, dr_du) %>%
     left_join(adjacency_db, by = c('unit1', 'unit2')) %>%
     left_join(commuting_db, by = c('unit1', 'unit2'))
 }

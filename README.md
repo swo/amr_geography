@@ -2,6 +2,17 @@
 
 ## 14 May
 
+- Recode the US data using the state abbreviations
+- Symmetrize the commuting data, so you have just proportions
+    - Europe might already have done this?
+    - Have these as matrices with row and column IDs, rather than long tidy tables
+- Do the adjacency analysis
+    - Get a CI on the Δρ/Δτ in adjacent vs. non-adjacent pairs
+    - Test using Mantel
+- Add the commuting analysis
+    - Get a CI on the Spearman correlations between ε and Δρ/Δτ
+    - Test using Mantel
+
 Use a Mantel test! This will compare the matrix of interactions (ε) against the
 matrix of use/resistance associations (Δρ/Δτ). If we use Spearman metric, then
 no need to worry about whether its log odds of Δρ/Δτ or whatever
