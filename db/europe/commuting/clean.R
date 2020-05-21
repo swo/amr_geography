@@ -28,4 +28,11 @@ commuting <- raw_commuting %>%
   ) %>%
   mutate_at("value", ~ . * 1e3)
 
+commuting <- commuting %>%
+  pivot_wider(
+    c(from_unit, to_unit),
+    names_from = to_unit,
+    values_fill = list(value = 0)
+  )
+
 write_tsv(commuting, "../commuting.tsv")

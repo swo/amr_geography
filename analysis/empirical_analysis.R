@@ -1,6 +1,11 @@
 #!/usr/bin/env Rscript
 
-source("utils.R")
+library(tidyverse)
+library(datasets)
+library(countrycode)
+library(cowplot)
+
+revalue <- function(x, to, from) to[match(x, from)]
 
 # Load US data --------------------------------------------------------
 
@@ -20,13 +25,12 @@ marketscan_use <- read_tsv('../data/ms-medicare-ro/ineq_marketscan.tsv') %>%
 
 marketscan <- marketscan_use %>%
   inner_join(marketscan_res, by = c('drug', 'state')) %>%
-  select(unit = state, bugdrug, use, f_resistant)
+  select(unit = state, bugdrug, use, f_resistant) %>%
+  mutate_at("unit", ~ revalue(., state.name, state.abb))
 
 nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
-  rename(state_abbreviation = state) %>%
-  filter(state_abbreviation %in% datasets::state.abb) %>%
+  filter(state %in% state.abb) %>%
   mutate(
-    state = datasets::state.name[match(state_abbreviation, datasets::state.abb)],
     bugdrug = 'Ec/q',
     use = rx_1k_year / 1e3,
     f_resistant = n_resistant / n_isolates
@@ -44,6 +48,7 @@ did_cpy_map <- tibble(
 )
 
 europe <- read_tsv('../data/ecdc/data.tsv') %>%
+  mutate_at("country", ~ countrycode(., origin = "country.name", destination = "iso3c")) %>%
   left_join(did_cpy_map, by = 'drug') %>%
   mutate(use = cpy_per_did * did) %>%
   mutate(
@@ -74,37 +79,48 @@ unit_data <- bind_rows(
   ungroup() %>%
   mutate_at('dataset', fct_inorder)
 
-# Load adjacency data ---------------------------------------------------------
+# Load adjacency and commuting data -------------------------------------------
 
-us_adjacency <- read_tsv('../db/us/adjacency.tsv') %>%
-  mutate(adjacent = TRUE) %>%
-  complete(state1, state2) %>%
-  replace_na(list(adjacent = FALSE)) %>%
-  rename(unit1 = state1, unit2 = state2)
+matrixify <- function(df) {
+  stopifnot(all(names(df)[-1] == df$from_unit))
+  
+  mat <- df %>%
+    select(-from_unit) %>%
+    as.matrix %>%
+    `rownames<-`(names(from_unit)[-1])
+  
+  stopifnot(all(rownames(mat) == colnames(mat)))
+  
+  # make rows sum to 1
+  mat <- apply(mat, 1, function(x) x / sum(x))
+  stopifnot(all(rowSums(x) == 1))
+  
+  # symmetrize
+  mat <- 0.5 * (mat + t(mat))
+  stopifnot(all(mat == t(mat)))
+  
+  mat
+}
 
-eu_adjacency <- read_tsv('../db/europe/adjacency.tsv') %>%
-  mutate(adjacent = TRUE) %>%
-  right_join(crossing(unit1 = eu_units, unit2 = eu_units)) %>%
-  replace_na(list(adjacent = FALSE))
-
-adjacency_db <- bind_rows(us_adjacency, eu_adjacency)
-
-# Load commuting/flight data --------------------------------------------------
-
-us_commuting <- read_tsv('../db/us/commuting.tsv') %>%
-  #rename_all(~ str_replace(., '^state', 'unit'))
-  rename(unit1 = from_state, unit2 = to_state)
-
-eu_commuting <- read_tsv('../db/europe/commuting.tsv') %>%
-  rename_all(~ str_replace(., '^country', 'unit')) %>%
-  filter(unit1 %in% eu_units, unit2 %in% eu_units)
-
-commuting_db <- bind_rows(
-  'US' = us_commuting,
-  'Europe' = eu_commuting,
-  .id = 'setting'
+interactions_db <- tribble(
+  ~setting, ~metric, ~fn,
+  "US", "adjacency", "../db/us/adjacency.tsv",
+  "US", "commuting", "../db/us/commuting.tsv",
+  "Europe", "adjacency", "../db/europe/adjacency.tsv",
+  "Europe", "commuting", "../db/europe/commuting.tsv"
 ) %>%
-  mutate_at('setting', fct_inorder)
+  mutate(
+    data = map(fn, read_tsv),
+    interactions = map(data, matrixify)
+  )
+
+
+# commuting_db <- bind_rows(
+#   'US' = us_commuting,
+#   'Europe' = eu_commuting,
+#   .id = 'setting'
+# ) %>%
+#   mutate_at('setting', fct_inorder)
 
 
 # Use-resistance in different datasets ----------------------------------------
@@ -143,9 +159,6 @@ ggsave('fig/cross_sectional.pdf')
 
 # Pairs data ------------------------------------------------------------------
 
-odds <- function(p) p / (1 - p)
-log_odds_ratio <- function(p, q) log(odds(p) / odds(q))
-
 cross_units <- function(df) {
   df %>%
     with(crossing(unit1 = unit, unit2 = unit)) %>%
@@ -157,9 +170,9 @@ cross_units <- function(df) {
       d_use = use1 - use2,
       dr_du = d_resistant / d_use
     ) %>%
-    select(unit1, unit2, dr_du) %>%
-    left_join(adjacency_db, by = c('unit1', 'unit2')) %>%
-    left_join(commuting_db, by = c('unit1', 'unit2'))
+    select(unit1, unit2, dr_du) #%>%
+    # left_join(adjacency_db, by = c('unit1', 'unit2')) %>%
+    # left_join(commuting_db, by = c('unit1', 'unit2'))
 }
 
 leave_one_out_from_cross <- function(df) {
@@ -174,6 +187,17 @@ cross_data <- unit_data %>%
   )
 
 # Commuting histogram ---------------------------------------------------------
+
+x <- bind_rows(
+  adjacency = us_adjacency,
+  commuting = us_commuting,
+  .id = "metric"
+) %>%
+  pivot_longer(cols = c(-metric, -from_unit), names_to = "to_unit") %>%
+  pivot_wider(c(metric, from_unit, to_unit), names_from = "metric") %>%
+  mutate_at("adjacency", as.logical)
+
+stop("OK")
 
 commuting_histogram <- cross_data %>%
   select(cross_data) %>%
@@ -226,7 +250,7 @@ analysis_f <- function(model_f, coef_f, ratio_f) {
       ratio = map_dbl(model, ratio_f)
     ) %>%
     select(dataset, coef, ratio)
-  
+
   l1o_results <- cross_data %>%
     select(dataset, l1o_cross_data) %>%
     unnest() %>%
@@ -240,7 +264,7 @@ analysis_f <- function(model_f, coef_f, ratio_f) {
       coef_se = jackknife.sd(coef),
       ratio_se = jackknife.sd(ratio)
     )
-  
+
   base_results %>%
     left_join(l1o_results, by = 'dataset')
 }
@@ -327,7 +351,7 @@ bind_rows(
 #   adjacency_results,
 #   'Comparing adjacent and non-adjacent pairs. "Coef" is difference in median Δρ/Δτ between the two groups. "Ratio" is that difference divided by overall median.'
 # )
-# 
+
 # show_results(
 #   adjacency_lorru_results,
 #   'As above, but using LOR(ρ)/Δτ'
