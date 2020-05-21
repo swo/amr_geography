@@ -3,9 +3,6 @@
 ## 14 May
 
 - Recode the US data using the state abbreviations
-- Symmetrize the commuting data, so you have just proportions
-    - Europe might already have done this?
-    - Have these as matrices with row and column IDs, rather than long tidy tables
 - Do the adjacency analysis
     - Get a CI on the Δρ/Δτ in adjacent vs. non-adjacent pairs
     - Test using Mantel
@@ -13,9 +10,22 @@
     - Get a CI on the Spearman correlations between ε and Δρ/Δτ
     - Test using Mantel
 
-Use a Mantel test! This will compare the matrix of interactions (ε) against the
-matrix of use/resistance associations (Δρ/Δτ). If we use Spearman metric, then
-no need to worry about whether its log odds of Δρ/Δτ or whatever
+## Commuting & Mantel tests (21 May)
+
+To clean the commuting data:
+
+1. Make a matrix of from->to counts (should be done)
+2. Re-scale each row (ask what *proportion* of workers from A go to B)
+3. Symmetrize: X_ij -> 0.5 * (X_ij + X_ji)
+4. Set the diagonal equal to the max entry
+
+Step #4 ensures that each unit will most strongly interact with itself, without
+saying that these internal interactions are stronger for any unit compared to
+any other. Beyond that, we just look at the symmetrized proportions.
+
+Then, use a Mantel test! This will compare the matrix of interactions (ε)
+against the matrix of use/resistance associations (Δρ/Δτ). If we use Spearman
+metric, then no need to worry about whether its log odds of Δρ/Δτ or whatever
 
 ## 7 May
 
@@ -27,19 +37,6 @@ Include a point that says that, given that adjacent US states have epsilon ~
 that in the power calculations?
 
 But not sure if I can read off ε as easily from the commuting data as I thought I could...
-
-## Methods
-
-For flights, say that flights relate to contacts by some proportion α. Then, a
-fraction β of internal contacts are represented by internal flights. Then c_ij
-(contacts) = α * t_ij (flights) and c_ii = α / β * t_ii.
-
-Show that US commuting and EU flights are pretty similarly distributed, if you
-allow that *internal* flights represent a small fraction (0.1%) of all internal
-contacts. Seems reasonable. Commuting seems like an easier thing to imagine.
-
-(Compare US flight pattern? Point isn't exactly what the network is, it's what
-effect it could have.)
 
 ## (new) framing
 
