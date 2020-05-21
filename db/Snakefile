@@ -1,0 +1,4 @@
+rule clean_us_commuting:
+    output: "us/commuting.tsv"
+    input: "us/commuting/table1.xlsx", script="us/commuting/clean.R"
+    shell: "cd us/commuting && ./clean.R"

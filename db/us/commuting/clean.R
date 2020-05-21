@@ -1,17 +1,30 @@
-#!/usr/bin/env Rscript --vanilla
+#!/usr/bin/env Rscript
 
 library(tidyverse)
 library(readxl)
 library(datasets)
 
-raw <- read_xlsx('table1.xlsx', skip = 5)
+revalue <- function(x, from, to) to[match(x, from)]
 
-# for each AB combination of states, how many workers go from the one to the other?
+raw <- read_xlsx("table1.xlsx", skip = 5)
+
+# for each AB combination of states, how many workers go from the one to
+# the other?
 counts <- raw %>%
-  select(from_state = `State Name...3`, to_state = `State Name...9`, n_workers = `Workers in Commuting Flow`) %>%
-  filter(from_state %in% state.name, to_state %in% state.name) %>%
-  group_by(from_state, to_state) %>%
-  summarize_at('n_workers', sum) %>%
-  ungroup()
+  select(
+    from_unit = `State Name...3`,
+    to_unit = `State Name...9`,
+    n = `Workers in Commuting Flow`
+  ) %>%
+  filter(from_unit %in% state.name, to_unit %in% state.name) %>%
+  mutate_at(c("from_unit", "to_unit"), ~ revalue(., state.name, state.abb)) %>%
+  group_by(from_unit, to_unit) %>%
+  summarize_at("n", sum) %>%
+  ungroup() %>%
+  pivot_wider(
+    c(from_unit, to_unit),
+    names_from = to_unit, values_from = n,
+    values_fill = list(n = 0)
+  )
 
 write_tsv(counts, "../commuting.tsv")
