@@ -1,3 +1,6 @@
+rule all:
+    input: expand("{x}/{y}.tsv", x=["us", "europe"], y=["adjacency", "commuting"])
+
 rule clean_us_adjacency:
     output: "us/adjacency.tsv"
     input:
@@ -6,7 +9,17 @@ rule clean_us_adjacency:
         script="us/adjacency/clean.R"
     shell: "cd us/adjacency && ./clean.R"
 
+rule clean_europe_adjacency:
+    output: "europe/adjacency.tsv"
+    input: "europe/adjacency/contdird.csv", script="europe/adjacency/clean.R"
+    shell: "cd europe/adjacency && ./clean.R"
+
 rule clean_us_commuting:
     output: "us/commuting.tsv"
     input: "us/commuting/table1.xlsx", script="us/commuting/clean.R"
     shell: "cd us/commuting && ./clean.R"
+
+rule clean_europe_commuting:
+    output: "europe/commuting.tsv"
+    input: "europe/commuting/table-64.tsv", script="europe/commuting/clean.R"
+    shell: "cd europe/commuting && ./clean.R"
