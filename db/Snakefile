@@ -1,3 +1,11 @@
+rule clean_us_adjacency:
+    output: "us/adjacency.tsv"
+    input:
+        "us/adjacency/county_adjacency.txt",
+        "us/adjacency/national_county.txt",
+        script="us/adjacency/clean.R"
+    shell: "cd us/adjacency && ./clean.R"
+
 rule clean_us_commuting:
     output: "us/commuting.tsv"
     input: "us/commuting/table1.xlsx", script="us/commuting/clean.R"
