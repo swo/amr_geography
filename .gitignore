@@ -14,5 +14,6 @@ doc/
 *.zip
 *.xlsx
 *.tsv
+*.gz
 
 .*.swp

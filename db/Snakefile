@@ -1,5 +1,7 @@
 rule all:
-    input: expand("{x}/{y}.tsv", x=["us", "europe"], y=["adjacency", "commuting"])
+    input:
+        "us/adjacency.tsv", "us/commuting.tsv",
+        "europe/adjacency.tsv", "europe/flights.tsv"
 
 rule clean_us_adjacency:
     output: "us/adjacency.tsv"
@@ -9,17 +11,22 @@ rule clean_us_adjacency:
         script="us/adjacency/clean.R"
     shell: "cd us/adjacency && ./clean.R"
 
-rule clean_europe_adjacency:
-    output: "europe/adjacency.tsv"
-    input: "europe/adjacency/contdird.csv", script="europe/adjacency/clean.R"
-    shell: "cd europe/adjacency && ./clean.R"
-
 rule clean_us_commuting:
     output: "us/commuting.tsv"
     input: "us/commuting/table1.xlsx", script="us/commuting/clean.R"
     shell: "cd us/commuting && ./clean.R"
 
-rule clean_europe_commuting:
-    output: "europe/commuting.tsv"
-    input: "europe/commuting/table-64.tsv", script="europe/commuting/clean.R"
-    shell: "cd europe/commuting && ./clean.R"
+rule clean_europe_adjacency:
+    output: "europe/adjacency.tsv"
+    input: "europe/adjacency/contdird.csv", script="europe/adjacency/clean.R"
+    shell: "cd europe/adjacency && ./clean.R"
+
+rule clean_europe_flights:
+    output: "europe/flights.tsv"
+    input: "europe/flights/avia_paocc.tsv.gz", script="europe/flights/clean.R"
+    shell: "cd europe/flights && ./clean.R"
+
+rule download_europe_flights:
+    output: "europe/flights/avia_paocc.tsv.gz"
+    params: url="https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?file=data/avia_paocc.tsv.gz"
+    shell: "wget {params.url} -O {output}"
