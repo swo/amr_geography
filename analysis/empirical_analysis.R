@@ -149,7 +149,8 @@ matrixify <- function(df) {
   stopifnot(all(mat == t(mat)))
     
   # set diagonal to maximum
-  diag(mat) <- max(mat)
+  if (any(mat > 1)) stop("Entries over 1")
+  diag(mat) <- 1
   
   mat
 }
@@ -215,6 +216,7 @@ leave_one_out_from_cross <- function(df) {
 
 cross_data <- unit_data %>%
   mutate(
+    setting = map_chr(data, ~ unique(.$setting)),
     cross_data = map(data, cross_units),
     l1o_cross_data = map(cross_data, leave_one_out_from_cross)
   )
@@ -370,20 +372,29 @@ cor_f <- function(df) cor(df$dr_du, df$interaction, method = "spearman")
 mantel_results <- cross_data %>%
   left_join(interactions_matrices, by = "setting") %>%
   mutate(
-    estimate = map_dbl(cross_data, cor_f),
+    # correlations
+    cor_est = map_dbl(cross_data, cor_f),
     l1o_ests = map(l1o_cross_data, function(dfs) map_dbl(dfs, cor_f)),
-    se = map_dbl(l1o_ests, jackknife.sd),
-    lci = estimate + se * qnorm(0.05 / 2),
-    uci = estimate + se * qnorm(1 - (0.05 / 2)),
+    cor_se = map_dbl(l1o_ests, jackknife.sd),
+    cor_lci = cor_est + cor_se * qnorm(0.05 / 2),
+    cor_uci = cor_est + cor_se * qnorm(1 - (0.05 / 2)),
+    # Mantel test
     Y = map(cross_data, ~ rank_matrix(long_to_matrix(., "dr_du"))),
     X = map2(matrix, Y, ~ rank_matrix(-subset_by_names(.x, rownames(.y)))),
     test = map2(X, Y, ~ vegan::mantel(.x, .y, method = "spearman")),
-    estimate2 = map_dbl(test, ~ .$statistic),
+    cor_est2 = map_dbl(test, ~ .$statistic),
     p = map_dbl(test, ~ .$signif),
-    sig = p.adjust(p, "BH") < 0.05
+    sig = p.adjust(p, "BH") < 0.05,
+    # rlm
+    model = map(cross_data, ~ MASS::rlm(dr_du ~ adjacent, data = .)),
+    rlm_est = map_dbl(model, ~ coef(.)["adjacentTRUE"]),
+    rlm_lci = map_dbl(model, ~ confint.default(.)["adjacentTRUE", "2.5 %"]),
+    rlm_uci = map_dbl(model, ~ confint.default(.)["adjacentTRUE", "97.5 %"])
   ) %>%
-  { stopifnot(all(.$estimate2 == -.$estimate)); . } %>%
-  select(dataset, estimate, estimate2, lci, uci, p, sig)
+  { stopifnot(all(.$cor_est2 == -.$cor_est)); . } %>%
+  select(dataset, cor_est, cor_lci, cor_uci, p, sig, rlm_est, rlm_lci, rlm_uci)
+
+mantel_results
 
 # # Tables ----------------------------------------------------------------------
 # 
