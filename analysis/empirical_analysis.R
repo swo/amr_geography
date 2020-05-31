@@ -379,8 +379,8 @@ mantel_results <- cross_data %>%
     cor_lci = cor_est + cor_se * qnorm(0.05 / 2),
     cor_uci = cor_est + cor_se * qnorm(1 - (0.05 / 2)),
     # Mantel test
-    Y = map(cross_data, ~ rank_matrix(long_to_matrix(., "dr_du"))),
-    X = map2(matrix, Y, ~ rank_matrix(-subset_by_names(.x, rownames(.y)))),
+    Y = map(cross_data, ~ -rank_matrix(long_to_matrix(., "dr_du"))),
+    X = map2(matrix, Y, ~ rank_matrix(subset_by_names(.x, rownames(.y)))),
     test = map2(X, Y, ~ vegan::mantel(.x, .y, method = "spearman")),
     cor_est2 = map_dbl(test, ~ .$statistic),
     p = map_dbl(test, ~ .$signif),

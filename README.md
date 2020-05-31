@@ -1,38 +1,23 @@
 # To do
 
-## 14 May
+## 31 May
 
-- Recode the US data using the state abbreviations
-- Do the adjacency analysis
-    - Get a CI on the Δρ/Δτ in adjacent vs. non-adjacent pairs
-    - Test using Mantel
-- Add the commuting analysis
-    - Get a CI on the Spearman correlations between ε and Δρ/Δτ
-    - Test using Mantel
+1. 2-deme simulations suggest could be an important effect
+2. Power calculation and ε says maybe
+3. Looked in empirical data and found it!
 
-## 21 May
+### Commuting & Mantel tests
 
-Cannot use commuting data from Europe. It's laughably sparse. Just use the
-flights data instead. The cleaning procedure below should iron out any kinks.
-(Well, someone might say that rail is important for adjacent countries or
-something, but that should have been covered by adjacency!)
-
-## Commuting & Mantel tests (21 May)
-
-To clean the commuting data:
-
-1. Make a matrix of from->to counts (should be done)
+1. Make a matrix of from->to counts
 2. Re-scale each row (ask what *proportion* of workers from A go to B)
 3. Symmetrize: X_ij -> 0.5 * (X_ij + X_ji)
-4. Set the diagonal equal to the max entry
+4. Set the diagonals to 1 (i.e., each compartment interacts maximally with itself)
 
-Step #4 ensures that each unit will most strongly interact with itself, without
-saying that these internal interactions are stronger for any unit compared to
-any other. Beyond that, we just look at the symmetrized proportions.
+When running a Mantel test:
 
-Then, use a Mantel test! This will compare the matrix of interactions (ε)
-against the matrix of use/resistance associations (Δρ/Δτ). If we use Spearman
-metric, then no need to worry about whether its log odds of Δρ/Δτ or whatever
+- Turn the ε and Δρ/Δτ matrices into ranks (i.e., so that a negative Δρ/Δτ turns into a non-negative dissimilarity)
+- Reverse the ranks on Δρ/Δτ (i.e., so that large association goes with *small* interaction)
+- Use the Spearman test
 
 ## 7 May
 
@@ -44,12 +29,6 @@ Include a point that says that, given that adjacent US states have epsilon ~
 that in the power calculations?
 
 But not sure if I can read off ε as easily from the commuting data as I thought I could...
-
-## (new) framing
-
-- Not a big problem in terms of X-sectional observations across large populations, like states. Could become problematic for smaller units, like cities or states.
-- However, hard to say it's *not* a problem, even for states, because very challenging to observe this effect, with so many unknowns.
-- Frame this as an opinion piece or something?
 
 ## Framing
 
@@ -104,3 +83,7 @@ uptake.5" Now we can actually put a number on that!
 - σ_ρ (the accuracy of measurements of resistance): This and N seem like the key adjustable parameters in an experimental design. There are fewer people in a Census tract than a state, so maybe it's easier to get a simple random sample? (Or maybe there's actually more noise in smaller groups?)
 - ε_0 (the "strength" of spillover): Guess that the WHN & D-types models, although design for European countries, also work for Census tracts
 ε (the number of cross-population contacts): This would require introducing a new data source. I could ask Stephen about estimates for this.
+
+# Notes
+
+- Not going to use Europe commuting data, as it's too sparse
