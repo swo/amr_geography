@@ -132,8 +132,9 @@ matrixify <- function(df) {
   
   mat <- df %>%
     select(-from_unit) %>%
-    as.matrix %>%
-    `rownames<-`(names(df)[-1])
+    as.matrix
+  
+  rownames(mat) <- names(df)[-1]
   
   stopifnot(all(rownames(mat) == colnames(mat)))
   
@@ -300,18 +301,90 @@ adjacency_results <- analysis_f(
   function(model) with(model, { (adj_med - nonadj_med) / nonadj_med })
 )
 
+test_f <- function(df) with(df, { wilcox.test(dr_du[adjacent], dr_du[!adjacent]) })
+estimate_f <- function(df) with(df, { median(dr_du[!adjacent]) - median(dr_du[adjacent]) })
+
+wilcoxon_results <- cross_data %>%
+  mutate(
+    test = map(cross_data, test_f),
+    estimate = map_dbl(cross_data, estimate_f),
+    l1o_estimates = map(l1o_cross_data, function(dfs) map_dbl(dfs, estimate_f)),
+    se = map_dbl(l1o_estimates, jackknife.sd),
+    lci = estimate + se * qnorm(0.05 / 2),
+    uci = estimate + se * qnorm(1 - (0.05 / 2)),
+    p = map_dbl(test, ~ .$p.value),
+    sig = p.adjust(p, "BH") < 0.05
+  ) %>%
+  select(dataset, estimate, lci, uci, p, sig)
+
+wilcoxon_results
 
 # Commuting analysis --------------------------------------------------
 
-commuting_results <- analysis_f(
-  function(df) cor(df$dr_du, df$interaction, method = "spearman"),
-  function(model) model,
-  function(model) NA
-)
+long_to_matrix <- function(tbl, value) {
+  nm <- sort(unique(c(tbl$unit1, tbl$unit2)))
+  X <- matrix(NA, nrow = length(nm), ncol = length(nm))
+  
+  is <- match(tbl$unit1, nm)
+  js <- match(tbl$unit2, nm)
+  
+  for (k in 1:nrow(tbl)) {
+    X[is[k], js[k]] <- tbl[[value]][k]
+    X[js[k], is[k]] <- tbl[[value]][k]
+  }
+  
+  colnames(X) <- nm
+  rownames(X) <- nm
+  
+  X
+}
 
-stop("run the permutation test")
+subset_by_names <- function(X, nm, rev = FALSE) {
+  stopifnot(all(nm %in% rownames(X)))
+  stopifnot(all(rownames(X) == colnames(X)))
+  k <- match(nm, rownames(X))
+  X[k, k]
+}
 
-# 
+rank_matrix <- function(X) {
+  n <- dim(X)[1]
+  # check that X is square
+  stopifnot(n == dim(X)[2])
+  
+  # initialize blank matrix
+  out <- matrix(NA, nrow = n, ncol = n)
+  
+  values <- rank(X[upper.tri(X)])
+  out[upper.tri(X)] <- values
+  out[lower.tri(X)] <- values
+  diag(out) <- 0
+  
+  rownames(out) <- rownames(X)
+  colnames(out) <- colnames(X)
+  
+  out
+}
+
+cor_f <- function(df) cor(df$dr_du, df$interaction, method = "spearman")
+
+mantel_results <- cross_data %>%
+  left_join(interactions_matrices, by = "setting") %>%
+  mutate(
+    estimate = map_dbl(cross_data, cor_f),
+    l1o_ests = map(l1o_cross_data, function(dfs) map_dbl(dfs, cor_f)),
+    se = map_dbl(l1o_ests, jackknife.sd),
+    lci = estimate + se * qnorm(0.05 / 2),
+    uci = estimate + se * qnorm(1 - (0.05 / 2)),
+    Y = map(cross_data, ~ rank_matrix(long_to_matrix(., "dr_du"))),
+    X = map2(matrix, Y, ~ rank_matrix(-subset_by_names(.x, rownames(.y)))),
+    test = map2(X, Y, ~ vegan::mantel(.x, .y, method = "spearman")),
+    estimate2 = map_dbl(test, ~ .$statistic),
+    p = map_dbl(test, ~ .$signif),
+    sig = p.adjust(p, "BH") < 0.05
+  ) %>%
+  { stopifnot(all(.$estimate2 == -.$estimate)); . } %>%
+  select(dataset, estimate, estimate2, lci, uci, p, sig)
+
 # # Tables ----------------------------------------------------------------------
 # 
 # show_results <- function(df, caption) {
