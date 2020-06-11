@@ -246,13 +246,14 @@ histograms <- cross_data %>%
     labels = c("no", "yes")
   ) +
   labs(
-    x = "Ad hoc interaction",
+    x = expression(paste("Interaction (", epsilon, ")")),
     y = "No. of unit pairs",
     fill = "Adjacent?"
   ) +
-  theme_cowplot()
+  theme_cowplot() +
+  theme(strip.background = element_blank())
 
-ggsave('fig/interactions_histogram.pdf')
+ggsave('fig/interactions_histogram.pdf', plot = histograms)
 
 
 # Adjacency analysis ----------------------------------------------------------
@@ -468,7 +469,8 @@ interaction_plot <- cross_data %>%
   labs(
     x = expression(paste("Interaction (", epsilon, ")")),
     y = dr_du_lab
-  )
+  ) +
+  theme(strip.background = element_blank())
 
 ggsave(
   "fig/interaction_plot.pdf", plot = interaction_plot,

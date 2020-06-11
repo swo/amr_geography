@@ -1,6 +1,9 @@
 # To do
 
-- Send to Rene Niehus, who knows about flight data?
+## June 11
+
+Now that the analyses have been cleaned up, do the re-framing, to make it clear
+that we're resolving a long-standing mystery?
 
 ## 31 May (and June 11)
 
