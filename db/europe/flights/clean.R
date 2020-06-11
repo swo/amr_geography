@@ -3,7 +3,7 @@
 library(tidyverse)
 library(countrycode)
 
-year <- "2018"
+year <- "2016"
 
 flights_tbl <- read_tsv("avia_paocc.tsv.gz") %>%
   # split the first column
