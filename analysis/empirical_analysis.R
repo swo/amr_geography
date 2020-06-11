@@ -320,6 +320,7 @@ wilcoxon_results <- cross_data %>%
   select(dataset, estimate, lci, uci, p, sig)
 
 wilcoxon_results
+write_tsv(wilcoxon_results, "results/wilcoxon-results.tsv")
 
 # Commuting analysis --------------------------------------------------
 
@@ -396,145 +397,91 @@ mantel_results <- cross_data %>%
 
 mantel_results
 
-# # Tables ----------------------------------------------------------------------
-# 
-# show_results <- function(df, caption) {
-#   df %>%
-#     mutate(
-#       coef_hci = 1.96 * coef_se * 0.5,
-#       coef_cil = coef - coef_hci,
-#       coef_ciu = coef + coef_hci,
-#       coef_star = coef_cil > 0 | coef_ciu < 0,
-#       ratio_hci = 1.96 * ratio_se * 0.5,
-#       ratio_cil = ratio - ratio_hci,
-#       ratio_ciu = ratio + ratio_hci,
-#       ratio_star = ratio_cil > 0 | ratio_ciu < 0
-#     ) %>%
-#     mutate_if(is.numeric, sigfig) %>%
-#     mutate_at(vars(ends_with('star')), ~ recode(as.numeric(.), `1` = '*', `0` = '')) %>%
-#     mutate(
-#       coef_display = str_glue('{coef} ({coef_cil} to {coef_ciu}){coef_star}'),
-#       ratio_display = str_glue('{ratio} ({ratio_cil} to {ratio_ciu}){ratio_star}')
-#     ) %>%
-#     select(dataset, coef_display, ratio_display)
-# }
-# 
-# bind_rows(
-#   "adjacency" = adjacency_results,
-#   "adjacency_lorru" = adjacency_lorru_results,
-#   "adjacency_rlm" = adjacency_rlm_results,
-#   "commuting" = commuting_results,
-#   .id = "model_type"
-# ) %>%
-#   nest(-model_type) %>%
-#   mutate(results = map(data, show_results)) %>%
-#   select(model_type, results) %>%
-#   unnest() %>%
-#   write_tsv("results/empirical.tsv")
+write_tsv(mantel_results, "results/mantel-results.tsv")
 
-# show_results(
-#   adjacency_results,
-#   'Comparing adjacent and non-adjacent pairs. "Coef" is difference in median Δρ/Δτ between the two groups. "Ratio" is that difference divided by overall median.'
-# )
-
-# show_results(
-#   adjacency_lorru_results,
-#   'As above, but using LOR(ρ)/Δτ'
-# )
-
-# show_results(
-#   adjacency_rlm_results,
-#   'Using robust regression: Δρ/Δτ ~ Α. "Coef" is βΑ, "ratio" is βΑ/μ.'
-# )
-
-# show_results(
-#   commuting_results,
-#   'Robust regression on Δρ/Δτ ~ C, where C is the commuting fraction. "Coef" is β * 10^-4. "Ratio" is β * 10^-4 / μ.'
-# )
-# ```
 
 # Plots -----------------------------------------------------------------------
 
-# boxplot_data_f <- function(df, ymin, ymax) {
-#   df %>%
-#     nest(-adjacent) %>%
-#     mutate(
-#       y = map(data, ~ .$dr_du),
-#       box = map(y, ~ boxplot.stats(.)$stats),
-#       boxplot_data = map(box, ~ tibble(
-#         ymin = max(.[1], ymin),
-#         lower = .[2],
-#         middle = .[3],
-#         upper = .[4],
-#         ymax = min(.[5], ymax)
-#       ))
-#     ) %>%
-#     select(adjacent, boxplot_data) %>%
-#     unnest()
-# }
-# 
-# boxplot_f <- function(cross_data, f_to_keep) {
-#   half_drop <- (1 - f_to_keep) / 2
-# 
-#   plot_data <- cross_data %>%
-#     mutate(
-#       y = map(cross_data, ~ .$dr_du),
-#       ymin = map_dbl(y, ~ quantile(., half_drop)),
-#       ymax = map_dbl(y, ~ quantile(., 1 - half_drop)),
-#       boxplot_data = pmap(list(cross_data, ymin, ymax), boxplot_data_f),
-#       point_data = pmap(list(cross_data, ymin, ymax), ~ filter(..1, between(dr_du, ..2, ..3)))
-#     )
-# 
-#   point_data <- plot_data %>%
-#     select(dataset, point_data) %>%
-#     unnest()
-# 
-#   boxplot_data <- plot_data %>%
-#     select(dataset, boxplot_data) %>%
-#     unnest()
-# 
-#   plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
-#     facet_wrap(~ dataset, scales = 'free_y') +
-#     geom_boxplot(
-#       data = boxplot_data,
-#       aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
-#       stat = 'identity'
-#     ) +
-#     geom_jitter(data = point_data, aes(y = dr_du), size = 0.1, width = 0.2) +
-#     scale_x_discrete(
-#       '',
-#       labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adj.')
-#     ) +
-#     ylab(expression(paste('Use-resistance association ', (Delta * rho / Delta * tau)))) +
-#     theme_cowplot() +
-#     theme(strip.background = element_blank())
-# 
-#   plot
-# }
-# 
-# adjacency_plot <- boxplot_f(cross_data, 0.90)
-# ggsave('fig/adjacency_plot.pdf', plot = adjacency_plot)
-# 
-# # swo: can include the rlm on the un-logged x values, as reported in the
-# # data, but they look weird and curvy when log-ing the x-vals
-# 
-# commute_plot <- cross_data %>%
-#   select(dataset, cross_data) %>%
-#   unnest() %>%
-#   group_by(dataset) %>%
-#   mutate(x = case_when(
-#     f_commuting == 0 ~ -6,
-#     TRUE ~ log10(f_commuting)
-#   )) %>%
-#   filter(between(ecdf(dr_du)(dr_du), 0.025, 0.975)) %>%
-#   ungroup() %>%
-#   ggplot(aes(x)) +
-#   facet_wrap(~ dataset, scales = 'free') +
-#   geom_point(aes(y = dr_du), shape = 1, size = 0.5) +
-#   #geom_line(aes(y = y)) +
-#   xlab('Commuting fraction (log10)') +
-#   ylab(expression(paste('Use-resistance association ', (Delta * rho / Delta * tau)))) +
-#   theme_cowplot() +
-#   theme(strip.background = element_blank())
-# 
-# ggsave('fig/commute_plot.pdf', plot = commute_plot)
+dr_du_lab <- expression(
+  paste('Use-resistance association ', (Delta * rho / Delta * tau))
+)
+
+boxplot_details_f <- function(df, ymin, ymax) {
+  df %>%
+    nest(-adjacent) %>%
+    mutate(
+      y = map(data, ~ .$dr_du),
+      box = map(y, ~ boxplot.stats(.)$stats),
+      boxplot_data = map(box, ~ tibble(
+        ymin = max(.[1], ymin),
+        lower = .[2],
+        middle = .[3],
+        upper = .[4],
+        ymax = min(.[5], ymax)
+      ))
+    ) %>%
+    select(adjacent, boxplot_data) %>%
+    unnest()
+}
+
+f_to_keep <- 0.90
+half_drop <- (1 - f_to_keep) / 2
+
+boxplot_data <- cross_data %>%
+  mutate(
+    y = map(cross_data, ~ .$dr_du),
+    ymin = map_dbl(y, ~ quantile(., half_drop)),
+    ymax = map_dbl(y, ~ quantile(., 1 - half_drop)),
+    boxplot_details = pmap(list(cross_data, ymin, ymax), boxplot_details_f),
+    point_data = pmap(list(cross_data, ymin, ymax), ~ filter(..1, between(dr_du, ..2, ..3)))
+  )
+
+point_data <- boxplot_data %>%
+  select(dataset, point_data) %>%
+  unnest(cols = point_data)
+
+boxplot_details <- boxplot_data %>%
+  select(dataset, boxplot_details) %>%
+  unnest(cols = boxplot_details)
+
+adjacency_plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
+  facet_wrap(~ dataset, scales = 'free_y') +
+  geom_boxplot(
+    data = boxplot_details,
+    aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
+    stat = 'identity'
+  ) +
+  geom_jitter(data = point_data, aes(y = dr_du), size = 0.1, width = 0.2) +
+  scale_x_discrete(
+    '',
+    labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adj.')
+  ) +
+  ylab(dr_du_lab) +
+  theme_cowplot() +
+  theme(strip.background = element_blank())
+
+ggsave('fig/adjacency_plot.pdf', plot = adjacency_plot)
+
+# Interaction plot
+
+interaction_plot <- cross_data %>%
+  select(dataset, cross_data) %>%
+  unnest(cols = cross_data) %>%
+  ggplot(aes(interaction, dr_du)) +
+  facet_wrap(vars(dataset)) +
+  geom_hline(yintercept = 0, linetype = 2) +
+  geom_point(shape = 1) +
+  scale_x_log10() +
+  scale_y_continuous(
+    limits = 50 * c(-1, 1)
+  ) +
+  theme_cowplot() +
+  labs(
+    x = expression(paste("Interaction (", epsilon, ")")),
+    y = dr_du_lab
+  )
+
+ggsave(
+  "fig/interaction_plot.pdf", plot = interaction_plot,
+  height = 6
+)

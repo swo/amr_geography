@@ -1,10 +1,18 @@
 # To do
 
-## 31 May
+- Send to Rene Niehus, who knows about flight data?
+
+## 31 May (and June 11)
 
 1. 2-deme simulations suggest could be an important effect
-2. Power calculation and ε says maybe
+2. Power calculation and ε says maybe you could see it
 3. Looked in empirical data and found it!
+
+- Fig 1: 2-deme simulations
+- Fig 2: Cross-sectional data
+- Fig 3: Wilcoxon results
+- Fig 4: Interaction results
+
 
 ### Commuting & Mantel tests
 
