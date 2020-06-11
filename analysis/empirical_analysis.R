@@ -6,6 +6,8 @@ library(countrycode)
 library(cowplot)
 library(patchwork)
 
+set.seed(77845) # for Mantel test
+
 revalue <- function(x, from, to) to[match(x, from)]
 
 # Load US data --------------------------------------------------------
@@ -264,62 +266,44 @@ jackknife.sd <- function(x) {
   sqrt((n - 1) / n * sum((x - mean(x)) ** 2))
 }
 
-analysis_f <- function(model_f, coef_f, ratio_f) {
-  base_results <- cross_data %>%
-    mutate(
-      model = map(cross_data, model_f),
-      coef = map_dbl(model, coef_f),
-      ratio = map_dbl(model, ratio_f)
-    ) %>%
-    select(dataset, coef, ratio)
-
-  l1o_results <- cross_data %>%
-    select(dataset, l1o_cross_data) %>%
-    unnest(cols = l1o_cross_data) %>%
-    mutate(
-      model = map(l1o_cross_data, model_f),
-      coef = map_dbl(model, coef_f),
-      ratio = map_dbl(model, ratio_f)
-    ) %>%
-    group_by(dataset) %>%
-    summarize(
-      coef_se = jackknife.sd(coef),
-      ratio_se = jackknife.sd(ratio)
-    )
-
-  base_results %>%
-    left_join(l1o_results, by = 'dataset')
-}
-
-adjacency_results <- analysis_f(
-  function(df) with(df, {
-    list(
-      adj_med = median(df$dr_du[df$adjacent]),
-      nonadj_med = median(df$dr_du[!df$adjacent])
-    )
-  }),
-  function(model) with(model, { adj_med - nonadj_med }),
-  function(model) with(model, { (adj_med - nonadj_med) / nonadj_med })
-)
-
 test_f <- function(df) with(df, { wilcox.test(dr_du[adjacent], dr_du[!adjacent]) })
-estimate_f <- function(df) with(df, { median(dr_du[!adjacent]) - median(dr_du[adjacent]) })
+arr_estimate_f <- function(df) with(df, { median(dr_du[adjacent]) - median(dr_du[!adjacent]) })
+ratio_estimate_f <- function(df) with(df, { median(dr_du[adjacent]) / median(dr_du[!adjacent]) })
+
+adjacency_results <- tibble(
+  method = c("arr", "ratio"),
+  estimate_f = list(arr_estimate_f, ratio_estimate_f)
+) %>%
+  crossing(cross_data) %>%
+  mutate(
+    estimate = map2_dbl(estimate_f, cross_data, ~ .x(.y)),
+    l1o_estimates = map2(l1o_cross_data, estimate_f, ~ map_dbl(.x, .y)),
+    se = map_dbl(l1o_estimates, jackknife.sd),
+    lci = estimate + se * qnorm(0.05 / 2),
+    uci = estimate + se * qnorm(1 - (0.05 / 2))
+  ) %>%
+  arrange(dataset, method) %>%
+  select(dataset, method, estimate, lci, uci)
 
 wilcoxon_results <- cross_data %>%
   mutate(
     test = map(cross_data, test_f),
-    estimate = map_dbl(cross_data, estimate_f),
-    l1o_estimates = map(l1o_cross_data, function(dfs) map_dbl(dfs, estimate_f)),
-    se = map_dbl(l1o_estimates, jackknife.sd),
-    lci = estimate + se * qnorm(0.05 / 2),
-    uci = estimate + se * qnorm(1 - (0.05 / 2)),
     p = map_dbl(test, ~ .$p.value),
     sig = p.adjust(p, "BH") < 0.05
   ) %>%
-  select(dataset, estimate, lci, uci, p, sig)
+  select(dataset, p, sig)
 
-wilcoxon_results
-write_tsv(wilcoxon_results, "results/wilcoxon-results.tsv")
+adjacency_table <- adjacency_results %>%
+  mutate_if(is.numeric, ~ signif(., 2)) %>%
+  mutate(label = as.character(str_glue("{estimate} ({lci} to {uci})"))) %>%
+  select(dataset, method, label) %>%
+  pivot_wider(names_from = method, values_from = label) %>%
+  left_join(wilcoxon_results, by = "dataset") %>%
+  mutate_if(is.numeric, ~ signif(., 2))
+
+adjacency_table
+
+write_tsv(adjacency_table, "results/adjacency-results.tsv")
 
 # Commuting analysis --------------------------------------------------
 
@@ -373,30 +357,28 @@ mantel_results <- cross_data %>%
   left_join(interactions_matrices, by = "setting") %>%
   mutate(
     # correlations
-    cor_est = map_dbl(cross_data, cor_f),
-    l1o_ests = map(l1o_cross_data, function(dfs) map_dbl(dfs, cor_f)),
-    cor_se = map_dbl(l1o_ests, jackknife.sd),
-    cor_lci = cor_est + cor_se * qnorm(0.05 / 2),
-    cor_uci = cor_est + cor_se * qnorm(1 - (0.05 / 2)),
+    estimate = map_dbl(cross_data, cor_f),
+    l1o_estimates = map(l1o_cross_data, function(dfs) map_dbl(dfs, cor_f)),
+    se = map_dbl(l1o_estimates, jackknife.sd),
+    lci = estimate + se * qnorm(0.05 / 2),
+    uci = estimate + se * qnorm(1 - (0.05 / 2)),
     # Mantel test
     Y = map(cross_data, ~ -rank_matrix(long_to_matrix(., "dr_du"))),
     X = map2(matrix, Y, ~ rank_matrix(subset_by_names(.x, rownames(.y)))),
     test = map2(X, Y, ~ vegan::mantel(.x, .y, method = "spearman")),
-    cor_est2 = map_dbl(test, ~ .$statistic),
+    estimate2 = map_dbl(test, ~ .$statistic),
     p = map_dbl(test, ~ .$signif),
-    sig = p.adjust(p, "BH") < 0.05,
-    # rlm
-    model = map(cross_data, ~ MASS::rlm(dr_du ~ adjacent, data = .)),
-    rlm_est = map_dbl(model, ~ coef(.)["adjacentTRUE"]),
-    rlm_lci = map_dbl(model, ~ confint.default(.)["adjacentTRUE", "2.5 %"]),
-    rlm_uci = map_dbl(model, ~ confint.default(.)["adjacentTRUE", "97.5 %"])
+    sig = p.adjust(p, "BH") < 0.05
   ) %>%
-  { stopifnot(all(.$cor_est2 == -.$cor_est)); . } %>%
-  select(dataset, cor_est, cor_lci, cor_uci, p, sig, rlm_est, rlm_lci, rlm_uci)
+  { stopifnot(all(.$estimate == -.$estimate2)); . } %>%
+  select(dataset, estimate, lci, uci, p, sig)
 
-mantel_results
+mantel_table <- mantel_results %>%
+  mutate_if(is.numeric, ~ signif(., 2))
 
-write_tsv(mantel_results, "results/mantel-results.tsv")
+mantel_table
+
+write_tsv(mantel_table, "results/mantel-results.tsv")
 
 
 # Plots -----------------------------------------------------------------------
