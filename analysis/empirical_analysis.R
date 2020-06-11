@@ -5,7 +5,6 @@ library(datasets)
 library(countrycode)
 library(cowplot)
 library(patchwork)
-library(scales)
 
 revalue <- function(x, from, to) to[match(x, from)]
 
@@ -221,7 +220,7 @@ cross_data <- unit_data %>%
     l1o_cross_data = map(cross_data, leave_one_out_from_cross)
   )
 
-# Commuting histogram ---------------------------------------------------------
+# Interactions histogram ------------------------------------------------------
 
 histograms <- cross_data %>%
   select(setting, cross_data) %>%
@@ -251,7 +250,7 @@ histograms <- cross_data %>%
   ) +
   theme_cowplot()
 
-ggsave('fig/commuting_histogram.pdf')
+ggsave('fig/interactions_histogram.pdf')
 
 
 # Adjacency analysis ----------------------------------------------------------
@@ -451,7 +450,12 @@ adjacency_plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
     aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
     stat = 'identity'
   ) +
-  geom_jitter(data = point_data, aes(y = dr_du), size = 0.1, width = 0.2) +
+  geom_jitter(
+    data = point_data,
+    aes(y = dr_du),
+    shape = 1, size = 0.75,
+    width = 0.3
+  ) +
   scale_x_discrete(
     '',
     labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adj.')
@@ -460,7 +464,10 @@ adjacency_plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
   theme_cowplot() +
   theme(strip.background = element_blank())
 
-ggsave('fig/adjacency_plot.pdf', plot = adjacency_plot)
+ggsave(
+  'fig/adjacency_plot.pdf', plot = adjacency_plot,
+  height = 6
+)
 
 # Interaction plot
 
