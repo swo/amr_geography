@@ -230,15 +230,18 @@ histograms <- cross_data %>%
   select(setting, unit1, unit2, adjacent, interaction) %>%
   distinct() %>%
   filter(unit1 < unit2) %>%
+  # convert to n-tiles
+  group_by(setting) %>%
+  mutate(x = ntile(interaction, 10)) %>%
+  ungroup() %>%
   mutate(key = recode(
     setting,
     Europe = "European intercountry flights",
     US = "US interstate commuting"
   )) %>%
-  ggplot(aes(x = interaction, fill = adjacent)) +
-  geom_histogram(na.rm = TRUE, color = "black") +
-  facet_wrap(facets = vars(key), scales = "free") +
-  scale_x_log10() +
+  ggplot(aes(x = factor(x), fill = adjacent)) +
+  geom_bar(color = "black", width = 1.0) +
+  facet_wrap(facets = vars(key), scales = "free_y") +
   scale_y_continuous(expand = c(0, 0)) +
   scale_fill_manual(
     breaks = c(FALSE, TRUE),
@@ -246,12 +249,18 @@ histograms <- cross_data %>%
     labels = c("no", "yes")
   ) +
   labs(
-    x = expression(paste("Interaction (", epsilon, ")")),
+    x = "Interaction decile",
     y = "No. of unit pairs",
     fill = "Adjacent?"
   ) +
   theme_cowplot() +
-  theme(strip.background = element_blank())
+  theme(
+    strip.background = element_blank(),
+    axis.line = element_blank(),
+    axis.ticks.x = element_blank()
+  )
+
+histograms
 
 ggsave('fig/interactions_histogram.pdf', plot = histograms)
 
@@ -457,20 +466,24 @@ ggsave(
 interaction_plot <- cross_data %>%
   select(dataset, cross_data) %>%
   unnest(cols = cross_data) %>%
-  ggplot(aes(interaction, dr_du)) +
-  facet_wrap(vars(dataset)) +
+  # convert to ranks
+  group_by(dataset) %>%
+  mutate(x = rank(interaction)) %>%
+  ungroup() %>%
+  ggplot(aes(x, dr_du)) +
+  facet_wrap(vars(dataset), scales = "free_x") +
   geom_hline(yintercept = 0, linetype = 2) +
   geom_point(shape = 1) +
-  scale_x_log10() +
-  scale_y_continuous(
-    limits = 50 * c(-1, 1)
-  ) +
+  geom_smooth(method = MASS::rlm, se = FALSE, color = "red", linetype = 2) +
   theme_cowplot() +
   labs(
-    x = expression(paste("Interaction (", epsilon, ")")),
+    x = "Interaction rank",
     y = dr_du_lab
   ) +
+  coord_cartesian(ylim = 25 * c(-1, 1)) +
   theme(strip.background = element_blank())
+
+interaction_plot
 
 ggsave(
   "fig/interaction_plot.pdf", plot = interaction_plot,
