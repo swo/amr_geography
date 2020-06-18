@@ -207,7 +207,7 @@ cross_units <- function(df) {
       d_use = use1 - use2,
       dr_du = d_resistant / d_use
     ) %>%
-    select(unit1, unit2, dr_du, adjacent, interaction)
+    select(unit1, unit2, dr_du, adjacent, interaction, interaction_decile)
 }
 
 leave_one_out_from_cross <- function(df) {
@@ -390,6 +390,45 @@ mantel_table
 
 write_tsv(mantel_table, "results/mantel-results.tsv")
 
+# Difference in dr/du by decile (compare least interaction=1 with most=10)
+add_decile <- function(df) mutate(df, decile = ntile(interaction, 10))
+decile_arr <- function(df) {
+  add_decile(df) %>%
+    with({
+      median(dr_du[decile == 10]) - median(dr_du[decile == 1])
+    })
+}
+decile_ratio <- function(df) {
+  add_decile(df) %>%
+    with({
+      (median(dr_du[decile == 10]) - median(dr_du[decile == 1])) /
+        median(dr_du[decile == 1])
+    })
+}
+
+tile_results <- tibble(
+  method = c("arr", "ratio"),
+  estimate_f = list(decile_arr, decile_ratio)
+) %>%
+  crossing(cross_data) %>%
+  mutate(
+    estimate = map2_dbl(estimate_f, cross_data, ~ .x(.y)),
+    l1o_estimates = map2(l1o_cross_data, estimate_f, ~ map_dbl(.x, .y)),
+    se = map_dbl(l1o_estimates, jackknife.sd),
+    lci = estimate + se * qnorm(0.05 / 2),
+    uci = estimate + se * qnorm(1 - (0.05 / 2))
+  ) %>%
+  arrange(dataset, method) %>%
+  select(dataset, method, estimate, lci, uci)
+
+tile_table <- tile_results %>%
+  mutate_if(is.numeric, ~ signif(., 2)) %>%
+  mutate(label = as.character(str_glue("{estimate} ({lci} to {uci})"))) %>%
+  select(dataset, method, label) %>%
+  pivot_wider(names_from = method, values_from = label) %>%
+  mutate_if(is.numeric, ~ signif(., 2))
+
+write_tsv(tile_table, "results/tile-table.tsv")
 
 # Plots -----------------------------------------------------------------------
 
