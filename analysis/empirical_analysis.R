@@ -32,10 +32,9 @@ marketscan <- marketscan_use %>%
   select(unit = state, bugdrug, use, f_resistant)
 
 nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
-  filter(state %in% state.abb) %>%
   mutate(
     bugdrug = 'Ec/q',
-    use = rx_1k_year / 1e3,
+    use = rx_person_year,
     f_resistant = n_resistant / n_isolates
   ) %>%
   select(unit = state, bugdrug, use, f_resistant)
