@@ -98,16 +98,20 @@ breaker <- function(digits) {
 
 obs_plot <- unit_data %>%
   unnest(cols = c(data)) %>%
-  ggplot(aes(use, f_resistant * 100)) +
+  ggplot(aes(use, f_resistant)) +
   facet_wrap(~ dataset, scales = 'free') +
   geom_smooth(method = 'lm', color = 'gray50') +
   geom_point() +
   scale_x_continuous(
-    'Treatments per person per year',
+    expression(paste(
+      "Antibiotic use ", tau, " (treatments per person per year)"
+    )),
     breaks = breaker(2)
   ) +
   scale_y_continuous(
-    name = 'Resistance (% isolates nonsusceptible)'
+    expression(paste(
+      "Resistance ", rho, " (proportion of isolates nonsusceptible)"
+    ))
   ) +
   theme_cowplot() +
   theme(
@@ -115,7 +119,10 @@ obs_plot <- unit_data %>%
     plot.margin = margin(1, 5, 1, 1, 'mm')
   )
 
-ggsave('fig/cross_sectional.pdf')
+ggsave(
+  "fig/cross_sectional.pdf", plot = obs_plot,
+  width = 6.5, height = 5, unit = "in"
+)
 
 # Load adjacency and commuting data -------------------------------------------
 
@@ -207,7 +214,7 @@ cross_units <- function(df) {
       d_use = use1 - use2,
       dr_du = d_resistant / d_use
     ) %>%
-    select(unit1, unit2, dr_du, adjacent, interaction, interaction_decile)
+    select(unit1, unit2, dr_du, adjacent, interaction)
 }
 
 leave_one_out_from_cross <- function(df) {
@@ -438,7 +445,7 @@ dr_du_lab <- expression(
 
 boxplot_details_f <- function(df, ymin, ymax) {
   df %>%
-    nest(-adjacent) %>%
+    nest(data = c(unit1, unit2, dr_du, interaction)) %>%
     mutate(
       y = map(data, ~ .$dr_du),
       box = map(y, ~ boxplot.stats(.)$stats),
@@ -451,7 +458,7 @@ boxplot_details_f <- function(df, ymin, ymax) {
       ))
     ) %>%
     select(adjacent, boxplot_data) %>%
-    unnest()
+    unnest(cols = c(boxplot_data))
 }
 
 f_to_keep <- 0.90
@@ -497,13 +504,27 @@ adjacency_plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
 
 ggsave(
   'fig/adjacency_plot.pdf', plot = adjacency_plot,
-  height = 6
+  width = 7, height = 5, unit = "in"
 )
 
-# Interaction plot
+# Interaction plot ----------------------------------------------------
+
+sig_interactions <- mantel_results %>%
+  filter(sig) %>%
+  pull(dataset)
+
+sig_labels <- levels(cross_data$dataset) %>%
+  (function(x) {
+    case_when(
+      x %in% sig_interactions ~ str_c(x, " *"),
+      TRUE ~ x
+    )
+  })
 
 interaction_plot <- cross_data %>%
   select(dataset, cross_data) %>%
+  # add * after names of significant interactions
+  mutate_at("dataset", ~ factor(., labels = sig_labels)) %>%
   unnest(cols = cross_data) %>%
   # convert to ranks
   group_by(dataset) %>%
@@ -526,5 +547,5 @@ interaction_plot
 
 ggsave(
   "fig/interaction_plot.pdf", plot = interaction_plot,
-  height = 6
+  width = 7.5, height = 5, unit = "in"
 )
