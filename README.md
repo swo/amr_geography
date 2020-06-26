@@ -6,9 +6,6 @@ simulations and observations of US states and European countries"
 ## To do
 
 - Add Zenodo badge at top
-- Figure out if want to include Python scraping scripts
-- Clean up
-    - analysis
 
 ## Getting started
 
@@ -30,9 +27,35 @@ R -e "install.packages(scan('r-packages.txt', what=character()))"
 
 ## File structure
 
+There are two directories with input empirical data:
 
-### Output
+- `data/` has antibiotic use and resistance data
+- `db/` has adjacency and transportation flow data
 
+This directory has the scripts required to re-run the analyses:
+
+- `whn_sims.R` and `dtypes_sims.R` run the 2-population simulations and
+  produced cached output, using `utils.R` as common resources
+- `2pop_figs.R` and `tables.R` create figures and tables using the cached
+  simulations
+- `empirical_analysis.R` runs the analyses of US states and European countries
+
+And there are 3 directories that hold the outputs:
+
+- `cache/` holds cached simulation results
+- `fig/` holds the output figures
+- `results/` holds the output tables
+
+## Output
+
+- `fig/whn_2pop.pdf` and `dtypes_2pop.pdf` show the simulation results visually
+- `results/2pop_reduction.tsv` shows the theoretical results in a table
+- `fig/cross_sectional.pdf` shows the observational data before any analysis
+- `fig/adjacency_plot.pdf` and `results/adjacency-results.tsv` show the
+  adjacency analysis
+- `fig/interaction_plot.pdf`, `fig/interactions_histogram.pdf`,
+  `results/mantel-results.tsv` and `results/tile-table.tsv` show the
+transportation analysis
 
 ## Author
 
