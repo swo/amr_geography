@@ -1,0 +1,7 @@
+rule all:
+    input: "nhsn-ims/data.tsv"
+
+rule nhsn:
+    output: "nhsn-ims/data.tsv"
+    input: script="nhsn-ims/download-and-clean.R"
+    shell: "cd nhsn-ims && ./download-and-clean.R"

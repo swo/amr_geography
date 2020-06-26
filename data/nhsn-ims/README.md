@@ -1,6 +1,3 @@
-% NHSN and IMS
-% 30 July 2018
-
 # IMS prescription data
 
 Downloaded from the CDC [Antibiotic Resistance Safety Atlas](https://gis.cdc.gov/grasp/PSA/indexAU.html).
