@@ -1,10 +1,20 @@
 #!/usr/bin/env Rscript
 
-source("utils.R")
+library(tidyverse)
+library(cowplot)
+library(grid)
+library(gridExtra)
+library(patchwork)
+
+pdf.options(useDingbats = FALSE, useKerning = FALSE)
+
+annotate_text <- function(x, y, label, parse = TRUE, ...) {
+  annotate('text', x = x, y = y, label = label, parse = parse, ...)
+}
 
 # WHN -------------------------------------------------------------------------
 
-whn_2pop <- read_rds("results/whn_2pop.rds")
+whn_2pop <- read_rds("cache/whn_2pop.rds")
 
 whn_2pop_barplot_data <- whn_2pop %>%
   unnest(results) %>%
@@ -17,7 +27,7 @@ whn_2pop_barplot_f <- function(df) {
   initial_resistance <- df %>%
     filter(epsilon == 0, pop == "control") %>%
     pull(rho)
-  
+
   df %>%
     ggplot(aes(x = factor(epsilon), y = rho, fill = pop)) +
     geom_hline(yintercept = initial_resistance, linetype = 2) +
@@ -122,7 +132,7 @@ ggsave(
 
 # D-types ---------------------------------------------------------------------
 
-dtypes <- read_rds("results/dtypes_2pop.rds")
+dtypes <- read_rds("cache/dtypes_2pop.rds")
 
 dtypes_plot <- dtypes %>%
   mutate(

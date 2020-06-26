@@ -1,5 +1,4 @@
 MODELS = ["whn", "dtypes"]
-SIMS = ["2pop", "commuting"]
 
 subworkflow db:
     workdir: "../db"
@@ -8,7 +7,10 @@ subworkflow db:
 rule all:
     input:
         expand("fig/{model}_2pop.pdf", model=MODELS),
-        expand("results/{x}.tsv", x=["2pop_reduction", "epsilon0"])
+        "results/2pop_reduction.tsv"
+
+rule clean:
+    shell: "rm -rf cache/* fig/* results/*"
 
 rule empirical:
     output: "fig/cross_sectional.pdf"
@@ -20,16 +22,16 @@ rule empirical:
     shell: "./{input.script}"
 
 rule simulation_tables:
-    output: expand("results/{x}.tsv", x=["2pop_reduction", "epsilon0"])
-    input: expand("results/{model}_{sim}.rds", model=MODELS, sim=SIMS), script="tables.R"
+    output: "results/2pop_reduction.tsv"
+    input: expand("cache/{model}_2pop.rds", model=MODELS), script="tables.R"
     shell: "./{input.script}"
 
 rule twopop_fig:
     output: expand("fig/{model}_2pop.pdf", model=MODELS)
-    input: expand("results/{model}_2pop.rds", model=MODELS), "utils.R", script="2pop_figs.R"
+    input: expand("cache/{model}_2pop.rds", model=MODELS), "utils.R", script="2pop_figs.R"
     shell: "./{input.script}"
 
 rule sim:
-    output: expand("results/{{model}}_{sim}.rds", sim=SIMS)
-    input: "{model}_model.R", "utils.R", script="{model}_sims.R"
+    output: "cache/{model}_2pop.rds"
+    input: "utils.R", script="{model}_sims.R"
     shell: "./{input.script}"

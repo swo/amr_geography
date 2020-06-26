@@ -15,13 +15,8 @@ simulations and observations of US states and European countries"
 
 ## Getting started
 
-The code run using R (developed against version 3.6.0) and packages:
-
-- [tidyverse](https://tidyverse.tidyverse.org)
-- [countrycode](https://github.com/vincentarelbundock/countrycode)
-- [vegan](https://github.com/vegandevs/vegan)
-- [cowplot](https://wilkelab.org/cowplot)
-- [patchwork](https://github.com/thomasp85/patchwork)
+The code run using R (developed against version 3.6.0) and a number of packages
+(see conda setup below).
 
 [Snakemake](https://snakemake.readthedocs.io/en/stable/) is used for
 convenience of executing the scripts but is not strictly necessary.
@@ -33,7 +28,7 @@ environment:
 conda create --name spillover r-base=3.6 python=3.6
 conda activate spillover
 python3 -m pip install snakemake
-R -e "install.packages(c('tidyverse', 'countrycode', 'vegan', 'cowplot', 'patchwork'))"
+R -e "install.packages(c('tidyverse', 'countrycode', 'vegan', 'cowplot', 'patchwork', 'gridExtra', 'memoise'))"
 ```
 
 ## File structure
