@@ -1,25 +1,30 @@
 MODELS = ["whn", "dtypes"]
 SIMS = ["2pop", "commuting"]
 
+subworkflow db:
+    workdir: "../db"
+    snakefile: "../db/Snakefile"
+
+subworkflow data:
+    workdir: "../data/"
+    snakefile: "../data/Snakefile"
+
 rule all:
     input:
         expand("fig/{model}_2pop.pdf", model=MODELS),
-        "fig/commuting.pdf",
-        expand("results/{x}.tsv", x=["power", "2pop_reduction", "commuting_reduction", "epsilon0"])
+        expand("results/{x}.tsv", x=["2pop_reduction", "epsilon0"])
 
 rule empirical:
     output: "fig/cross_sectional.pdf"
-    input: script="empirical_analysis.R"
+    input:
+        db("../db/us/adjacency.tsv"), db("../db/us/commuting.tsv"),
+        db("../db/europe/adjacency.tsv"), db("../db/europe/flights.tsv")
+        script="empirical_analysis.R"
     shell: "./{input.script}"
 
 rule simulation_tables:
     output: expand("results/{x}.tsv", x=["2pop_reduction", "epsilon0"])
     input: expand("results/{model}_{sim}.rds", model=MODELS, sim=SIMS), script="tables.R"
-    shell: "./{input.script}"
-
-rule commuting_analysis:
-    output: "fig/commuting.pdf", "results/commuting_reduction.tsv"
-    input: expand("results/{model}_commuting.rds", model=MODELS), "utils.R", script="commuting_analysis.R"
     shell: "./{input.script}"
 
 rule twopop_fig:
@@ -30,9 +35,4 @@ rule twopop_fig:
 rule sim:
     output: expand("results/{{model}}_{sim}.rds", sim=SIMS)
     input: "{model}_model.R", "utils.R", script="{model}_sims.R"
-    shell: "./{input.script}"
-
-rule power:
-    output: "results/power.tsv"
-    input: script="power.R"
     shell: "./{input.script}"

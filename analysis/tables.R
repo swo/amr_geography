@@ -48,4 +48,3 @@ twopop_reduction <- data %>%
   select(sim, delta_tau, epsilon, reduction)
 
 write_tsv(twopop_reduction, "results/2pop_reduction.tsv")
-
