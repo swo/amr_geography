@@ -1,19 +1,11 @@
-.Rproj.user
-.Rhistory
-.RData
-.Ruserdata
 *.pdf
-old/
-tmp*
-pack/
-doc/
-
-# data files
 *.csv
-*.dta
 *.zip
-*.xlsx
 *.tsv
 *.gz
 
-.*.swp
+cache/
+results/
+fig/
+
+pack/

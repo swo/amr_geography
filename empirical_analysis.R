@@ -10,9 +10,9 @@ set.seed(77845) # for Mantel test
 
 # Load US data --------------------------------------------------------
 
-marketscan <- read_tsv("../data/marketscan/data.tsv")
+marketscan <- read_tsv("data/marketscan/data.tsv")
 
-nhsn <- read_tsv('../data/nhsn/data.tsv') %>%
+nhsn <- read_tsv('data/nhsn/data.tsv') %>%
   mutate(
     bugdrug = 'Ec/q',
     use = rx_person_year,
@@ -30,7 +30,7 @@ did_cpy_map <- tibble(
   cpy_per_did = 365 / (1e3 * ddd_per_tx)
 )
 
-europe <- read_tsv('../data/ecdc/data.tsv') %>%
+europe <- read_tsv('data/ecdc/data.tsv') %>%
   left_join(did_cpy_map, by = 'drug') %>%
   mutate(use = cpy_per_did * did) %>%
   mutate(
@@ -117,7 +117,7 @@ read_adjacency_matrix <- function(fn) {
 
 matrixify <- function(df) {
   stopifnot(all(names(df)[-1] == df$from_unit))
-  
+
   mat <- df %>%
     select(-from_unit) %>%
     as.matrix
@@ -150,8 +150,8 @@ tibblify <- function(mat) {
 
 adjacency_db <- tribble(
   ~setting, ~fn,
-  "US", "../db/us/adjacency.tsv",
-  "Europe", "../db/europe/adjacency.tsv"
+  "US", "db/us/adjacency.tsv",
+  "Europe", "db/europe/adjacency.tsv"
 ) %>%
   mutate(data = map(fn, read_adjacency_matrix)) %>%
   select(setting, data) %>%
@@ -165,8 +165,8 @@ adjacency_db %>%
 
 interactions_matrices <- tribble(
   ~setting, ~fn,
-  "US", "../db/us/commuting.tsv",
-  "Europe", "../db/europe/flights.tsv"
+  "US", "db/us/commuting.tsv",
+  "Europe", "db/europe/flights.tsv"
 ) %>%
   mutate(
     data = map(fn, read_tsv),

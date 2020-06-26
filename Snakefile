@@ -1,8 +1,8 @@
 MODELS = ["whn", "dtypes"]
 
 subworkflow db:
-    workdir: "../db"
-    snakefile: "../db/Snakefile"
+    workdir: "db"
+    snakefile: "db/Snakefile"
 
 rule all:
     input:
@@ -18,9 +18,9 @@ rule clean:
 rule empirical:
     output: "fig/cross_sectional.pdf"
     input:
-        db("../db/us/adjacency.tsv"), db("../db/us/commuting.tsv"),
-        db("../db/europe/adjacency.tsv"), db("../db/europe/flights.tsv"),
-        expand("../data/{x}/data.tsv", x=["ecdc", "marketscan", "nhsn"]),
+        db("us/adjacency.tsv"), db("us/commuting.tsv"),
+        db("europe/adjacency.tsv"), db("europe/flights.tsv"),
+        expand("data/{x}/data.tsv", x=["ecdc", "marketscan", "nhsn"]),
         script="empirical_analysis.R"
     shell: "./{input.script}"
 
