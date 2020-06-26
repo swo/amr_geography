@@ -8,28 +8,9 @@ library(patchwork)
 
 set.seed(77845) # for Mantel test
 
-revalue <- function(x, from, to) to[match(x, from)]
-
 # Load US data --------------------------------------------------------
 
-marketscan_res <- read_tsv('../data/ms-medicare-ro/abg_state.tsv') %>%
-  rename(drug = drug_group) %>%
-  mutate(bugdrug = case_when(
-    # don't do Sp/bl, as they have negative correlation
-    .$bug == 'E. coli' & .$drug == 'quinolone' ~ 'Ec/q',
-    .$bug == 'S. pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
-  )) %>%
-  filter(!is.na(bugdrug)) %>%
-  select(bugdrug, drug, state, f_resistant = f_ns)
-
-marketscan_use <- read_tsv('../data/ms-medicare-ro/ineq_marketscan.tsv') %>%
-  rename(drug = drug_group, use = total_use) %>%
-  filter(drug %in% c('quinolone', 'macrolide'))
-
-marketscan <- marketscan_use %>%
-  inner_join(marketscan_res, by = c('drug', 'state')) %>%
-  mutate_at("state", ~ revalue(., state.name, state.abb)) %>%
-  select(unit = state, bugdrug, use, f_resistant)
+marketscan <- read_tsv("../data/marketscan/data.tsv")
 
 nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
   mutate(
