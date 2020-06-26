@@ -6,8 +6,11 @@ subworkflow db:
 
 rule all:
     input:
+        # simulations
         expand("fig/{model}_2pop.pdf", model=MODELS),
-        "results/2pop_reduction.tsv"
+        "results/2pop_reduction.tsv",
+        # empirical
+        expand("fig/{x}.pdf", x=["cross_sectional"])
 
 rule clean:
     shell: "rm -rf cache/* fig/* results/*"

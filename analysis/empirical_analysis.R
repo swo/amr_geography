@@ -12,7 +12,7 @@ set.seed(77845) # for Mantel test
 
 marketscan <- read_tsv("../data/marketscan/data.tsv")
 
-nhsn <- read_tsv('../data/nhsn-ims/data.tsv') %>%
+nhsn <- read_tsv('../data/nhsn/data.tsv') %>%
   mutate(
     bugdrug = 'Ec/q',
     use = rx_person_year,
@@ -31,7 +31,6 @@ did_cpy_map <- tibble(
 )
 
 europe <- read_tsv('../data/ecdc/data.tsv') %>%
-  mutate_at("country", ~ countrycode(., origin = "country.name", destination = "iso3c")) %>%
   left_join(did_cpy_map, by = 'drug') %>%
   mutate(use = cpy_per_did * did) %>%
   mutate(
@@ -40,7 +39,7 @@ europe <- read_tsv('../data/ecdc/data.tsv') %>%
       .$bug == 'Streptococcus pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
       .$bug == 'Streptococcus pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
     ),
-    f_resistant = n_ns / n_isolates
+    f_resistant = n_resistant / n_isolates
   ) %>%
   select(unit = country, bugdrug, use, f_resistant)
 
@@ -65,6 +64,7 @@ unit_data <- tribble(
 
 # Use-resistance in different datasets ----------------------------------------
 
+# Convenience functions for making nice breaks in the plot
 round_up <- function(x, digits) ceiling(x * 10 ** digits) / 10 ** digits
 round_down <- function(x, digits) floor(x * 10 ** digits) / 10 ** digits
 
@@ -247,8 +247,6 @@ histograms <- cross_data %>%
     axis.ticks.x = element_blank()
   )
 
-histograms
-
 ggsave('fig/interactions_histogram.pdf', plot = histograms)
 
 
@@ -304,8 +302,6 @@ adjacency_table <- adjacency_results %>%
   pivot_wider(names_from = method, values_from = label) %>%
   left_join(wilcoxon_results, by = "dataset") %>%
   mutate_if(is.numeric, ~ signif(., 2))
-
-adjacency_table
 
 write_tsv(adjacency_table, "results/adjacency-results.tsv")
 
