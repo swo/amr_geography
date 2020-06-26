@@ -257,7 +257,7 @@ histograms <- cross_data %>%
   ) +
   labs(
     x = "Interaction decile",
-    y = "No. of unit pairs",
+    y = "No. of population pairs",
     fill = "Adjacent?"
   ) +
   theme_cowplot() +
@@ -285,11 +285,18 @@ jackknife.sd <- function(x) {
 
 test_f <- function(df) with(df, { wilcox.test(dr_du[adjacent], dr_du[!adjacent]) })
 arr_estimate_f <- function(df) with(df, { median(dr_du[adjacent]) - median(dr_du[!adjacent]) })
-ratio_estimate_f <- function(df) with(df, { median(dr_du[adjacent]) / median(dr_du[!adjacent]) })
+
+# fractional change
+fc_estimate_f <- function(df) {
+  with(df, {
+    (median(dr_du[adjacent]) - median(dr_du[!adjacent])) /
+      median(dr_du[!adjacent])
+  })
+}
 
 adjacency_results <- tibble(
-  method = c("arr", "ratio"),
-  estimate_f = list(arr_estimate_f, ratio_estimate_f)
+  method = c("arr", "fc"),
+  estimate_f = list(arr_estimate_f, fc_estimate_f)
 ) %>%
   crossing(cross_data) %>%
   mutate(
@@ -405,6 +412,7 @@ decile_arr <- function(df) {
       median(dr_du[decile == 10]) - median(dr_du[decile == 1])
     })
 }
+
 decile_ratio <- function(df) {
   add_decile(df) %>%
     with({
