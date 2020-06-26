@@ -12,9 +12,9 @@ set.seed(77845) # for Mantel test
 
 marketscan <- read_tsv("data/marketscan/data.tsv")
 
-nhsn <- read_tsv('data/nhsn/data.tsv') %>%
+nhsn <- read_tsv("data/nhsn/data.tsv") %>%
   mutate(
-    bugdrug = 'Ec/q',
+    bugdrug = "Ec/q",
     use = rx_person_year,
     f_resistant = n_resistant / n_isolates
   ) %>%
@@ -25,19 +25,19 @@ nhsn <- read_tsv('data/nhsn/data.tsv') %>%
 # Conversion from DID (defined daily doses per 1k inhabitants per day)
 # to CPY (claims per person per year)
 did_cpy_map <- tibble(
-  drug = c('beta_lactam', 'quinolone', 'macrolide'),
+  drug = c("beta_lactam", "quinolone", "macrolide"),
   ddd_per_tx = c(10, 10, 7),
   cpy_per_did = 365 / (1e3 * ddd_per_tx)
 )
 
-europe <- read_tsv('data/ecdc/data.tsv') %>%
-  left_join(did_cpy_map, by = 'drug') %>%
+europe <- read_tsv("data/ecdc/data.tsv") %>%
+  left_join(did_cpy_map, by = "drug") %>%
   mutate(use = cpy_per_did * did) %>%
   mutate(
     bugdrug = case_when(
-      .$bug == 'Escherichia coli' & .$drug == 'quinolone' ~ 'Ec/q',
-      .$bug == 'Streptococcus pneumoniae' & .$drug == 'beta_lactam' ~ 'Sp/bl',
-      .$bug == 'Streptococcus pneumoniae' & .$drug == 'macrolide' ~ 'Sp/m'
+      .$bug == "Escherichia coli" & .$drug == "quinolone" ~ "Ec/q",
+      .$bug == "Streptococcus pneumoniae" & .$drug == "beta_lactam" ~ "Sp/bl",
+      .$bug == "Streptococcus pneumoniae" & .$drug == "macrolide" ~ "Sp/m"
     ),
     f_resistant = n_resistant / n_isolates
   ) %>%
@@ -55,12 +55,12 @@ unit_data <- tribble(
   "Europe", "ECDC", europe
 ) %>%
   unnest(cols = data) %>%
-  mutate(dataset = str_c(data_source, ' ', bugdrug)) %>%
+  mutate(dataset = str_c(data_source, " ", bugdrug)) %>%
   select(dataset, setting, unit, f_resistant, use) %>%
   group_by(dataset) %>%
   nest() %>%
   ungroup() %>%
-  mutate_at('dataset', fct_inorder)
+  mutate_at("dataset", fct_inorder)
 
 # Use-resistance in different datasets ----------------------------------------
 
@@ -79,8 +79,8 @@ breaker <- function(digits) {
 obs_plot <- unit_data %>%
   unnest(cols = c(data)) %>%
   ggplot(aes(use, f_resistant)) +
-  facet_wrap(~ dataset, scales = 'free') +
-  geom_smooth(method = 'lm', color = 'gray50') +
+  facet_wrap(~ dataset, scales = "free") +
+  geom_smooth(method = "lm", color = "gray50") +
   geom_point() +
   scale_x_continuous(
     expression(paste(
@@ -96,7 +96,7 @@ obs_plot <- unit_data %>%
   theme_cowplot() +
   theme(
     strip.background = element_blank(),
-    plot.margin = margin(1, 5, 1, 1, 'mm')
+    plot.margin = margin(1, 5, 1, 1, "mm")
   )
 
 ggsave(
@@ -121,25 +121,25 @@ matrixify <- function(df) {
   mat <- df %>%
     select(-from_unit) %>%
     as.matrix
-  
+
   rownames(mat) <- names(df)[-1]
-  
+
   stopifnot(all(rownames(mat) == colnames(mat)))
-  
+
   # make rows sum to 1
   mat <- mat %>%
     sweep(1, rowSums(.), "/")
-    
+
   stopifnot(all(rowSums(mat) == 1))
-  
+
   # symmetrize
   mat <- 0.5 * (mat + t(mat))
   stopifnot(all(mat == t(mat)))
-    
+
   # set diagonal to maximum
   if (any(mat > 1)) stop("Entries over 1")
   diag(mat) <- 1
-  
+
   mat
 }
 
@@ -174,7 +174,7 @@ interactions_matrices <- tribble(
   ) %>%
   select(setting, matrix)
 
-interactions_tbl <- interactions_matrices %>% 
+interactions_tbl <- interactions_matrices %>%
   mutate(tbl = map(matrix, tibblify)) %>%
   select(setting, tbl) %>%
   unnest(cols = tbl)
@@ -185,8 +185,8 @@ cross_units <- function(df) {
   df %>%
     with(crossing(unit1 = unit, unit2 = unit)) %>%
     filter(unit1 < unit2) %>%
-    left_join(rename_all(df, ~ str_c(., '1')), by = 'unit1') %>%
-    left_join(rename_all(df, ~ str_c(., '2')), by = 'unit2') %>%
+    left_join(rename_all(df, ~ str_c(., "1")), by = "unit1") %>%
+    left_join(rename_all(df, ~ str_c(., "2")), by = "unit2") %>%
     left_join(adjacency_db, by = c("unit1", "unit2")) %>%
     left_join(interactions_tbl, by = c("unit1", "unit2")) %>%
     mutate(
@@ -247,7 +247,7 @@ histograms <- cross_data %>%
     axis.ticks.x = element_blank()
   )
 
-ggsave('fig/interactions_histogram.pdf', plot = histograms)
+ggsave("fig/interactions_histogram.pdf", plot = histograms)
 
 
 # Adjacency analysis ----------------------------------------------------------
@@ -310,18 +310,18 @@ write_tsv(adjacency_table, "results/adjacency-results.tsv")
 long_to_matrix <- function(tbl, value) {
   nm <- sort(unique(c(tbl$unit1, tbl$unit2)))
   X <- matrix(NA, nrow = length(nm), ncol = length(nm))
-  
+
   is <- match(tbl$unit1, nm)
   js <- match(tbl$unit2, nm)
-  
+
   for (k in 1:nrow(tbl)) {
     X[is[k], js[k]] <- tbl[[value]][k]
     X[js[k], is[k]] <- tbl[[value]][k]
   }
-  
+
   colnames(X) <- nm
   rownames(X) <- nm
-  
+
   X
 }
 
@@ -336,18 +336,18 @@ rank_matrix <- function(X) {
   n <- dim(X)[1]
   # check that X is square
   stopifnot(n == dim(X)[2])
-  
+
   # initialize blank matrix
   out <- matrix(NA, nrow = n, ncol = n)
-  
+
   values <- rank(X[upper.tri(X)])
   out[upper.tri(X)] <- values
   out[lower.tri(X)] <- values
   diag(out) <- 0
-  
+
   rownames(out) <- rownames(X)
   colnames(out) <- colnames(X)
-  
+
   out
 }
 
@@ -424,7 +424,7 @@ write_tsv(tile_table, "results/tile-table.tsv")
 # Plots -----------------------------------------------------------------------
 
 dr_du_lab <- expression(
-  paste('Use-resistance association ', (Delta * rho / Delta * tau))
+  paste("Use-resistance association ", (Delta * rho / Delta * tau))
 )
 
 boxplot_details_f <- function(df, ymin, ymax) {
@@ -466,11 +466,11 @@ boxplot_details <- boxplot_data %>%
   unnest(cols = boxplot_details)
 
 adjacency_plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
-  facet_wrap(~ dataset, scales = 'free_y') +
+  facet_wrap(~ dataset, scales = "free_y") +
   geom_boxplot(
     data = boxplot_details,
     aes(lower = lower, upper = upper, middle = middle, ymin = ymin, ymax = ymax),
-    stat = 'identity'
+    stat = "identity"
   ) +
   geom_jitter(
     data = point_data,
@@ -479,15 +479,15 @@ adjacency_plot <- ggplot(data = NULL, aes(x = factor(adjacent))) +
     width = 0.3
   ) +
   scale_x_discrete(
-    '',
-    labels = c(`TRUE` = 'Adjacent', `FALSE` = 'Not adj.')
+    "",
+    labels = c(`TRUE` = "Adjacent", `FALSE` = "Not adj.")
   ) +
   ylab(dr_du_lab) +
   theme_cowplot() +
   theme(strip.background = element_blank())
 
 ggsave(
-  'fig/adjacency_plot.pdf', plot = adjacency_plot,
+  "fig/adjacency_plot.pdf", plot = adjacency_plot,
   width = 7, height = 5, unit = "in"
 )
 
