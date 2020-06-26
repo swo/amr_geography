@@ -8,9 +8,6 @@ simulations and observations of US states and European countries"
 - Add Zenodo badge at top
 - Figure out if want to include Python scraping scripts
 - Clean up
-    - one big snakemake for everything
-    - data
-    - db
     - analysis
 
 ## Getting started
@@ -28,7 +25,7 @@ environment:
 conda create --name spillover r-base=3.6 python=3.6
 conda activate spillover
 python3 -m pip install snakemake
-R -e "install.packages(c('tidyverse', 'countrycode', 'vegan', 'cowplot', 'patchwork', 'gridExtra', 'memoise'))"
+R -e "install.packages(scan('r-packages.txt', what=character()))"
 ```
 
 ## File structure

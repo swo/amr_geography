@@ -1,0 +1,8 @@
+tidyverse
+countrycode
+vegan
+cowplot
+patchwork
+gridExtra
+memoise
+rootSolve
