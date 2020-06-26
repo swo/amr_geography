@@ -1,11 +1,9 @@
 # Antibiotic resistance spillover
 
+[![DOI](https://zenodo.org/badge/142627876.svg)](https://zenodo.org/badge/latestdoi/142627876)
+
 Code for "The role of 'spillover' in outpatient antibiotic resistance:
 simulations and observations of US states and European countries"
-
-## To do
-
-- Add Zenodo badge at top
 
 ## Getting started
 
