@@ -29,14 +29,20 @@ whn_2pop_barplot_f <- function(df) {
     pull(rho)
 
   df %>%
-    ggplot(aes(x = factor(epsilon), y = rho, fill = pop)) +
+    mutate_at("epsilon", ~ factor(
+      ., levels = unique(.),
+      labels = scales::percent(unique(.), accuracy = 1)
+    )) %>%
+    ggplot(aes(x = epsilon, y = rho, fill = pop)) +
     geom_hline(yintercept = initial_resistance, linetype = 2) +
     geom_col(position = "dodge", color = "black") +
     scale_fill_manual(
       "",
       values = c("white", "black")
     ) +
-    scale_x_discrete(name = expression(epsilon)) +
+    scale_x_discrete(
+      name = expression(epsilon)
+    ) +
     scale_y_continuous(
       name = "resistance (%)",
       labels = scales::percent_format(accuracy = 1, suffix = ""),
@@ -61,23 +67,25 @@ whn_plot2 <- whn_2pop_barplot_data %>%
 
 whn_plot3 <- whn_2pop_lineplot_data %>%
   filter(epsilon %in% c(0.0, 0.01, 0.1)) %>%
-  ggplot(aes(delta_tau, delta_rho, group = factor(epsilon))) +
-  geom_point() +
-  geom_line() +
+  ggplot(aes(delta_tau, delta_rho)) +
+  geom_blank(data = tibble(delta_tau = 0.155, delta_rho = 0)) +
+  geom_point(aes(group = factor(epsilon))) +
+  geom_line(aes(group = factor(epsilon))) +
   scale_x_continuous(
     expression(Delta * tau),
-    limits = c(0, 0.15),
-    expand = c(0, 0.002)
+    # limits = c(0, 0.15),
+    expand = c(0, 0)
   ) +
   scale_y_continuous(
     expression(Delta * rho),
     limits = c(0, 0.80),
     expand = c(0, 0.01)
   ) +
-  annotate_text(0.07, 0.60, "epsilon == 0") +
-  annotate_text(0.10, 0.35, "epsilon == 0.01") +
-  annotate_text(0.13, 0.12, "epsilon == 0.1") +
-  theme_cowplot(font_size = 12)
+  annotate_text(0.07, 0.60, "epsilon == 0 * '%'") +
+  annotate_text(0.10, 0.35, "epsilon == 1 * '%'") +
+  annotate_text(0.13, 0.12, "epsilon == 10 * '%'") +
+  theme_cowplot(font_size = 12) +
+  theme(plot.margin = margin(0, 15, 0, 0, "pt"))
 
 whn_plot4 <- whn_2pop_lineplot_data %>%
   filter(
@@ -88,7 +96,7 @@ whn_plot4 <- whn_2pop_lineplot_data %>%
   ggplot(aes(epsilon, dr_du, group = factor(delta_tau))) +
   geom_point(aes(shape = factor(delta_tau))) +
   geom_line() +
-  geom_blank(data = tibble(epsilon = 0, dr_du = 0, delta_tau = 0.01)) +
+  geom_blank(data = tibble(epsilon = c(0, 0.51), dr_du = 0, delta_tau = 0.01)) +
   scale_shape_manual(
     values = c(1, 16),
     labels = c(
@@ -99,15 +107,19 @@ whn_plot4 <- whn_2pop_lineplot_data %>%
   guides(shape = guide_legend(title = "", label.hjust = 0)) +
   scale_x_continuous(
     expression(epsilon),
-    expand = c(0, 0.005)
+    expand = c(0, 0),
+    labels = partial(scales::percent, accuracy = 1)
   ) +
   scale_y_continuous(
     expression(Delta * rho / Delta * tau),
     limits = c(0, 7),
-    expand = c(0, 0.1)
+    expand = c(0, 0.0)
   ) +
   theme_cowplot(font_size = 12) +
-  theme(legend.position = c(0.5, 0.75))
+  theme(
+    legend.position = c(0.5, 0.75),
+    plot.margin = margin(0, 12, 0, 3, "pt")
+  )
 
 diagram <- ggdraw() +
   draw_grob(x = 0.2, circleGrob(gp = gpar(fill = "black")), scale = 0.5) +
@@ -153,6 +165,7 @@ dtypes_plot <- dtypes %>%
   guides(shape = guide_legend(title = "", label.hjust = 0)) +
   scale_x_continuous(
     expression(epsilon),
+    labels = scales::percent,
     limits = c(0, 0.1),
     expand = c(0.02, 0, 0.05, 0)
   ) +
