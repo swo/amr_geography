@@ -3,7 +3,7 @@
 [![DOI](https://zenodo.org/badge/142627876.svg)](https://zenodo.org/badge/latestdoi/142627876)
 
 Code for "The role of 'spillover' in outpatient antibiotic resistance:
-simulations and observations of US states and European countries"
+simulations and observations of US states and European countries" (preprint DOI [10.1101/536714](https://doi.org/10.1101/536714))
 
 ## Getting started
 
