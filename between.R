@@ -20,18 +20,21 @@ build_cross <- function(unit_data, alpha) {
     rename_all(unit_data, ~ str_c(., ".1")),
     rename_all(unit_data, ~ str_c(., ".2"))
   ) %>%
-    mutate(dist = sqrt((x.1 - x.2) ** 2 + (y.1 - y.2) ** 2))
+    mutate(
+      dist = sqrt((x.1 - x.2) ** 2 + (y.1 - y.2) ** 2),
+      weight = exp(-dist / alpha)
+    )
 
-  neighbor_use_data <- cross_data %>%
+  unit_data <- cross_data %>%
+    # get the resistance that every place would have, in a vacuum
+    mutate(res0 = slope * use.2) %>%
     group_by(id.1) %>%
-    mutate(weight = exp(-dist / alpha)) %>%
-    summarize(neighbor_use = weighted.mean(use.2, weight)) %>%
-    select(id = id.1, neighbor_use)
-
-  unit_data <- unit_data %>%
-    left_join(neighbor_use_data, by = "id") %>%
-    mutate(res = slope * neighbor_use) %>%
-    select(id, use, res)
+    # get actual resistance as weighted mean
+    summarize(
+      use = unique(use.1),
+      res = weighted.mean(res0, weight)
+    ) %>%
+    select(id = id.1, use, res)
 
   dist_data <- cross_data %>%
     select(id.1, id.2, dist) %>%
