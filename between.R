@@ -23,10 +23,8 @@ build_cross <- function(unit_data, alpha) {
     mutate(dist = sqrt((x.1 - x.2) ** 2 + (y.1 - y.2) ** 2))
 
   neighbor_use_data <- cross_data %>%
-    # filter(id.1 != id.2) %>%
     group_by(id.1) %>%
     mutate(weight = exp(-dist / alpha)) %>%
-    # mutate(weight = if_else(dist == 0, 1 - alpha, alpha / dist)) %>%
     summarize(neighbor_use = weighted.mean(use.2, weight)) %>%
     select(id = id.1, neighbor_use)
 
@@ -53,12 +51,7 @@ build_cross <- function(unit_data, alpha) {
   )
 }
 
-# This approach "works" whether you use the current model
-# (weight = e^{-dist / alpha}) or the other model (currently
-# commented; weight = 1-a if dist==0, else alpha / dist).
-
 alphas <- c(1e-6, 0.01, 0.1, 0.2)
-# alphas <- c(0.0, 0.1, 0.5, 1.0)
 
 results <- tibble(alpha = alphas) %>%
   mutate(
@@ -68,7 +61,8 @@ results <- tibble(alpha = alphas) %>%
     model = map(dist_data, ~ rlm(dr_du ~ dist, data = .)),
     summary = map(model, summary),
     ci = map(model, confint.default),
-    cor = map(dist_data, ~ cor.test(.$dr_du, .$dist, method = "spearman"))
+    cor = map(dist_data, ~ cor.test(.$dr_du, .$dist, method = "spearman")),
+    cor_p = map_dbl(cor, ~ .$p.value)
   )
 
 unit_plot <- results %>%
@@ -96,6 +90,4 @@ plot <- unit_plot + pair_plot
 
 ggsave("tmp.pdf")
 
-# results$summary
-# results$ci
-# results$cor
+results$cor_p
