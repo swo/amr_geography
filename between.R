@@ -26,14 +26,13 @@ build_cross <- function(unit_data, alpha) {
     # filter(id.1 != id.2) %>%
     group_by(id.1) %>%
     mutate(weight = exp(-dist / alpha)) %>%
-    # mutate(weight = 1 / dist) %>%
+    # mutate(weight = if_else(dist == 0, 1 - alpha, alpha / dist)) %>%
     summarize(neighbor_use = weighted.mean(use.2, weight)) %>%
     select(id = id.1, neighbor_use)
 
   unit_data <- unit_data %>%
     left_join(neighbor_use_data, by = "id") %>%
     mutate(res = slope * neighbor_use) %>%
-    # mutate(res = slope * ((1 - alpha) * use + alpha * neighbor_use)) %>%
     select(id, use, res)
 
   dist_data <- cross_data %>%
@@ -48,33 +47,55 @@ build_cross <- function(unit_data, alpha) {
     filter(id.1 != id.2, d_use >= 0) %>%
     select(id.1, id.2, dr_du, dist)
 
-  dist_data
+  list(
+    unit_data = unit_data,
+    dist_data = dist_data
+  )
 }
 
+# This approach "works" whether you use the current model
+# (weight = e^{-dist / alpha}) or the other model (currently
+# commented; weight = 1-a if dist==0, else alpha / dist).
+
 alphas <- c(1e-6, 0.01, 0.1, 0.2)
+# alphas <- c(0.0, 0.1, 0.5, 1.0)
 
 results <- tibble(alpha = alphas) %>%
   mutate(
     data = map(alpha, ~ build_cross(unit_data, .)),
-    model = map(data, ~ rlm(dr_du ~ dist, data = .)),
+    unit_data = map(data, ~ .$unit_data),
+    dist_data = map(data, ~ .$dist_data),
+    model = map(dist_data, ~ rlm(dr_du ~ dist, data = .)),
     summary = map(model, summary),
     ci = map(model, confint.default),
-    cor = map(data, ~ with(., { cor.test(dr_du, dist, method = "spearman") }))
+    cor = map(dist_data, ~ cor.test(.$dr_du, .$dist, method = "spearman"))
   )
 
+unit_plot <- results %>%
+  select(alpha, unit_data) %>%
+  unnest(cols = unit_data) %>%
+  ggplot(aes(use, res)) +
+  facet_wrap(vars(alpha)) +
+  geom_point() +
+  geom_abline(slope = 1, linetype = 2, color = "green") +
+  stat_smooth(method = "rlm", color = "red", linetype = 2, se = FALSE) +
+  labs(x = "use", y = "res", title = "Units")
+
 pair_plot <- results %>%
-  select(alpha, data) %>%
-  unnest(cols = data) %>%
+  select(alpha, dist_data) %>%
+  unnest(cols = dist_data) %>%
   ggplot(aes(dist, dr_du)) +
   facet_wrap(vars(alpha)) +
   geom_point() +
   geom_hline(yintercept = 1, linetype = 2, color = "green") +
-  stat_smooth(method = "rlm", color = "red", linetype = 2) +
+  stat_smooth(method = "rlm", color = "red", linetype = 2, se = FALSE) +
   coord_cartesian(ylim = c(-25, 25)) +
   labs(x = "distance", y = "Δres / Δuse", title = "Pairs of units")
 
+plot <- unit_plot + pair_plot
+
 ggsave("tmp.pdf")
 
-results$summary
-results$ci
-results$cor
+# results$summary
+# results$ci
+# results$cor
