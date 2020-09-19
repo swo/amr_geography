@@ -55,6 +55,7 @@ build_cross <- function(unit_data, alpha) {
 }
 
 alphas <- c(1e-6, 0.01, 0.1, 0.2)
+# alphas <- seq(1e-6, 1.0, length.out = 100)
 
 results <- tibble(alpha = alphas) %>%
   mutate(
