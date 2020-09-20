@@ -24,17 +24,13 @@ whn_2pop_lineplot_data <- whn_2pop %>%
   mutate(delta_rho = map_dbl(results, ~ max(.$rho) - min(.$rho)))
 
 whn_2pop_barplot_f <- function(df) {
-  initial_resistance <- df %>%
-    filter(epsilon == 0, pop == "control") %>%
-    pull(rho)
-
   df %>%
     mutate_at("epsilon", ~ factor(
       ., levels = unique(.),
       labels = scales::percent(unique(.), accuracy = 1)
     )) %>%
     ggplot(aes(x = epsilon, y = rho, fill = pop)) +
-    geom_hline(yintercept = initial_resistance, linetype = 2) +
+    geom_hline(yintercept = 0.50, linetype = 2) +
     geom_col(position = "dodge", color = "black") +
     scale_fill_manual(
       "",
@@ -121,17 +117,7 @@ whn_plot4 <- whn_2pop_lineplot_data %>%
     plot.margin = margin(0, 12, 0, 3, "pt")
   )
 
-diagram <- ggdraw() +
-  draw_grob(x = 0.2, circleGrob(gp = gpar(fill = "black")), scale = 0.5) +
-  draw_grob(x = -0.5, circleGrob(gp = gpar(fill = "white")), scale = 0.5) +
-  draw_grob(x = -0.5, y = -0.5, textGrob("control\npopulation", gp = gpar(fontsize = 11))) +
-  draw_grob(x = 0.2, y = -0.5, textGrob("intervention\npopulation", gp = gpar(fontsize = 11))) +
-  draw_grob(x = 0, y = 0, linesGrob(x = unit(c(0.2, 0.5), "npc"), y = 0.5)) +
-  draw_grob(x = -0.15, y = 0.1, textGrob(expression(epsilon), gp = gpar(fontsize = 11))) +
-  draw_grob(x = -0.15, y = 0.35, textGrob("interaction\nstrength", gp = gpar(fontsize = 11)))
-
-whn_2pop_plot <- (diagram | whn_plot1 | whn_plot2) /
-  (whn_plot3 | whn_plot4) +
+whn_2pop_plot <- whn_plot1 + whn_plot2 + whn_plot3 + whn_plot4 +
   plot_annotation(
     tag_levels = "a",
     theme = theme(plot.margin = margin())
