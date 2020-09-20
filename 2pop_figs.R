@@ -85,22 +85,14 @@ whn_plot3 <- whn_2pop_lineplot_data %>%
 
 whn_plot4 <- whn_2pop_lineplot_data %>%
   filter(
-    delta_tau %in% c(0.05, 0.10),
+    delta_tau == 0.10,
     epsilon %in% c(0, 1e-4, 0.01, 0.025, 0.050, 0.075, 0.1, 0.2, 0.3, 0.4, 0.5)
   ) %>%
   mutate(dr_du = delta_rho / delta_tau) %>%
   ggplot(aes(epsilon, dr_du, group = factor(delta_tau))) +
-  geom_point(aes(shape = factor(delta_tau))) +
+  geom_point() +
   geom_line() +
   geom_blank(data = tibble(epsilon = c(0, 0.51), dr_du = 0, delta_tau = 0.01)) +
-  scale_shape_manual(
-    values = c(1, 16),
-    labels = c(
-      expression(Delta * tau == 0.05),
-      expression(Delta * tau == 0.10)
-    )
-  ) +
-  guides(shape = guide_legend(title = "", label.hjust = 0)) +
   scale_x_continuous(
     expression(epsilon),
     expand = c(0, 0),
