@@ -26,6 +26,8 @@ build_cross <- function(unit_data, alpha) {
       weight = exp(-dist / alpha)
     )
 
+  stopifnot(nrow(cross_data) == nrow(unit_data) ** 2)
+
   # use the crossed data to get the observed resistance in every unit
   unit_data <- cross_data %>%
     # get the resistance that every place would have, in a vacuum
@@ -46,7 +48,7 @@ build_cross <- function(unit_data, alpha) {
     mutate(
       d_use = use.1 - use.2,
       d_res = res.1 - res.2,
-      dr_du = d_use / d_res
+      dr_du = d_res / d_use
     ) %>%
     filter(id.1 != id.2, d_use >= 0) %>%
     select(id.1, id.2, dr_du, dist)
@@ -65,7 +67,7 @@ build_cross <- function(unit_data, alpha) {
   )
 }
 
-alphas <- c(1e-6, 0.01, 0.1, 0.2)
+alphas <- c(1e-6, 0.01, 0.1, 0.5)
 # alphas <- seq(1e-6, 1.0, length.out = 100)
 
 results <- tibble(alpha = alphas) %>%
@@ -75,13 +77,15 @@ results <- tibble(alpha = alphas) %>%
     dist_data = map(data, ~ .$dist_data),
     adj_data = map(data, ~ .$adj_data),
     model = map(dist_data, ~ rlm(dr_du ~ dist, data = .)),
-    summary = map(model, summary),
+    slope = map_dbl(model, ~ coef(.)["dist"]),
     ci = map(model, confint.default),
     cor = map(dist_data, ~ cor.test(.$dr_du, .$dist, method = "spearman")),
     cor_p = map_dbl(cor, ~ .$p.value),
     adj_test = map(adj_data, ~ wilcox.test(dr_du ~ adjacent, data = .)),
     adj_p = map_dbl(adj_test, ~ .$p.value)
   )
+
+lim <- 5
 
 unit_plot <- results %>%
   select(alpha, unit_data) %>%
@@ -101,7 +105,7 @@ pair_plot <- results %>%
   geom_point() +
   geom_hline(yintercept = 1, linetype = 2, color = "green") +
   stat_smooth(method = "rlm", color = "red", linetype = 2, se = FALSE) +
-  coord_cartesian(ylim = c(-25, 25)) +
+  coord_cartesian(ylim = c(-1, 1) * lim) +
   labs(x = "distance", y = "Δres / Δuse", title = "Pairs of units")
 
 adj_plot <- results %>%
@@ -110,7 +114,7 @@ adj_plot <- results %>%
   ggplot(aes(adjacent, dr_du)) +
   facet_wrap(vars(alpha), nrow = 1) +
   geom_boxplot() +
-  coord_cartesian(ylim = c(-25, 25)) +
+  coord_cartesian(ylim = c(-1, 1) * lim) +
   labs(x = "adjacent", y = "Δres / Δuse", title = "Pairs of units")
 
 plot <- unit_plot / pair_plot / adj_plot
@@ -118,4 +122,5 @@ plot <- unit_plot / pair_plot / adj_plot
 ggsave("tmp.pdf")
 
 results$cor_p
+results$slope
 results$adj_p
