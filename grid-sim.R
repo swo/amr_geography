@@ -147,9 +147,8 @@ pair_plot <- results %>%
 
 plot <- plot_grid(unit_plot, pair_plot, labels = c("a", "b"), nrow = 2)
 
-ggsave("tmp.pdf")
+ggsave("fig/grid-sim-plot.pdf", plot = plot)
 
-print("Correlation p")
-results$cor_p
-print("Decile median raio")
-results$decile_ratio
+results %>%
+  select(alpha, cor_p, decile_ratio) %>%
+  write_tsv("results/grid-sim-results.tsv")
