@@ -6,9 +6,12 @@ subworkflow db:
 
 rule all:
     input:
-        # simulations
+        # mechanistic simulations
         expand("fig/{model}_2pop.pdf", model=MODELS),
         "results/2pop_reduction.tsv",
+        # grid simulation
+        "fig/grid-sim-plot.pdf",
+        "results/grid-sim-results.tsv",
         # empirical
         expand("fig/{x}.pdf", x=["cross_sectional"])
 
@@ -22,6 +25,11 @@ rule empirical:
         db("europe/adjacency.tsv"), db("europe/flights.tsv"),
         expand("data/{x}/data.tsv", x=["ecdc", "marketscan", "nhsn"]),
         script="empirical_analysis.R"
+    shell: "./{input.script}"
+
+rule grid_sim:
+    output: "fig/grid-sim-plot.pdf", "results/grid-sim-results.tsv"
+    input: script="grid-sim.R"
     shell: "./{input.script}"
 
 rule simulation_tables:
