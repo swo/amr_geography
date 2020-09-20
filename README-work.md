@@ -1,3 +1,18 @@
+# New framing
+
+- Definition of spillover
+    - Spillover dilutes U-R in pairs
+    - " also intro's variance into U-R X-sectionals, and decreases slope
+- There is a *causal* slope, and the observed one.
+    - They differ because of spillover
+    - You still get benefit, it's just diffused across populations, so you underestimate it
+- Quantification
+    - Ideally, the drop in that slope
+    - But cannot immediately say whether variance (and decreased slope) is due to spillover
+    - So alternatively, say the difference in U-R between highly-interacting and weakly-interacting, which is an *underestimate* of the difference in those 2 slopes (since even weakly interacting interact some)
+
+# Other results
+
 If you take the `between.R` script and put in a lot more alpha's, then you
 can ask how changing eps0 alters the slope and variance in the
 cross-population line: more interaction means weaker slope and more variance.
