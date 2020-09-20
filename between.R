@@ -5,6 +5,8 @@ library(patchwork)
 library(cowplot)
 rlm <- MASS::rlm
 
+set.seed(77845)
+
 n <- 50
 slope <- 1
 grid_size <- 1
@@ -56,17 +58,9 @@ build_cross <- function(unit_data, alpha) {
     filter(id.1 != id.2, d_use >= 0) %>%
     select(id.1, id.2, dr_du, dist, interaction_rank)
 
-  # look at the observed data with respect to adjacency
-  adj_data <- dist_data %>%
-    group_by(id.1) %>%
-    mutate(adjacent = dist == min(dist[dist > 0])) %>%
-    ungroup() %>%
-    select(id.1, id.2, dr_du, adjacent)
-
   list(
     unit_data = unit_data,
-    dist_data = dist_data,
-    adj_data = adj_data
+    dist_data = dist_data
   )
 }
 
@@ -79,65 +73,79 @@ compare_deciles <- function(dist_data) {
     with({ dr_du[decile == 1] / dr_du[decile == 10] })
 }
 
+rlm_slope <- possibly(
+  function(dist_data) {
+    model <- rlm(dr_du ~ interaction_rank, data = dist_data)
+    coef(model)["interaction_rank"]
+  },
+  NA_real_
+)
+
 alphas <- c(1e-6, 0.025, 0.1, 0.25)
-# alphas <- c(2, 5, 10, 100)
 
 results <- tibble(alpha = alphas) %>%
   mutate(
     data = map(alpha, ~ build_cross(unit_data, .)),
     unit_data = map(data, ~ .$unit_data),
     dist_data = map(data, ~ .$dist_data),
-    adj_data = map(data, ~ .$adj_data),
-    model = map(dist_data, ~ rlm(dr_du ~ interaction_rank, data = .)),
-    slope = map_dbl(model, ~ coef(.)["interaction_rank"]),
+    slope = map_dbl(dist_data, rlm_slope),
     decile_ratio = map_dbl(dist_data, compare_deciles),
     cor = map(dist_data, ~ cor.test(.$dr_du, .$dist, method = "spearman")),
-    cor_p = map_dbl(cor, ~ .$p.value),
-    adj_test = map(adj_data, ~ wilcox.test(dr_du ~ adjacent, data = .)),
-    adj_p = map_dbl(adj_test, ~ .$p.value)
+    cor_p = map_dbl(cor, ~ .$p.value)
   )
 
 lim <- 5
 
 unit_plot <- results %>%
   select(alpha, unit_data) %>%
+  mutate_at("alpha", ~ fct_inorder(str_c("alpha == ", .))) %>%
   unnest(cols = unit_data) %>%
   ggplot(aes(use, res)) +
-  facet_wrap(vars(alpha), nrow = 1) +
+  facet_wrap(vars(alpha), nrow = 1, labeller = label_parsed) +
+  geom_abline(slope = slope, linetype = 2, color = "black") +
+  stat_smooth(method = "lm", color = "gray50", se = FALSE) +
   geom_point() +
-  geom_abline(slope = slope, linetype = 2, color = "green") +
-  stat_smooth(method = "rlm", color = "red", linetype = 2, se = FALSE) +
-  labs(x = "use", y = "res", title = "Units") +
-  theme_cowplot()
+  scale_x_continuous(
+    name = expression(tau),
+    breaks = c(0, 0.5, 1),
+    labels = c("0", "0.5", "1")
+  ) +
+  scale_y_continuous(
+    name = expression(rho),
+    breaks = c(0, 0.5, 1)
+  ) +
+  theme_cowplot() +
+  theme(
+    strip.background = element_blank(),
+    plot.margin = margin(1, 5, 5, 1, "mm"),
+    panel.spacing = unit(1, "lines")
+  )
 
 pair_plot <- results %>%
   select(alpha, dist_data) %>%
+  mutate_at("alpha", ~ fct_inorder(str_c("alpha == ", .))) %>%
   unnest(cols = dist_data) %>%
   ggplot(aes(interaction_rank, dr_du)) +
-  facet_wrap(vars(alpha), nrow = 1) +
-  geom_point() +
-  geom_hline(yintercept = slope, linetype = 2, color = "green") +
+  facet_wrap(vars(alpha), nrow = 1, labeller = label_parsed) +
+  geom_point(shape = 1) +
+  geom_hline(yintercept = slope, linetype = 2, color = "black") +
+  geom_hline(yintercept = 0, linetype = 1, color = "black") +
   stat_smooth(method = "rlm", color = "red", linetype = 2, se = FALSE) +
   coord_cartesian(ylim = c(-1, 1) * lim) +
-  labs(
-    x = "Interaction (rank)",
-    y = expression(Delta * "res" / Delta * "use"),
-    title = "Pairs of units"
+  scale_x_continuous(
+    name = "Interaction (rank)",
+    breaks = c(0, n ** 2 / 2, n ** 2)
   ) +
-  theme_cowplot()
+  labs(y = expression(Delta * rho / Delta * tau)) +
+  theme_cowplot() +
+  theme(
+    strip.background = element_blank(),
+    strip.text = element_blank(),
+    plot.margin = margin(1, 5, 1, 1, "mm"),
+    panel.spacing = unit(1, "lines")
+  )
 
-adj_plot <- results %>%
-  select(alpha, adj_data) %>%
-  unnest(cols = adj_data) %>%
-  ggplot(aes(adjacent, dr_du)) +
-  facet_wrap(vars(alpha), nrow = 1) +
-  geom_hline(yintercept = slope, linetype = 2, color = "green") +
-  geom_boxplot() +
-  coord_cartesian(ylim = c(-1, 1) * lim) +
-  labs(x = "adjacent", y = "Δres / Δuse", title = "Pairs of units") +
-  theme_cowplot()
-
-plot <- unit_plot / pair_plot / adj_plot
+plot <- plot_grid(unit_plot, pair_plot, labels = c("a", "b"), nrow = 2)
 
 ggsave("tmp.pdf")
 
@@ -145,5 +153,3 @@ print("Correlation p")
 results$cor_p
 print("Decile median raio")
 results$decile_ratio
-print("Adjacency p")
-results$adj_p
