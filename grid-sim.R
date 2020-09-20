@@ -28,7 +28,7 @@ build_cross <- function(unit_data, alpha) {
     mutate(
       dist = sqrt((x.1 - x.2) ** 2 + (y.1 - y.2) ** 2),
       weight = exp(-dist / alpha),
-      interaction_rank = rank(weight)
+      interaction_rank = rank(weight, ties.method = "first")
     )
 
   stopifnot(nrow(cross_data) == nrow(unit_data) ** 2)
