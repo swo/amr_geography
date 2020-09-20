@@ -16,6 +16,7 @@ unit_data <- tibble(
 )
 
 build_cross <- function(unit_data, alpha) {
+  # cross the raw unit data
   cross_data <- crossing(
     rename_all(unit_data, ~ str_c(., ".1")),
     rename_all(unit_data, ~ str_c(., ".2"))
@@ -25,6 +26,7 @@ build_cross <- function(unit_data, alpha) {
       weight = exp(-dist / alpha)
     )
 
+  # use the crossed data to get the observed resistance in every unit
   unit_data <- cross_data %>%
     # get the resistance that every place would have, in a vacuum
     mutate(res0 = slope * use.2) %>%
@@ -36,6 +38,7 @@ build_cross <- function(unit_data, alpha) {
     ) %>%
     select(id = id.1, use, res)
 
+  # look at the observed data with respect to distance
   dist_data <- cross_data %>%
     select(id.1, id.2, dist) %>%
     left_join(rename_all(unit_data, ~ str_c(., ".1")), by = "id.1") %>%
@@ -48,9 +51,17 @@ build_cross <- function(unit_data, alpha) {
     filter(id.1 != id.2, d_use >= 0) %>%
     select(id.1, id.2, dr_du, dist)
 
+  # look at the observed data with respect to adjacency
+  adj_data <- dist_data %>%
+    group_by(id.1) %>%
+    mutate(adjacent = dist == min(dist)) %>%
+    ungroup() %>%
+    select(id.1, id.2, dr_du, adjacent)
+
   list(
     unit_data = unit_data,
-    dist_data = dist_data
+    dist_data = dist_data,
+    adj_data = adj_data
   )
 }
 
@@ -62,18 +73,21 @@ results <- tibble(alpha = alphas) %>%
     data = map(alpha, ~ build_cross(unit_data, .)),
     unit_data = map(data, ~ .$unit_data),
     dist_data = map(data, ~ .$dist_data),
+    adj_data = map(data, ~ .$adj_data),
     model = map(dist_data, ~ rlm(dr_du ~ dist, data = .)),
     summary = map(model, summary),
     ci = map(model, confint.default),
     cor = map(dist_data, ~ cor.test(.$dr_du, .$dist, method = "spearman")),
-    cor_p = map_dbl(cor, ~ .$p.value)
+    cor_p = map_dbl(cor, ~ .$p.value),
+    adj_test = map(adj_data, ~ wilcox.test(dr_du ~ adjacent, data = .)),
+    adj_p = map_dbl(adj_test, ~ .$p.value)
   )
 
 unit_plot <- results %>%
   select(alpha, unit_data) %>%
   unnest(cols = unit_data) %>%
   ggplot(aes(use, res)) +
-  facet_wrap(vars(alpha)) +
+  facet_wrap(vars(alpha), nrow = 1) +
   geom_point() +
   geom_abline(slope = 1, linetype = 2, color = "green") +
   stat_smooth(method = "rlm", color = "red", linetype = 2, se = FALSE) +
@@ -83,15 +97,25 @@ pair_plot <- results %>%
   select(alpha, dist_data) %>%
   unnest(cols = dist_data) %>%
   ggplot(aes(dist, dr_du)) +
-  facet_wrap(vars(alpha)) +
+  facet_wrap(vars(alpha), nrow = 1) +
   geom_point() +
   geom_hline(yintercept = 1, linetype = 2, color = "green") +
   stat_smooth(method = "rlm", color = "red", linetype = 2, se = FALSE) +
   coord_cartesian(ylim = c(-25, 25)) +
   labs(x = "distance", y = "Δres / Δuse", title = "Pairs of units")
 
-plot <- unit_plot + pair_plot
+adj_plot <- results %>%
+  select(alpha, adj_data) %>%
+  unnest(cols = adj_data) %>%
+  ggplot(aes(adjacent, dr_du)) +
+  facet_wrap(vars(alpha), nrow = 1) +
+  geom_boxplot() +
+  coord_cartesian(ylim = c(-25, 25)) +
+  labs(x = "adjacent", y = "Δres / Δuse", title = "Pairs of units")
+
+plot <- unit_plot / pair_plot / adj_plot
 
 ggsave("tmp.pdf")
 
 results$cor_p
+results$adj_p
