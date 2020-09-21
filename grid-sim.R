@@ -19,7 +19,7 @@ unit_data <- tibble(
   y = runif(n, 0, grid_size)
 )
 
-build_cross <- function(unit_data, alpha) {
+build_cross <- function(unit_data, d0) {
   # cross the raw unit data
   cross_data <- crossing(
     rename_all(unit_data, ~ str_c(., ".1")),
@@ -27,7 +27,7 @@ build_cross <- function(unit_data, alpha) {
   ) %>%
     mutate(
       dist = sqrt((x.1 - x.2) ** 2 + (y.1 - y.2) ** 2),
-      weight = exp(-dist / alpha),
+      weight = exp(-dist / d0),
       interaction_rank = rank(weight, ties.method = "first")
     )
 
@@ -73,48 +73,41 @@ compare_deciles <- function(dist_data) {
     with({ dr_du[decile == 1] / dr_du[decile == 10] })
 }
 
-rlm_slope <- possibly(
-  function(dist_data) {
-    model <- rlm(dr_du ~ interaction_rank, data = dist_data)
-    coef(model)["interaction_rank"]
-  },
-  NA_real_
-)
+d0s <- c(1e-6, 0.025, 0.075, 0.25)
 
-alphas <- c(1e-6, 0.025, 0.1, 0.25)
-
-results <- tibble(alpha = alphas) %>%
+results <- tibble(d0 = d0s) %>%
   mutate(
-    data = map(alpha, ~ build_cross(unit_data, .)),
+    data = map(d0, ~ build_cross(unit_data, .)),
     unit_data = map(data, ~ .$unit_data),
     dist_data = map(data, ~ .$dist_data),
-    slope = map_dbl(dist_data, rlm_slope),
+    slope = map_dbl(unit_data, ~ coef(lm(res ~ use, data = .))["use"]),
     decile_ratio = map_dbl(dist_data, compare_deciles),
-    cor = map(dist_data, ~ cor.test(.$dr_du, .$dist, method = "spearman")),
-    cor_p = map_dbl(cor, ~ .$p.value)
+    cor_test = map(dist_data, ~ cor.test(.$dr_du, .$interaction_rank, method = "spearman")),
+    cor = map_dbl(cor_test, ~ .$estimate),
+    cor_p = map_dbl(cor_test, ~ .$p.value)
   )
 
 lim <- 5
 
 unit_plot <- results %>%
-  select(alpha, unit_data) %>%
-  mutate_at("alpha", ~ fct_inorder(str_c("alpha == ", .))) %>%
+  select(d0, unit_data) %>%
+  mutate_at("d0", ~ fct_inorder(str_c("d[0] == ", .))) %>%
   unnest(cols = unit_data) %>%
   ggplot(aes(use, res)) +
-  facet_wrap(vars(alpha), nrow = 1, labeller = label_parsed) +
+  facet_wrap(vars(d0), nrow = 1, labeller = label_parsed) +
   geom_abline(slope = slope, linetype = 2, color = "black") +
   stat_smooth(method = "lm", color = "gray50", se = FALSE) +
   geom_point() +
   scale_x_continuous(
-    name = expression(tau),
+    name = expression("use (" * tau * ")"),
     breaks = c(0, 0.5, 1),
     labels = c("0", "0.5", "1")
   ) +
   scale_y_continuous(
-    name = expression(rho),
+    name = expression("resistance (" * rho * ")"),
     breaks = c(0, 0.5, 1)
   ) +
-  theme_cowplot() +
+  theme_cowplot(font_size = 12) +
   theme(
     strip.background = element_blank(),
     plot.margin = margin(1, 5, 5, 1, "mm"),
@@ -122,13 +115,12 @@ unit_plot <- results %>%
   )
 
 pair_plot <- results %>%
-  select(alpha, dist_data) %>%
-  mutate_at("alpha", ~ fct_inorder(str_c("alpha == ", .))) %>%
+  select(d0, dist_data) %>%
+  mutate_at("d0", ~ fct_inorder(str_c("d[0] == ", .))) %>%
   unnest(cols = dist_data) %>%
   ggplot(aes(interaction_rank, dr_du)) +
-  facet_wrap(vars(alpha), nrow = 1, labeller = label_parsed) +
+  facet_wrap(vars(d0), nrow = 1, labeller = label_parsed) +
   geom_point(shape = 1) +
-  geom_hline(yintercept = slope, linetype = 2, color = "black") +
   geom_hline(yintercept = 0, linetype = 1, color = "black") +
   stat_smooth(method = "rlm", color = "red", linetype = 2, se = FALSE) +
   coord_cartesian(ylim = c(-1, 1) * lim) +
@@ -137,7 +129,7 @@ pair_plot <- results %>%
     breaks = c(0, n ** 2 / 2, n ** 2)
   ) +
   labs(y = expression(Delta * rho / Delta * tau)) +
-  theme_cowplot() +
+  theme_cowplot(font_size = 12) +
   theme(
     strip.background = element_blank(),
     strip.text = element_blank(),
@@ -145,10 +137,17 @@ pair_plot <- results %>%
     panel.spacing = unit(1, "lines")
   )
 
-plot <- plot_grid(unit_plot, pair_plot, labels = c("a", "b"), nrow = 2)
+plot <- unit_plot / pair_plot +
+ plot_annotation(
+   tag_levels = "a",
+   theme = theme(plot.margin = margin())
+ )
 
-ggsave("fig/grid-sim-plot.pdf", plot = plot)
+ggsave(
+  "fig/grid-sim-plot.pdf", plot,
+  width = 190, height = 100, unit = "mm"
+)
 
 results %>%
-  select(alpha, cor_p, decile_ratio) %>%
+  select(d0, slope, cor, cor_p, decile_ratio) %>%
   write_tsv("results/grid-sim-results.tsv")

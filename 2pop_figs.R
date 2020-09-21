@@ -37,10 +37,10 @@ whn_2pop_barplot_f <- function(df) {
       values = c("white", "black")
     ) +
     scale_x_discrete(
-      name = expression(epsilon)
+      name = expression("interaction strength (" * epsilon * ")")
     ) +
     scale_y_continuous(
-      name = "resistance (%)",
+      name = expression("resistance (" * rho * ", %)"),
       labels = scales::percent_format(accuracy = 1, suffix = ""),
       limits = c(0, 1.0),
       expand = c(0, 0)
@@ -69,7 +69,6 @@ whn_plot3 <- whn_2pop_lineplot_data %>%
   geom_line(aes(group = factor(epsilon))) +
   scale_x_continuous(
     expression(Delta * tau),
-    # limits = c(0, 0.15),
     expand = c(0, 0)
   ) +
   scale_y_continuous(
