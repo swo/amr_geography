@@ -66,11 +66,14 @@ build_cross <- function(unit_data, d0) {
 
 compare_deciles <- function(dist_data) {
   dist_data %>%
-    mutate(decile = ntile(dist, 10)) %>%
+    mutate(decile = ntile(-dist, 10)) %>%
     filter(decile %in% c(1, 10)) %>%
     group_by(decile) %>%
     summarize_at("dr_du", median) %>%
-    with({ dr_du[decile == 1] / dr_du[decile == 10] })
+    with({
+      (dr_du[decile == 10] - dr_du[decile == 1]) /
+        dr_du[decile == 1]
+    })
 }
 
 d0s <- c(1e-6, 0.025, 0.075, 0.25)
@@ -81,7 +84,7 @@ results <- tibble(d0 = d0s) %>%
     unit_data = map(data, ~ .$unit_data),
     dist_data = map(data, ~ .$dist_data),
     slope = map_dbl(unit_data, ~ coef(lm(res ~ use, data = .))["use"]),
-    decile_ratio = map_dbl(dist_data, compare_deciles),
+    decile_fraction = map_dbl(dist_data, compare_deciles),
     cor_test = map(dist_data, ~ cor.test(.$dr_du, .$interaction_rank, method = "spearman")),
     cor = map_dbl(cor_test, ~ .$estimate)
   )
@@ -148,5 +151,5 @@ ggsave(
 )
 
 results %>%
-  select(d0, slope, cor, decile_ratio) %>%
+  select(d0, slope, cor, decile_fraction) %>%
   write_tsv("results/grid-sim-results.tsv")

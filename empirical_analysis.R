@@ -376,24 +376,26 @@ mantel_results <- cross_data %>%
 mantel_table <- mantel_results %>%
   mutate_if(is.numeric, ~ signif(., 2))
 
-mantel_table
-
 write_tsv(mantel_table, "results/mantel-results.tsv")
 
 # Difference in dr/du by decile (compare least interaction=1 with most=10)
 add_decile <- function(df) mutate(df, decile = ntile(interaction, 10))
 decile_arr <- function(df) {
   add_decile(df) %>%
+    group_by(decile) %>%
+    summarize_at("dr_du", median) %>%
     with({
-      median(dr_du[decile == 10]) - median(dr_du[decile == 1])
+      dr_du[decile == 10] - dr_du[decile == 1]
     })
 }
 
 decile_ratio <- function(df) {
   add_decile(df) %>%
+    group_by(decile) %>%
+    summarize_at("dr_du", median) %>%
     with({
-      (median(dr_du[decile == 10]) - median(dr_du[decile == 1])) /
-        median(dr_du[decile == 1])
+      (dr_du[decile == 10] - dr_du[decile == 1]) /
+        dr_du[decile == 1]
     })
 }
 
@@ -526,8 +528,6 @@ interaction_plot <- cross_data %>%
   ) +
   coord_cartesian(ylim = 25 * c(-1, 1)) +
   theme(strip.background = element_blank())
-
-interaction_plot
 
 ggsave(
   "fig/interaction_plot.pdf", plot = interaction_plot,
