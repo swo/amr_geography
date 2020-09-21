@@ -83,8 +83,7 @@ results <- tibble(d0 = d0s) %>%
     slope = map_dbl(unit_data, ~ coef(lm(res ~ use, data = .))["use"]),
     decile_ratio = map_dbl(dist_data, compare_deciles),
     cor_test = map(dist_data, ~ cor.test(.$dr_du, .$interaction_rank, method = "spearman")),
-    cor = map_dbl(cor_test, ~ .$estimate),
-    cor_p = map_dbl(cor_test, ~ .$p.value)
+    cor = map_dbl(cor_test, ~ .$estimate)
   )
 
 lim <- 5
@@ -149,5 +148,5 @@ ggsave(
 )
 
 results %>%
-  select(d0, slope, cor, cor_p, decile_ratio) %>%
+  select(d0, slope, cor, decile_ratio) %>%
   write_tsv("results/grid-sim-results.tsv")
