@@ -91,12 +91,20 @@ results <- tibble(d0 = d0s) %>%
 
 lim <- 5
 
+make_label <- function(d0) {
+  fct_inorder(if_else(
+    d0 == 1e-6,
+    "d[0] == 10^{-6}",
+    str_c("d[0] == ", d0)
+  ))
+}
+
 unit_plot <- results %>%
   select(d0, unit_data) %>%
-  mutate_at("d0", ~ fct_inorder(str_c("d[0] == ", .))) %>%
+  mutate(label = make_label(d0)) %>%
   unnest(cols = unit_data) %>%
   ggplot(aes(use, res)) +
-  facet_wrap(vars(d0), nrow = 1, labeller = label_parsed) +
+  facet_wrap(vars(label), nrow = 1, labeller = label_parsed) +
   geom_abline(slope = slope, linetype = 2, color = "black") +
   stat_smooth(method = "lm", color = "gray50", se = FALSE) +
   geom_point() +
@@ -118,10 +126,10 @@ unit_plot <- results %>%
 
 pair_plot <- results %>%
   select(d0, dist_data) %>%
-  mutate_at("d0", ~ fct_inorder(str_c("d[0] == ", .))) %>%
+  mutate(label = make_label(d0)) %>%
   unnest(cols = dist_data) %>%
   ggplot(aes(interaction_rank, dr_du)) +
-  facet_wrap(vars(d0), nrow = 1, labeller = label_parsed) +
+  facet_wrap(vars(label), nrow = 1, labeller = label_parsed) +
   geom_point(shape = 1) +
   geom_hline(yintercept = 0, linetype = 1, color = "black") +
   stat_smooth(method = "rlm", color = "red", linetype = 2, se = FALSE) +
