@@ -34,6 +34,8 @@ This directory has the scripts required to re-run the analyses:
 
 - `whn_sims.R` and `dtypes_sims.R` run the 2-population simulations and
   produced cached output, using `utils.R` as common resources
+- `grid-sim.R` runs the spatial simulation and produces the relevant figure and
+  table
 - `2pop_figs.R` and `tables.R` create figures and tables using the cached
   simulations
 - `empirical_analysis.R` runs the analyses of US states and European countries
@@ -48,6 +50,8 @@ And there are 3 directories that hold the outputs:
 
 - `fig/whn_2pop.pdf` and `dtypes_2pop.pdf` show the simulation results visually
 - `results/2pop_reduction.tsv` shows the theoretical results in a table
+- `fig/grid-sim-plot.pdf` and `results/grid-sim-results.tsv` shows the spatial
+  results
 - `fig/cross_sectional.pdf` shows the observational data before any analysis
 - `fig/adjacency_plot.pdf` and `results/adjacency-results.tsv` show the
   adjacency analysis
